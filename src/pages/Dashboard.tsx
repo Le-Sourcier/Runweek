@@ -1,13 +1,34 @@
 import { useUser } from '../context/UserContext';
-import { Heart, Activity, Moon, Footprints, Calendar, Trophy } from 'lucide-react';
+import { usePRs } from '../context/PRContext'; // Import usePRs
+import { isThisMonth, parseISO, format } from 'date-fns'; // Import date-fns functions & format
+import { fr } from 'date-fns/locale'; // Import French locale for date formatting
+import { Heart, Activity, Moon, Footprints, Calendar, Trophy, ArrowRight, PlusCircle } from 'lucide-react'; // Added PlusCircle
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
   const { user } = useUser();
+  const { prs } = usePRs(); // Fetch PRs
   
   if (!user) return null;
+
+  // Calculate PR statistics
+  const totalPRs = prs?.length || 0;
+  const prsThisMonth = prs?.filter(pr => pr.date && isThisMonth(parseISO(pr.date))).length || 0;
+
+  // Process PRs for "Recent Personal Records" section
+  const recentPRs = (prs || [])
+    .slice() // Create a shallow copy before sorting to avoid mutating the original context state
+    .sort((a, b) => {
+      try {
+        return parseISO(b.date).getTime() - parseISO(a.date).getTime();
+      } catch (e) {
+        // Handle invalid date strings if necessary, e.g., by pushing them to the end or logging an error
+        return 0;
+      }
+    })
+    .slice(0, 3); // Take top 3 recent PRs
 
   // Mock data for heart rate trend
   const heartRateData = [
@@ -123,6 +144,25 @@ export default function Dashboard() {
               <span className="stat-value">8,432</span>
             </div>
             <span className="text-orange-500 text-sm font-medium">1,568 restants</span>
+          </div>
+        </motion.div>
+
+        {/* PR Summary Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }} // New delay
+          className="stat-card"
+        >
+          <span className="stat-label">Records Personnels</span>
+          <div className="flex items-baseline gap-2 mt-2">
+            <div className="flex items-center gap-2">
+              <Trophy className="text-yellow-500" size={24} />
+              <span className="stat-value">{totalPRs} Total</span>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-sm text-gray-500 ml-8">{prsThisMonth} Ce Mois-ci</span>
           </div>
         </motion.div>
       </div>
@@ -246,6 +286,62 @@ export default function Dashboard() {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* Recent Personal Records Section */}
+      <div className="chart-container">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-medium text-gray-900">Records Récents</h3>
+          <div className="flex items-center gap-3"> {/* Updated to gap-3 for spacing */}
+            <Link
+              to="/personal-records"
+              className="text-primary-500 text-sm font-medium hover:text-primary-600 flex items-center gap-1"
+            >
+              Voir tout
+              <ArrowRight size={14} />
+            </Link>
+            <Link
+              to="/personal-records" // Navigates to the page where PRs can be added
+              className="bg-primary-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-600 flex items-center gap-1.5 transition-colors shadow-sm"
+            >
+              <PlusCircle size={16} />
+              Ajouter un Record
+            </Link>
+          </div>
+        </div>
+
+        {recentPRs.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Aucun record personnel enregistré pour le moment.{' '}
+            <Link to="/personal-records" className="text-primary-500 hover:text-primary-600 font-medium">
+              En ajoutez un!
+            </Link>
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {recentPRs.map((pr) => (
+              <div
+                key={pr.id}
+                className="p-4 rounded-lg border border-gray-200 bg-white hover:shadow-md transition-all"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold text-primary-600">{pr.distance} km Record</h4>
+                    <p className="text-sm text-gray-700">Temps: <span className="font-medium">{pr.time}</span></p>
+                  </div>
+                  <div className="text-right">
+                    {pr.date && (
+                       <p className="text-xs text-gray-500">
+                         {format(parseISO(pr.date), 'd MMM yyyy', { locale: fr })}
+                       </p>
+                    )}
+                    {pr.notes && <p className="text-xs text-gray-400 mt-1 truncate" title={pr.notes}>{pr.notes}</p>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Connect Device Banner */}
