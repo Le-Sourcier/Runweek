@@ -9,11 +9,11 @@ import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
 import Settings from './pages/Settings';
-import PersonalRecords from './pages/PersonalRecords'; // Import PersonalRecords page
+import PersonalRecords from './pages/PersonalRecords';
 import { UserProvider } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
-import { PRProvider } from './context/PRContext'; // Import PRProvider
+import { PRProvider } from './context/PRContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -22,7 +22,7 @@ function App() {
     <UserProvider>
       <SearchProvider>
         <NotificationProvider>
-          <PRProvider> {/* Wrap with PRProvider */}
+          <PRProvider>
             <Layout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
@@ -31,18 +31,18 @@ function App() {
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/achievements" element={<Achievements />} />
-                <Route path="/personal-records" element={<PersonalRecords />} /> {/* Add PersonalRecords route */}
+                <Route path="/personal-records" element={<PersonalRecords />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>
-          </PRProvider> {/* PRProvider closes before ToastContainer */}
+          </PRProvider>
           <ToastContainer
-            position="bottom-right"
-            autoClose={5000}
+            position="top-right" // Using template's props
+            autoClose={3000}    // Using template's props
             hideProgressBar={false}
-            newestOnTop
+            newestOnTop={false} // Using template's props
             closeOnClick
             rtl={false}
             pauseOnFocusLoss
