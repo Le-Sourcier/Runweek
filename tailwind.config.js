@@ -9,12 +9,16 @@ export default {
         mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
       },
       fontSize: {
-        '2xs': '0.625rem',
-        '3xl': '1.875rem',
-        '4xl': '2.25rem',
-        '5xl': '3rem',
-        '6xl': '3.75rem',
-        '7xl': '4.5rem',
+        xs: ['0.75rem', { lineHeight: '1rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['1rem', { lineHeight: '1.5rem' }],
+        lg: ['1.125rem', { lineHeight: '1.75rem' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2rem', { lineHeight: '2.5rem' }],
+        '5xl': ['2.25rem', { lineHeight: '2.75rem' }],
+        '6xl': ['2.5rem', { lineHeight: '3rem' }],
       },
       colors: {
         primary: {
@@ -106,170 +110,6 @@ export default {
         bounceSoft: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-5px)' },
-        },
-      },
-      typography: {
-        DEFAULT: {
-          css: {
-            maxWidth: '65ch',
-            color: 'var(--tw-prose-body)',
-            '[class~="lead"]': {
-              color: 'var(--tw-prose-lead)',
-            },
-            strong: {
-              color: 'var(--tw-prose-bold)',
-              fontWeight: '600',
-            },
-            'ol[type="A"]': {
-              '--list-counter-style': 'upper-alpha',
-            },
-            'ol[type="a"]': {
-              '--list-counter-style': 'lower-alpha',
-            },
-            'ol[type="A" s]': {
-              '--list-counter-style': 'upper-alpha',
-            },
-            'ol[type="a" s]': {
-              '--list-counter-style': 'lower-alpha',
-            },
-            'ol[type="I"]': {
-              '--list-counter-style': 'upper-roman',
-            },
-            'ol[type="i"]': {
-              '--list-counter-style': 'lower-roman',
-            },
-            'ol[type="I" s]': {
-              '--list-counter-style': 'upper-roman',
-            },
-            'ol[type="i" s]': {
-              '--list-counter-style': 'lower-roman',
-            },
-            'ol[type="1"]': {
-              '--list-counter-style': 'decimal',
-            },
-            'ol > li': {
-              position: 'relative',
-            },
-            'ol > li::before': {
-              content: 'counter(list-item, var(--list-counter-style, decimal)) "."',
-              position: 'absolute',
-              fontWeight: '400',
-              color: 'var(--tw-prose-counters)',
-            },
-            'ul > li': {
-              position: 'relative',
-            },
-            'ul > li::before': {
-              content: '""',
-              position: 'absolute',
-              backgroundColor: 'var(--tw-prose-bullets)',
-              borderRadius: '50%',
-            },
-            hr: {
-              borderColor: 'var(--tw-prose-hr)',
-              borderTopWidth: 1,
-            },
-            blockquote: {
-              fontWeight: '500',
-              fontStyle: 'italic',
-              color: 'var(--tw-prose-quotes)',
-              borderLeftWidth: '0.25rem',
-              borderLeftColor: 'var(--tw-prose-quote-borders)',
-              quotes: '"\\201C""\\201D""\\2018""\\2019"',
-            },
-            'blockquote p:first-of-type::before': {
-              content: 'open-quote',
-            },
-            'blockquote p:last-of-type::after': {
-              content: 'close-quote',
-            },
-            h1: {
-              color: 'var(--tw-prose-headings)',
-              fontWeight: '800',
-            },
-            'h1 strong': {
-              fontWeight: '900',
-              color: 'inherit',
-            },
-            h2: {
-              color: 'var(--tw-prose-headings)',
-              fontWeight: '700',
-            },
-            'h2 strong': {
-              fontWeight: '800',
-              color: 'inherit',
-            },
-            h3: {
-              color: 'var(--tw-prose-headings)',
-              fontWeight: '600',
-            },
-            'h3 strong': {
-              fontWeight: '700',
-              color: 'inherit',
-            },
-            h4: {
-              color: 'var(--tw-prose-headings)',
-              fontWeight: '600',
-            },
-            'h4 strong': {
-              fontWeight: '700',
-              color: 'inherit',
-            },
-            code: {
-              color: 'var(--tw-prose-code)',
-              fontWeight: '600',
-            },
-            'code::before': {
-              content: '"`"',
-            },
-            'code::after': {
-              content: '"`"',
-            },
-            'a code': {
-              color: 'inherit',
-            },
-            'h1 code': {
-              color: 'inherit',
-            },
-            'h2 code': {
-              color: 'inherit',
-            },
-            'h3 code': {
-              color: 'inherit',
-            },
-            'h4 code': {
-              color: 'inherit',
-            },
-            'blockquote code': {
-              color: 'inherit',
-            },
-            'thead th code': {
-              color: 'inherit',
-            },
-            pre: {
-              color: 'var(--tw-prose-pre-code)',
-              backgroundColor: 'var(--tw-prose-pre-bg)',
-              overflowX: 'auto',
-              fontWeight: '400',
-            },
-            'pre code': {
-              backgroundColor: 'transparent',
-              borderWidth: '0',
-              borderRadius: '0',
-              padding: '0',
-              fontWeight: 'inherit',
-              color: 'inherit',
-              fontSize: 'inherit',
-              fontFamily: 'inherit',
-              lineHeight: 'inherit',
-            },
-            'pre code::before': {
-              content: 'none',
-            },
-            'pre code::after': {
-              content: 'none',
-            },
-          },
         },
       },
     },
