@@ -341,39 +341,11 @@ export default function Calendar() {
               .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort by date
               .slice(0,4) // Take first 4
               .map((event) => (
-              <div
-                key={event.id}
-                className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-primary/10 text-primary"> {/* Icon theming */}
-                    {event.type === 'Run' ? <TrendingUp size={16} /> :
-                     event.type === 'Bike' ? <ActivityIcon size={16} /> : // Using ActivityIcon as placeholder for Bike/Swim/Gym
-                     event.type === 'Swim' ? <ActivityIcon size={16} /> :
-                     event.type === 'Gym' ? <ActivityIcon size={16} /> :
-                     <ActivityIcon size={16} />}
-                  </div>
-                  {event.distance && <Badge variant="primary" className="text-xs">{event.distance} km</Badge>}
+                <div key={event.id}>
+                  <h4>{event.title}</h4>
+                  <p>{new Date(event.date + 'T00:00:00').toLocaleDateString()}</p>
                 </div>
-                <h4 className="font-medium text-foreground text-sm mb-0.5">{event.title}</h4>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <CalendarIcon size={12} />
-                  <span>{new Date(event.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                </div>
-                {event.time &&
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock size={12} />
-                    <span>{event.time}</span>
-                  </div>
-                }
-                {event.location &&
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin size={12} />
-                    <span>{event.location}</span>
-                  </div>
-                }
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
            <div className="p-6 text-center">
