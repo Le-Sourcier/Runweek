@@ -42,7 +42,7 @@ type SettingSection = {
 };
 
 export default function Settings() {
-  const { user, updateUserPreferences } = useUser(); // Added updateUserPreferences
+  const { user, updateUserPreferences, updateUserProfile } = useUser(); // Added updateUserProfile
   const { colorPalette, setColorPalette } = useTheme();
   const { isFloatingCoachActive, toggleFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
   const location = useLocation();
@@ -68,6 +68,12 @@ export default function Settings() {
     achievements: true,
     reminders: true,
     updates: false
+    reminders: true,
+    updates: false
+  });
+  const [syncSettings, setSyncSettings] = useState({
+    autoSync: true,
+    backgroundSync: false,
   });
 
   const settingSections: SettingSection[] = [
@@ -127,22 +133,7 @@ export default function Settings() {
     }
   ];
 
-  const connectedDevices = [
-    {
-      id: 'd1',
-      name: 'Garmin Forerunner 955',
-      type: 'Montre connectée',
-      lastSync: '2025-03-15T10:30:00',
-      status: 'connected'
-    },
-    {
-      id: 'd2',
-      name: 'iPhone 15 Pro',
-      type: 'Smartphone',
-      lastSync: '2025-03-15T10:45:00',
-      status: 'connected'
-    }
-  ];
+  // const connectedDevices = [...] // This will be removed, data comes from user context
 
   const availableColorPalettes = [
     { name: 'Default', id: 'default', color: '#6366F1' }, // Example primary color
@@ -152,12 +143,14 @@ export default function Settings() {
     { name: 'Sunset Orange', id: 'orange', color: '#F59E0B' },
   ];
 
-  const socialAccounts = [
-    { id: 'facebook', name: 'Facebook', icon: <Facebook size={24} />, connected: false },
-    { id: 'twitter', name: 'Twitter', icon: <Twitter size={24} />, connected: false },
-    { id: 'instagram', name: 'Instagram', icon: <Instagram size={24} />, connected: false },
-    { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin size={24} />, connected: false },
-    { id: 'strava', name: 'Strava', icon: <Link2 size={24} />, connected: true }, // Example of a connected app
+  // This list defines the available accounts and their icons.
+  // The `connected` status will come from user.socialAccounts.
+  const availableSocialIntegrations = [
+    { id: 'facebook', name: 'Facebook', icon: <Facebook size={24} /> },
+    { id: 'twitter', name: 'Twitter', icon: <Twitter size={24} /> },
+    { id: 'instagram', name: 'Instagram', icon: <Instagram size={24} /> },
+    { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin size={24} /> },
+    { id: 'strava', name: 'Strava', icon: <Link2 size={24} /> }, // Using Link2 as per original
   ];
 
   // Effect to update activeTab if URL query parameter changes and load preferences
@@ -171,12 +164,106 @@ export default function Settings() {
     if (user?.preferences) {
       setSelectedLanguage(user.preferences.language || 'fr');
       setSelectedRegion(user.preferences.region || 'FR');
+      // Load notification settings
+      if (user.preferences.notificationSettings) {
+        setNotifications(user.preferences.notificationSettings);
+      } else {
+        // If not set in user's preferences, initialize with some defaults
+        // (or keep the useState defaults if they are desired as the fallback)
+        // For example, to ensure all keys are present if structure varies:
+        setNotifications(currentSettings => ({
+          email: user.preferences.notificationSettings?.email ?? currentSettings.email,
+          push: user.preferences.notificationSettings?.push ?? currentSettings.push,
+          achievements: user.preferences.notificationSettings?.achievements ?? currentSettings.achievements,
+          reminders: user.preferences.notificationSettings?.reminders ?? currentSettings.reminders,
+          updates: user.preferences.notificationSettings?.updates ?? currentSettings.updates,
+        }));
+      }
+      // Load sync settings
+      if (user.preferences.syncSettings) {
+        setSyncSettings(user.preferences.syncSettings);
+      } else if (typeof user.preferences.syncSettings === 'undefined') {
+        // If syncSettings is not defined, initialize with defaults (no immediate save)
+        setSyncSettings({ autoSync: true, backgroundSync: false });
+      }
     }
     // Make sure settingSections is included in dependency array if it's defined inside the component
     // or if its contents can change and affect getInitialTab logic indirectly via find.
     // For now, assuming settingSections is stable or defined outside if getInitialTab relies on it at mount.
   }, [location.search, activeTab, user, settingSections]); // Added settingSections
 
+
+  const handleToggleAccountConnection = (accountId: string) => {
+    if (!user || !updateUserProfile) return;
+
+    // Get current status or assume false if not present
+    const currentAccountState = user.socialAccounts?.find(acc => acc.id === accountId);
+    const newConnectedStatus = !(currentAccountState?.connected || false);
+
+    if (newConnectedStatus) {
+      // Simulate OAuth flow for connecting
+      alert(`Simulating connection to ${accountId}... In a real app, this would involve an OAuth flow.`);
+      // For a real app, you'd only proceed to update context after successful OAuth.
+    } else {
+      alert(`Disconnecting from ${accountId}...`);
+    }
+
+    let updatedSocialAccounts = [...(user.socialAccounts || [])];
+    const accountIndex = updatedSocialAccounts.findIndex(acc => acc.id === accountId);
+
+    if (accountIndex > -1) {
+      updatedSocialAccounts[accountIndex] = { ...updatedSocialAccounts[accountIndex], connected: newConnectedStatus };
+    } else {
+      // If account not in context yet (e.g. first time connecting one from the static list)
+      const accountDetails = availableSocialIntegrations.find(acc => acc.id === accountId);
+      if (accountDetails) {
+           updatedSocialAccounts.push({ id: accountDetails.id, name: accountDetails.name, connected: newConnectedStatus });
+      }
+    }
+
+    updateUserProfile({ socialAccounts: updatedSocialAccounts });
+  };
+
+  const handleRevokeDevice = (deviceId: string) => {
+    if (!user || !user.connectedDevices || !updateUserProfile) return; // Added updateUserProfile check
+    // Option 1: Filter out the device
+    const updatedDevices = user.connectedDevices.filter(device => device.id !== deviceId);
+    // Option 2: Change status (uncomment to use this instead)
+    // const updatedDevices = user.connectedDevices.map(device =>
+    //   device.id === deviceId ? { ...device, status: 'disconnected_by_user' as const } : device
+    // );
+    updateUserProfile({ connectedDevices: updatedDevices }); // Pass only the changed part of the user
+  };
+
+  const handleSyncToggle = (key: keyof typeof syncSettings) => {
+    const newSyncSettings = {
+      ...syncSettings,
+      [key]: !syncSettings[key],
+    };
+    setSyncSettings(newSyncSettings);
+    if (user && updateUserPreferences) {
+      updateUserPreferences({
+        ...(user.preferences || {}),
+        syncSettings: newSyncSettings,
+      });
+    }
+  };
+
+  const handleNotificationToggle = (key: keyof typeof notifications) => {
+    const newSettings = {
+      ...notifications,
+      [key]: !notifications[key],
+    };
+    setNotifications(newSettings); // Update local state immediately for UI responsiveness
+
+    if (user && updateUserPreferences) {
+      updateUserPreferences({
+        ...(user.preferences || {}), // Spread existing preferences
+        notificationSettings: newSettings, // Update with new notification settings
+      });
+      // console.log('Notification preferences saved!'); // Optional: for debugging or success message
+    }
+  };
 
   const handleSaveLanguageRegion = () => {
     if (user && updateUserPreferences) {
@@ -420,7 +507,7 @@ export default function Settings() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Recevez des mises à jour par email</p>
                     </div>
                     <button
-                      onClick={() => setNotifications(prev => ({ ...prev, email: !prev.email }))}
+                      onClick={() => handleNotificationToggle('email')}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         notifications.email ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
                       }`}
@@ -439,7 +526,7 @@ export default function Settings() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Recevez des notifications sur votre appareil</p>
                     </div>
                     <button
-                      onClick={() => setNotifications(prev => ({ ...prev, push: !prev.push }))}
+                      onClick={() => handleNotificationToggle('push')}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         notifications.push ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
                       }`}
@@ -458,7 +545,7 @@ export default function Settings() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Notifications pour les nouveaux badges</p>
                     </div>
                     <button
-                      onClick={() => setNotifications(prev => ({ ...prev, achievements: !prev.achievements }))}
+                      onClick={() => handleNotificationToggle('achievements')}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         notifications.achievements ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
                       }`}
@@ -466,6 +553,44 @@ export default function Settings() {
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                           notifications.achievements ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+                    <div>
+                      <h3 className="font-medium text-gray-800 dark:text-white">Rappels d'activité</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Recevez des rappels pour vos activités planifiées</p>
+                    </div>
+                    <button
+                      onClick={() => handleNotificationToggle('reminders')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notifications.reminders ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notifications.reminders ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+                    <div>
+                      <h3 className="font-medium text-gray-800 dark:text-white">Mises à jour produit</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Recevez des informations sur les nouvelles fonctionnalités et mises à jour</p>
+                    </div>
+                    <button
+                      onClick={() => handleNotificationToggle('updates')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notifications.updates ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notifications.updates ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -483,71 +608,111 @@ export default function Settings() {
             >
               <Card title="Appareils connectés">
                 <div className="space-y-4">
-                  {connectedDevices.map((device) => (
+                  {(user?.connectedDevices || []).map((device) => (
                     <div
                       key={device.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:border-primary transition-all"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:border-primary transition-all dark:border-gray-700 dark:hover:border-primary-600"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           <Activity size={24} className="text-primary" />
                         </div>
                         <div>
-                          <h3 className="font-medium">{device.name}</h3>
-                          <p className="text-sm text-gray-500">{device.type}</p>
-                          <p className="text-xs text-gray-400">
+                          <h3 className="font-medium text-gray-800 dark:text-white">{device.name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{device.type}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
                             Dernière synchronisation: {new Date(device.lastSync).toLocaleString()}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="success" className="flex items-center gap-1">
-                          <Check size={12} />
-                          Connecté
-                        </Badge>
-                        <button className="p-2 hover:bg-gray-100 rounded-lg">
-                          <X size={16} className="text-gray-400" />
-                        </button>
+                        {device.status === 'connected' && (
+                          <Badge variant="success" className="flex items-center gap-1">
+                            <Check size={12} /> Connecté
+                          </Badge>
+                        )}
+                        {device.status === 'disconnected_by_user' && (
+                          <Badge variant="default" className="flex items-center gap-1 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200">
+                            Déconnecté
+                          </Badge>
+                        )}
+                        {device.status === 'sync_error' && (
+                          <Badge variant="error" className="flex items-center gap-1">
+                            Erreur Sync
+                          </Badge>
+                        )}
+                        {device.status === 'connected' && (
+                           <button onClick={() => handleRevokeDevice(device.id)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                            <X size={16} className="text-gray-400 dark:text-gray-500" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
 
-                  <button className="w-full p-4 border border-dashed rounded-lg text-center hover:border-primary hover:bg-gray-50 transition-all">
+                  <button
+                    onClick={() => alert('Feature to add new devices is coming soon!')}
+                    className="w-full p-4 border border-dashed rounded-lg text-center hover:border-primary hover:bg-gray-50 transition-all dark:border-gray-700 dark:hover:border-primary-600 dark:hover:bg-gray-700"
+                  >
                     <span className="text-primary font-medium">+ Ajouter un appareil</span>
                   </button>
                 </div>
               </Card>
 
-              <Card title="Synchronisation">
+              <Card title="Synchronisation" className="bg-white dark:bg-gray-800">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
                     <div>
-                      <h3 className="font-medium">Synchronisation automatique</h3>
-                      <p className="text-sm text-gray-500">Synchroniser automatiquement les données</p>
+                      <h3 className="font-medium text-gray-800 dark:text-white">Synchronisation automatique</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Synchroniser automatiquement les données</p>
                     </div>
-                    <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary">
-                      <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
+                    <button
+                      onClick={() => handleSyncToggle('autoSync')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        syncSettings.autoSync ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          syncSettings.autoSync ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
                     <div>
-                      <h3 className="font-medium">Synchronisation en arrière-plan</h3>
-                      <p className="text-sm text-gray-500">Mettre à jour même lorsque l'app est fermée</p>
+                      <h3 className="font-medium text-gray-800 dark:text-white">Synchronisation en arrière-plan</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Mettre à jour même lorsque l'app est fermée</p>
                     </div>
-                    <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary">
-                      <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
+                    <button
+                      onClick={() => handleSyncToggle('backgroundSync')}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        syncSettings.backgroundSync ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          syncSettings.backgroundSync ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">Dernière synchronisation</h3>
-                      <p className="text-sm text-gray-500">Il y a 5 minutes</p>
+                      <h3 className="font-medium text-gray-800 dark:text-white">Dernière synchronisation</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {/* This could be dynamic based on user.lastSyncGlobal or similar */}
+                        Il y a 5 minutes (simulation)
+                      </p>
                     </div>
-                    <button className="btn btn-outline">
+                    <button
+                      onClick={() => console.log("Attempting manual sync...")}
+                      className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                    >
                       Synchroniser maintenant
                     </button>
                   </div>
@@ -643,33 +808,38 @@ export default function Settings() {
             >
               <Card title="Comptes connectés" className="bg-white dark:bg-gray-800">
                 <div className="space-y-4">
-                  {socialAccounts.map((account) => (
-                    <div
-                      key={account.id}
-                      className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:border-primary dark:hover:border-primary-600 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400">
-                          {account.icon}
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-800 dark:text-white">{account.name}</h3>
-                          <p className={`text-sm ${account.connected ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                            {account.connected ? 'Connecté' : 'Non connecté'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          account.connected
-                            ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-900'
-                            : 'bg-primary-50 text-primary hover:bg-primary-100 dark:bg-primary-800/60 dark:text-primary-300 dark:hover:bg-primary-700'
-                        }`}
+                  {availableSocialIntegrations.map((integration) => {
+                    const contextAccount = user?.socialAccounts?.find(sa => sa.id === integration.id);
+                    const isConnected = contextAccount ? contextAccount.connected : false;
+                    return (
+                      <div
+                        key={integration.id}
+                        className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:border-primary dark:hover:border-primary-600 transition-all"
                       >
-                        {account.connected ? 'Déconnecter' : 'Connecter'}
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400">
+                            {integration.icon}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-800 dark:text-white">{integration.name}</h3>
+                            <p className={`text-sm ${isConnected ? 'text-green-500 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {isConnected ? 'Connecté' : 'Non connecté'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleToggleAccountConnection(integration.id)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isConnected
+                              ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-400 dark:hover:bg-red-900'
+                              : 'bg-primary-50 text-primary hover:bg-primary-100 dark:bg-primary-800/60 dark:text-primary-300 dark:hover:bg-primary-700'
+                          }`}
+                        >
+                          {isConnected ? 'Déconnecter' : 'Connecter'}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </Card>
             </motion.div>

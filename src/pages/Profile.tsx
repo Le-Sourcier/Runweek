@@ -28,6 +28,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
   const [editedEmail, setEditedEmail] = useState(user?.email || '');
+  const [editedProfileImage, setEditedProfileImage] = useState(user?.profileImage || '');
 
   // Preferences State - Initialize with defaults, then update from user.preferences in useEffect
   const [distanceUnit, setDistanceUnit] = useState(user?.preferences?.distanceUnit || 'kilometers');
@@ -47,6 +48,7 @@ export default function Profile() {
     if (user) {
       setEditedName(user.name);
       setEditedEmail(user.email);
+      setEditedProfileImage(user.profileImage); // Add this line
       if (user.preferences) {
         setDistanceUnit(user.preferences.distanceUnit || 'kilometers');
         setPreferredRunDays(user.preferences.preferredRunDays || ['Mon', 'Wed', 'Fri']);
@@ -105,14 +107,14 @@ export default function Profile() {
       // Entering edit mode, initialize with current user data
       setEditedName(user.name);
       setEditedEmail(user.email);
-      // setEditedProfileImage(user.profileImage);
+      setEditedProfileImage(user.profileImage);
     }
     setIsEditing(!isEditing);
   };
 
   const handleSaveChanges = () => {
     if (user) { // Ensure user is not null before attempting update
-      updateUserProfile({ name: editedName, email: editedEmail });
+      updateUserProfile({ name: editedName, email: editedEmail, profileImage: editedProfileImage }); // Add profileImage
     }
     setIsEditing(false);
     // Optionally: show a success notification
@@ -122,7 +124,7 @@ export default function Profile() {
     // Revert changes to original user data
     setEditedName(user.name);
     setEditedEmail(user.email);
-    // setEditedProfileImage(user.profileImage);
+    setEditedProfileImage(user.profileImage); // Add this line
     setIsEditing(false);
   };
   
@@ -177,17 +179,42 @@ export default function Profile() {
           <div className="flex flex-col items-center text-center">
             <div className="relative">
               <img 
-                src={user.profileImage} // This could also be editedProfileImage if you implement image editing
+                src={isEditing ? editedProfileImage : user.profileImage} // Show edited or original image
                 alt={editedName}
                 className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
               />
-              <button
-                onClick={handleEditToggle}
-                className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm hover:bg-primary-600"
-                aria-label="Edit profile image or details"
-              >
-                <Edit size={14} />
-              </button>
+              {isEditing ? (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (event.target && typeof event.target.result === 'string') {
+                            setEditedProfileImage(event.target.result); // Preview image using data URL
+                          }
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    className="absolute bottom-0 right-0 h-8 w-8 opacity-0 cursor-pointer" // Basic styling, can be improved
+                    aria-label="Change profile picture"
+                  />
+                  <div className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm pointer-events-none">
+                    <Edit size={14} />
+                  </div>
+                </>
+              ) : (
+                <button
+                  onClick={handleEditToggle} // This button now mainly toggles text fields for editing
+                  className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm hover:bg-primary-600"
+                  aria-label="Edit profile details"
+                >
+                  <Edit size={14} />
+                </button>
+              )}
             </div>
             
             {isEditing ? (

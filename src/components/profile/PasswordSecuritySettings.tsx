@@ -8,7 +8,7 @@ interface PasswordSecuritySettingsProps {
 }
 
 const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onBack }) => {
-  const { changePassword } = useUser(); // Get changePassword from context
+  const { user, changePassword, updateUserPreferences } = useUser(); // Add user and updateUserPreferences
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -16,8 +16,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false); // Loading state
 
-  // 2FA state - simple placeholder
-  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const isTwoFactorEnabled = user?.preferences?.isTwoFactorEnabled || false;
 
   const handleChangePassword = async (e: React.FormEvent) => { // Made async
     e.preventDefault();
@@ -59,9 +58,16 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
   };
 
   const handleToggleTwoFactor = () => {
-    // Placeholder for 2FA logic
-    setIsTwoFactorEnabled(!isTwoFactorEnabled);
-    console.log('2FA Toggled:', !isTwoFactorEnabled);
+    if (user && updateUserPreferences) {
+      const new2FAStatus = !isTwoFactorEnabled; // Calculate new status based on context value
+      updateUserPreferences({
+        ...(user.preferences || {}),
+        isTwoFactorEnabled: new2FAStatus,
+      });
+      // Optionally, add a console.log or a success message for feedback,
+      // though the UI will update based on the context change.
+      console.log('2FA preference Toggled to:', new2FAStatus);
+    }
   };
 
   return (
@@ -163,6 +169,23 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
             Add an extra layer of security to your account by enabling two-factor authentication.
           </p>
         )}
+      </Card>
+
+      <Card title="Active Sessions" className="bg-card text-card-foreground border-border">
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Management of active sessions is not available at the moment.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            For security, always make sure to log out from devices you no longer use.
+          </p>
+          {/* Optional: Add a button that links to a hypothetical help page or just a disabled button */}
+          {/*
+          <button className="btn btn-outline mt-2" disabled>
+            Learn More
+          </button>
+          */}
+        </div>
       </Card>
     </div>
   );
