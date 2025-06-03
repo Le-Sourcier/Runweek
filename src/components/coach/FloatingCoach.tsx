@@ -1,16 +1,24 @@
+<<<<<<< HEAD
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFloatingCoach } from "../../context/FloatingCoachContext";
 import { Bot, X, ChevronsLeftRight as PositionIcon } from "lucide-react"; // Using ChevronsLeftRight for position toggle
+=======
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useFloatingCoach } from '../../context/FloatingCoachContext';
+import { Bot, X, ChevronsLeftRight as PositionIcon, EyeOff } from 'lucide-react'; // Added EyeOff
+>>>>>>> 4545b31dac8a0113a6dea851bbe7e4ce9626e4b5
 
 const FloatingCoach: React.FC = () => {
   const {
     isCoachPanelOpen,
     coachPosition,
-    toggleCoachPanelOpen,
+    // toggleCoachPanelOpen, // Not directly used, open/close are more explicit
     setCoachPosition,
     closeCoachPanel,
-    openCoachPanel, // Use openCoachPanel for FAB to ensure coach is active
+    openCoachPanel,
+    deactivateFloatingCoach, // Added deactivateFloatingCoach
   } = useFloatingCoach();
 
   const positionClasses =
@@ -65,6 +73,7 @@ const FloatingCoach: React.FC = () => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-3 border-b border-border bg-muted/50">
+<<<<<<< HEAD
               <h3 className="font-semibold text-sm text-foreground">
                 Coach AI
               </h3>
@@ -77,6 +86,22 @@ const FloatingCoach: React.FC = () => {
                         : "bottom-left"
                     )
                   }
+=======
+              <h3 className="font-semibold text-sm text-foreground">Coach AI</h3>
+              <div className="flex items-center gap-0.5"> {/* Adjusted gap for potentially more buttons */}
+                <motion.button
+                  title="Hide Coach"
+                  onClick={deactivateFloatingCoach}
+                  className="p-1.5 rounded-md hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Deactivate floating coach"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <EyeOff size={16} />
+                </motion.button>
+                <motion.button
+                  title="Move Coach"
+                  onClick={() => setCoachPosition(coachPosition === 'bottom-left' ? 'bottom-right' : 'bottom-left')}
+>>>>>>> 4545b31dac8a0113a6dea851bbe7e4ce9626e4b5
                   className="p-1.5 rounded-md hover:bg-background/80 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Toggle coach position"
                   whileTap={{ scale: 0.9 }}
@@ -84,6 +109,7 @@ const FloatingCoach: React.FC = () => {
                   <PositionIcon size={16} />
                 </motion.button>
                 <motion.button
+                  title="Close Panel"
                   onClick={closeCoachPanel}
                   className="p-1.5 rounded-md hover:bg-background/80 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Close coach panel"
