@@ -21,6 +21,7 @@ import PasswordResetPage from './pages/PasswordResetPage';
 
 // Context Providers
 import { ThemeProvider } from './context/ThemeContext'; // Added ThemeProvider import
+import { FloatingCoachProvider } from './context/FloatingCoachContext'; // Import FloatingCoachProvider
 import { UserProvider, useUser } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -103,9 +104,11 @@ const AppRoutes: React.FC = () => {
 function App() {
   return (
     <ThemeProvider> {/* Added ThemeProvider wrapper */}
-      <UserProvider>
-        <AppRoutes />
-      </UserProvider>
+      <FloatingCoachProvider> {/* Add the new provider here */}
+        <UserProvider>
+          <AppRoutes />
+        </UserProvider>
+      </FloatingCoachProvider>
     </ThemeProvider>
   );
 }

@@ -5,6 +5,8 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { useUser } from '../../context/UserContext';
 import LoadingScreen from '../ui/LoadingScreen';
+import { useFloatingCoach } from '../../context/FloatingCoachContext'; // Import useFloatingCoach
+import FloatingCoach from '../../components/coach/FloatingCoach'; // Import FloatingCoach component
 
 type LayoutProps = {
   children: ReactNode;
@@ -14,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isLoading } = useUser();
+  const { isFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -69,6 +72,7 @@ export default function Layout({ children }: LayoutProps) {
           </AnimatePresence>
         </main>
       </div>
+      {isFloatingCoachActive && <FloatingCoach />} {/* Conditionally render FloatingCoach */}
     </div>
   );
 }

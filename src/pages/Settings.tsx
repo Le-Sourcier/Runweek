@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'; // Added useEffect
 import { useLocation } from 'react-router-dom'; // Added useLocation
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
+import { useFloatingCoach } from '../context/FloatingCoachContext'; // Import useFloatingCoach
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import ThemePreview from '../components/ui/ThemePreview'; // Import ThemePreview
@@ -43,6 +44,7 @@ type SettingSection = {
 export default function Settings() {
   const { user, updateUserPreferences } = useUser(); // Added updateUserPreferences
   const { colorPalette, setColorPalette } = useTheme();
+  const { isFloatingCoachActive, toggleFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
   const location = useLocation();
 
   // Determine initial tab from URL query parameter or default to 'general'
@@ -302,6 +304,31 @@ export default function Settings() {
                         </button>
                     )}
                   </div>
+
+                  {/* Floating Coach Toggle */}
+                  <div className="pt-4 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-foreground">Floating Coach AI</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Show the AI Coach as a floating button for quick access.
+                        </p>
+                      </div>
+                      <label htmlFor="floating-coach-toggle" className="flex items-center cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            id="floating-coach-toggle"
+                            className="sr-only peer"
+                            checked={isFloatingCoachActive}
+                            onChange={toggleFloatingCoachActive}
+                          />
+                          <div className="w-10 h-6 bg-muted rounded-full peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-slate-800 after:border-gray-300 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
                   <ThemePreview /> {/* Add ThemePreview here */}
                 </div>
               </Card>
