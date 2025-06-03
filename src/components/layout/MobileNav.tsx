@@ -22,8 +22,8 @@ export default function MobileNav({ className = "" }: MobileNavProps) {
             key={item.path}
             to={item.path}
             className={({ isActive }) => 
-              `flex flex-col items-center justify-center ${
-                isActive ? 'text-primary' : 'text-gray-500'
+              `flex flex-col items-center justify-center transition-all duration-150 ease-in-out hover:scale-105 active:scale-95 ${
+                isActive ? 'text-primary' : 'text-gray-500 hover:text-primary/80'
               }`
             }
             end={item.path === '/'}

@@ -32,10 +32,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
           onClick={onClose} // Close on overlay click
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }} // Start slightly down and smaller
+            initial={{ opacity: 0, scale: 0.9, y: 50 }} // Start further down and smaller
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }} // Exit to the same state
-            transition={{ duration: 0.2, ease: "easeOut" }} // Smooth easing
+            exit={{ opacity: 0, scale: 0.9, y: 50 }} // Exit to the same state
+            transition={{ duration: 0.3, ease: "easeOut" }} // Slightly longer duration for a smoother feel
             className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 w-full ${sizeClasses[size]}`}
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
           >
@@ -43,7 +43,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
               {title && <h3 className="text-lg font-semibold text-foreground">{title}</h3>}
               <button
                 onClick={onClose}
-                className="p-1 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card"
+                className="p-1 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-colors"
                 aria-label="Close modal"
               >
                 <X size={20} />

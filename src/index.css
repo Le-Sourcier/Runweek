@@ -148,6 +148,9 @@
   
   body {
     @apply bg-background text-foreground font-sans antialiased text-base;
+    transition-property: background-color, color; /* Focus on main body colors */
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
   }
 
   /* Typography Scale */
@@ -196,6 +199,9 @@
   /* Card Components */
   .card {
     @apply bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 transition-shadow hover:shadow-xl; /* Updated to use theme variables & standard shadow/radius */
+    transition-property: background-color, color, border-color, box-shadow; /* Add color transitions alongside shadow */
+    transition-duration: 0.2s; /* Consistent duration */
+    transition-timing-function: ease-in-out;
   }
   
   /* Button Variants */

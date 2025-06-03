@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
+import ThemePreview from '../components/ui/ThemePreview'; // Import ThemePreview
 import { 
   Bell, 
   Globe, 
@@ -301,6 +302,7 @@ export default function Settings() {
                         </button>
                     )}
                   </div>
+                  <ThemePreview /> {/* Add ThemePreview here */}
                 </div>
               </Card>
             </motion.div>
