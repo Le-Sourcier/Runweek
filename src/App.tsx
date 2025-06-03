@@ -20,6 +20,7 @@ import PasswordRecoveryRequestPage from './pages/PasswordRecoveryRequestPage';
 import PasswordResetPage from './pages/PasswordResetPage';
 
 // Context Providers
+import { ThemeProvider } from './context/ThemeContext'; // Added ThemeProvider import
 import { UserProvider, useUser } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -101,9 +102,11 @@ const AppRoutes: React.FC = () => {
 // Main App component: Sets up UserProvider and renders the AppRoutes
 function App() {
   return (
-    <UserProvider>
-      <AppRoutes />
-    </UserProvider>
+    <ThemeProvider> {/* Added ThemeProvider wrapper */}
+      <UserProvider>
+        <AppRoutes />
+      </UserProvider>
+    </ThemeProvider>
   );
 }
 

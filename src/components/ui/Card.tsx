@@ -12,7 +12,7 @@ export default function Card({ children, className = "", title, action }: CardPr
     <div className={`card ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
-          {title && <h3 className="font-medium">{title}</h3>}
+          {title && <h3 className="font-medium text-card-foreground">{title}</h3>}
           {action && <div>{action}</div>}
         </div>
       )}
