@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'; // Added useEffect
 import { useLocation } from 'react-router-dom'; // Added useLocation
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
+import { useFloatingCoach } from '../context/FloatingCoachContext'; // Import useFloatingCoach
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
+import ThemePreview from '../components/ui/ThemePreview'; // Import ThemePreview
 import { 
   Bell, 
   Globe, 
@@ -42,6 +44,7 @@ type SettingSection = {
 export default function Settings() {
   const { user, updateUserPreferences } = useUser(); // Added updateUserPreferences
   const { colorPalette, setColorPalette } = useTheme();
+  const { isFloatingCoachActive, toggleFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
   const location = useLocation();
 
   // Determine initial tab from URL query parameter or default to 'general'
@@ -203,7 +206,7 @@ export default function Settings() {
               <button
                 key={section.id}
                 onClick={() => setActiveTab(section.id)}
-                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors ${
+                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
                   activeTab === section.id
                     ? 'bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -235,7 +238,7 @@ export default function Settings() {
           </nav>
 
           <div className="mt-6 pt-6 border-t dark:border-gray-700">
-            <button className="w-full p-3 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+            <button className="w-full p-3 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]">
               <Trash2 size={20} />
               <span className="font-medium">Supprimer le compte</span>
             </button>
@@ -259,7 +262,7 @@ export default function Settings() {
                         <button
                           key={option}
                           onClick={() => setCurrentThemeOption(option)}
-                          className={`px-4 py-2 rounded-lg font-medium ${
+                          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97] ${
                             currentThemeOption === option
                               ? 'bg-primary text-white'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -278,7 +281,7 @@ export default function Settings() {
                         <button
                           key={palette.id}
                           onClick={() => setColorPalette(palette.id)}
-                          className={`p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                          className={`p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-transform duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97] ${
                             colorPalette === palette.id ? 'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-primary' : ''
                           }`}
                           title={palette.name}
@@ -295,12 +298,38 @@ export default function Settings() {
                      {colorPalette !== 'default' && (
                         <button
                             onClick={() => setColorPalette('default')}
-                            className="mt-4 text-sm text-primary hover:underline"
+                            className="mt-4 text-sm text-primary hover:underline transition-colors duration-150 ease-in-out"
                         >
                             Réinitialiser la palette
                         </button>
                     )}
                   </div>
+
+                  {/* Floating Coach Toggle */}
+                  <div className="pt-4 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-foreground">Floating Coach AI</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Show the AI Coach as a floating button for quick access.
+                        </p>
+                      </div>
+                      <label htmlFor="floating-coach-toggle" className="flex items-center cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            id="floating-coach-toggle"
+                            className="sr-only peer"
+                            checked={isFloatingCoachActive}
+                            onChange={toggleFloatingCoachActive}
+                          />
+                          <div className="w-10 h-6 bg-muted rounded-full peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-slate-800 after:border-gray-300 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <ThemePreview /> {/* Add ThemePreview here */}
                 </div>
               </Card>
             </motion.div>

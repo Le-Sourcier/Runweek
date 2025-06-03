@@ -43,7 +43,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
           <span className="font-bold text-xl">Runweek</span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="md:hidden p-1">
+          <button onClick={onClose} className="md:hidden p-1 rounded-md hover:bg-gray-100 transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]">
             <X size={20} />
           </button>
         )}
@@ -86,10 +86,10 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
               <NavLink 
                 to={item.path}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all
+                  flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
                   ${isActive 
                     ? 'bg-primary/10 text-primary' 
-                    : 'text-gray-600 hover:bg-gray-50'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
                 end={item.path === '/'}
@@ -106,7 +106,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       <div className="p-3 border-t">
         <NavLink 
           to="/settings"
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-50"
+          className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all hover:translate-x-1"
         >
           <span>Paramètres</span>
         </NavLink>

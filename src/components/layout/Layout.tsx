@@ -1,9 +1,12 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion'; // Import framer-motion components
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useUser } from '../../context/UserContext';
 import LoadingScreen from '../ui/LoadingScreen';
+import { useFloatingCoach } from '../../context/FloatingCoachContext'; // Import useFloatingCoach
+import FloatingCoach from '../../components/coach/FloatingCoach'; // Import FloatingCoach component
 
 type LayoutProps = {
   children: ReactNode;
@@ -13,6 +16,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isLoading } = useUser();
+  const { isFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -50,9 +54,25 @@ export default function Layout({ children }: LayoutProps) {
         
         {/* Page content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname} // Use location.pathname from useLocation()
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={{
+                initial: { opacity: 0, y: 20 },
+                animate: { opacity: 1, y: 0 },
+                exit: { opacity: 0, y: -20 },
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }} // Adjust duration and easing as needed
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+      {isFloatingCoachActive && <FloatingCoach />} {/* Conditionally render FloatingCoach */}
     </div>
   );
 }
