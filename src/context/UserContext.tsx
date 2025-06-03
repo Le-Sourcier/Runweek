@@ -37,7 +37,24 @@ type User = {
   stats: UserStats;
   goals: UserGoal[];
   achievements: UserAchievement[];
+  preferences?: UserPreferences; // Added preferences field
 };
+
+// Define UserPreferences type
+export interface UserPreferences {
+  distanceUnit: 'kilometers' | 'miles';
+  preferredRunDays: string[];
+  preferredRunTime: 'morning' | 'afternoon' | 'evening' | 'any';
+  trainingFocus: 'endurance' | 'speed' | 'race_training' | 'weight_loss' | 'general_fitness';
+  // Privacy settings added here
+  activityVisibility?: 'only_me' | 'friends' | 'public';
+  profileVisibility?: 'only_me' | 'friends' | 'public';
+  dataSharing?: boolean;
+  locationSharing?: boolean;
+  // Language and Region settings
+  language?: string; // e.g., 'en', 'fr'
+  region?: string;   // e.g., 'US', 'FR'
+}
 
 // Define UserCredentials type for login
 export type UserCredentials = {
@@ -52,6 +69,8 @@ type UserContextType = {
   error: string | null; // For login/auth errors
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   logout: () => void;
+  updateUserProfile: (updatedProfileData: Partial<User>) => void;
+  updateUserPreferences: (preferences: UserPreferences) => void; // Added updateUserPreferences
   // setUser: React.Dispatch<React.SetStateAction<User | null>>; // Keep if direct manipulation is needed, or remove if only via login/logout
 };
 
@@ -80,7 +99,21 @@ const sampleUser: User = {
   achievements: [
     { id: 'a1', title: 'First Run', description: 'Completed your first run', icon: 'Award', earnedDate: '2023-05-18' },
     { id: 'a2', title: '10K Club', description: 'Completed a 10K run', icon: 'Medal', earnedDate: '2023-06-02' },
-  ]
+  ],
+  preferences: {
+    distanceUnit: 'kilometers',
+    preferredRunDays: ['Mon', 'Wed', 'Fri'],
+    preferredRunTime: 'morning',
+    trainingFocus: 'endurance',
+    // Default privacy settings for sampleUser
+    activityVisibility: 'friends',
+    profileVisibility: 'friends',
+    dataSharing: false,
+    locationSharing: true,
+    // Default language and region for sampleUser
+    language: 'en',
+    region: 'US',
+  }
 };
 
 
@@ -119,9 +152,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setError(null);
   };
+
+  const updateUserProfile = (updatedProfileData: Partial<User>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null; // Should not happen if called correctly
+      return { ...prevUser, ...updatedProfileData };
+    });
+    // In a real app, also save to localStorage if user session is persisted there
+    // localStorage.setItem('user', JSON.stringify({ ...user, ...updatedProfileData }));
+  };
+
+  const updateUserPreferences = (preferences: UserPreferences) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        preferences: { ...prevUser.preferences, ...preferences }
+      };
+    });
+    // Persist to localStorage if using it
+    // if (user) {
+    //   localStorage.setItem('user', JSON.stringify({ ...user, preferences: { ...user.preferences, ...preferences } }));
+    // }
+  };
   
   return (
-    <UserContext.Provider value={{ user, isLoading, isAuthenticated, error, login, logout }}>
+    <UserContext.Provider value={{ user, isLoading, isAuthenticated, error, login, logout, updateUserProfile, updateUserPreferences }}>
       {children}
     </UserContext.Provider>
   );

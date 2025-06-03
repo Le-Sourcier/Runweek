@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
+import { useLocation } from 'react-router-dom'; // Added useLocation
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext'; // Added useTheme import
+import { useTheme } from '../context/ThemeContext';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import { 
@@ -38,11 +39,25 @@ type SettingSection = {
 };
 
 export default function Settings() {
-  const { user } = useUser();
-  const { colorPalette, setColorPalette } = useTheme(); // Added theme context
-  const [activeTab, setActiveTab] = useState('general');
-  const [currentThemeOption, setCurrentThemeOption] = useState('system'); // Renamed theme to currentThemeOption to avoid conflict
-  const [language, setLanguage] = useState('fr');
+  const { user, updateUserPreferences } = useUser(); // Added updateUserPreferences
+  const { colorPalette, setColorPalette } = useTheme();
+  const location = useLocation();
+
+  // Determine initial tab from URL query parameter or default to 'general'
+  const getInitialTab = () => {
+    const params = new URLSearchParams(location.search);
+    const tabFromQuery = params.get('tab');
+    if (tabFromQuery && settingSections.find(s => s.id === tabFromQuery)) {
+      return tabFromQuery;
+    }
+    return 'general'; // Default tab
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+  const [currentThemeOption, setCurrentThemeOption] = useState('system');
+  // Language and Region States
+  const [selectedLanguage, setSelectedLanguage] = useState('fr'); // Renamed from language
+  const [selectedRegion, setSelectedRegion] = useState('FR');
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -140,6 +155,34 @@ export default function Settings() {
     { id: 'linkedin', name: 'LinkedIn', icon: <Linkedin size={24} />, connected: false },
     { id: 'strava', name: 'Strava', icon: <Link2 size={24} />, connected: true }, // Example of a connected app
   ];
+
+  // Effect to update activeTab if URL query parameter changes and load preferences
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabFromQuery = params.get('tab');
+    if (tabFromQuery && settingSections.find(s => s.id === tabFromQuery) && tabFromQuery !== activeTab) {
+      setActiveTab(tabFromQuery);
+    }
+
+    if (user?.preferences) {
+      setSelectedLanguage(user.preferences.language || 'fr');
+      setSelectedRegion(user.preferences.region || 'FR');
+    }
+  }, [location.search, activeTab, user]); // Rerun when query string, activeTab, or user object changes
+
+
+  const handleSaveLanguageRegion = () => {
+    if (user && updateUserPreferences) {
+      updateUserPreferences({
+        // It's crucial to spread existing preferences to not overwrite them
+        ...user.preferences,
+        language: selectedLanguage,
+        region: selectedRegion,
+      });
+      console.log('Language and region preferences saved!');
+      // Optionally, show a success toast/notification
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -254,6 +297,77 @@ export default function Settings() {
                         </button>
                     )}
                   </div>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
+          {activeTab === 'language' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card title="Langue et Région" className="bg-card text-card-foreground border-border">
+                <div className="space-y-6">
+                  {/* Language Selection */}
+                  <div>
+                    <label htmlFor="language-select" className="block text-sm font-medium text-foreground mb-1">
+                      Langue de l'application
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="language-select"
+                        value={selectedLanguage}
+                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                        className="input appearance-none bg-background text-foreground px-4 py-2 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-border w-full"
+                      >
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
+                        <option value="de">Deutsch</option>
+                      </select>
+                      <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none" size={16} />
+                    </div>
+                  </div>
+
+                  {/* Region Selection */}
+                  <div>
+                    <label htmlFor="region-select" className="block text-sm font-medium text-foreground mb-1">
+                      Région
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="region-select"
+                        value={selectedRegion}
+                        onChange={(e) => setSelectedRegion(e.target.value)}
+                        className="input appearance-none bg-background text-foreground px-4 py-2 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary border border-border w-full"
+                      >
+                        <option value="US">United States</option>
+                        <option value="FR">France</option>
+                        <option value="CA">Canada</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="DE">Germany</option>
+                      </select>
+                      <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none" size={16} />
+                    </div>
+                  </div>
+
+                  {/* Date Format Example */}
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-1">Exemple de format de date :</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date().toLocaleDateString(selectedLanguage + '-' + selectedRegion, {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-border flex justify-end">
+                  <button onClick={handleSaveLanguageRegion} className="btn btn-primary">
+                    Sauvegarder les modifications
+                  </button>
                 </div>
               </Card>
             </motion.div>
