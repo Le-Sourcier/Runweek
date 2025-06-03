@@ -89,7 +89,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 const sampleUser: User = {
   id: "1",
   name: "Alex Runner",
-  email: "alex@example.com", // Login with this email
+  email: "andre@runweek.fr", // Login with this email
   profileImage:
     "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150",
   joinedDate: "2023-05-15",
