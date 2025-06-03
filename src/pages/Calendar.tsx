@@ -210,7 +210,7 @@ export default function Calendar() {
           <p className="text-gray-600">Schedule and track your workouts</p>
         </div>
 
-        <button className="btn btn-primary flex items-center gap-2">
+        <button className="btn btn-primary flex items-center gap-2" onClick={handleOpenAddWorkoutModal}>
           <Plus size={16} />
           Add Workout
         </button>
@@ -377,7 +377,7 @@ export default function Calendar() {
               <p className="text-gray-500">
                 No workouts scheduled for this day
               </p>
-              <button className="mt-3 text-primary font-medium text-sm hover:underline">
+              <button className="mt-3 text-primary font-medium text-sm hover:underline" onClick={handleOpenAddWorkoutModal}>
                 Add a workout
               </button>
             </div>
