@@ -38,6 +38,23 @@ type User = {
   goals: UserGoal[];
   achievements: UserAchievement[];
   preferences?: UserPreferences; // Added preferences field
+  connectedDevices?: ConnectedDevice[]; // New field
+  socialAccounts?: SocialAccountConnection[]; // New field
+};
+
+export type SocialAccountConnection = {
+  id: string; // e.g., 'facebook', 'strava'
+  name: string;
+  connected: boolean;
+};
+
+export type ConnectedDevice = {
+  id: string;
+  name: string;
+  type: string; // e.g., 'Smartphone', 'Watch', 'Fitness Tracker'
+  lastSync: string; // ISO date string
+  status: 'connected' | 'disconnected_by_user' | 'sync_error';
+  // icon?: string; // Optional: for specific device icons later
 };
 
 // Define UserPreferences type
@@ -59,6 +76,18 @@ export interface UserPreferences {
   // Language and Region settings
   language?: string; // e.g., 'en', 'fr'
   region?: string; // e.g., 'US', 'FR'
+  notificationSettings?: { // New field
+    email: boolean;
+    push: boolean;
+    achievements: boolean;
+    reminders: boolean;
+    updates: boolean; // e.g., for product updates, newsletters
+  };
+  isTwoFactorEnabled?: boolean; // New field for 2FA status
+  syncSettings?: { // New field for sync preferences
+    autoSync: boolean;
+    backgroundSync: boolean;
+  };
 }
 
 // Define UserCredentials type for login
@@ -151,24 +180,64 @@ const sampleUser: User = {
     // Default language and region for sampleUser
     language: "en",
     region: "US",
+    notificationSettings: { // Default values
+      email: true,
+      push: true,
+      achievements: true,
+      reminders: true,
+      updates: false,
+    },
+    isTwoFactorEnabled: false, // Default 2FA status
+    syncSettings: {
+      autoSync: true,
+      backgroundSync: false,
+    },
   },
+  connectedDevices: [
+    {
+      id: 'd1',
+      name: 'Garmin Forerunner 955',
+      type: 'Montre connectée',
+      lastSync: new Date().toISOString(), // Use dynamic date for freshness
+      status: 'connected'
+    },
+    {
+      id: 'd2',
+      name: 'iPhone 15 Pro',
+      type: 'Smartphone',
+      lastSync: new Date(Date.now() - 3600 * 1000 * 24).toISOString(), // Example: 1 day ago
+      status: 'connected'
+    }
+  ],
+  socialAccounts: [
+    { id: 'facebook', name: 'Facebook', connected: false },
+    { id: 'twitter', name: 'Twitter', connected: false },
+    { id: 'instagram', name: 'Instagram', connected: false },
+    { id: 'linkedin', name: 'LinkedIn', connected: false },
+    { id: 'strava', name: 'Strava', connected: true },
+  ],
 };
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Default to false, login will set loading
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check localStorage
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!user;
 
-  // Remove the automatic user fetch, login will handle setting the user
-  // React.useEffect(() => {
-  //   setIsLoading(true);
-  //   setTimeout(() => {
-  //     setUser(sampleUser); // Or null if no persisted session
-  //     setIsLoading(false);
-  //   }, 1000);
-  // }, []);
+  React.useEffect(() => {
+    setIsLoading(true);
+    try {
+      const persistedUser = localStorage.getItem('user');
+      if (persistedUser) {
+        setUser(JSON.parse(persistedUser));
+      }
+    } catch (e) {
+      console.error("Failed to parse user from localStorage", e);
+      localStorage.removeItem('user'); // Clear corrupted data
+    }
+    setIsLoading(false);
+  }, []); // Empty dependency array to run only on mount
 
   const login = async (credentials: UserCredentials) => {
     setIsLoading(true);
@@ -182,6 +251,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     ) {
       // Hardcoded credentials
       setUser(sampleUser);
+      localStorage.setItem('user', JSON.stringify(sampleUser)); // Persist user
       setIsLoading(false);
     } else {
       setError("Invalid email or password.");
@@ -190,31 +260,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    localStorage.removeItem('user'); // Remove user from storage
     setUser(null);
     setError(null);
   };
 
   const updateUserProfile = (updatedProfileData: Partial<User>) => {
     setUser((prevUser) => {
-      if (!prevUser) return null; // Should not happen if called correctly
-      return { ...prevUser, ...updatedProfileData };
+      if (!prevUser) return null;
+      const updatedUser = { ...prevUser, ...updatedProfileData };
+      localStorage.setItem('user', JSON.stringify(updatedUser)); // Persist changes
+      return updatedUser;
     });
-    // In a real app, also save to localStorage if user session is persisted there
-    // localStorage.setItem('user', JSON.stringify({ ...user, ...updatedProfileData }));
   };
 
   const updateUserPreferences = (preferences: UserPreferences) => {
     setUser((prevUser) => {
       if (!prevUser) return null;
-      return {
+      const updatedUser = {
         ...prevUser,
-        preferences: { ...prevUser.preferences, ...preferences },
+        preferences: { ...(prevUser.preferences || {}), ...preferences },
       };
+      localStorage.setItem('user', JSON.stringify(updatedUser)); // Persist changes
+      return updatedUser;
     });
-    // Persist to localStorage if using it
-    // if (user) {
-    //   localStorage.setItem('user', JSON.stringify({ ...user, preferences: { ...user.preferences, ...preferences } }));
-    // }
   };
 
   const changePassword = async (

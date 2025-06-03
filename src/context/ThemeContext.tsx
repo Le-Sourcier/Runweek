@@ -13,15 +13,32 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // ThemeProvider component
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [colorPalette, setColorPalette] = useState<string>('default');
+  const [currentTheme, setCurrentThemeState] = useState<'light' | 'dark'>(() => {
+    const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    return storedTheme || 'light'; // Default to 'light' if nothing is stored
+  });
+  const [currentColorPalette, setCurrentColorPaletteState] = useState<string>(() => {
+    const storedPalette = localStorage.getItem('colorPalette');
+    return storedPalette || 'default'; // Default to 'default' if nothing is stored
+  });
+
+  // Functions to be exposed via context
+  const setTheme = (newTheme: 'light' | 'dark') => {
+    setCurrentThemeState(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  const setColorPalette = (newPalette: string) => {
+    setCurrentColorPaletteState(newPalette);
+    localStorage.setItem('colorPalette', newPalette);
+  };
 
   // Apply theme class to document.documentElement
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-  }, [theme]);
+    root.classList.add(currentTheme); // Use currentTheme from state
+  }, [currentTheme]);
 
   // Define color palettes
   // HSL values should correspond to the definitions in index.css for the respective palettes
@@ -77,9 +94,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Apply color palette CSS variables to the root element
   useEffect(() => {
     const root = window.document.documentElement;
-    const selectedPalette = paletteColors[colorPalette] || paletteColors.default;
+    const selectedPalette = paletteColors[currentColorPalette] || paletteColors.default;
 
-    console.log(`Applying palette: ${colorPalette}`);
+    console.log(`Applying palette: ${currentColorPalette}`);
     for (const [variable, value] of Object.entries(selectedPalette)) {
       root.style.setProperty(variable, value);
       // console.log(`Set ${variable} to ${value}`);
@@ -92,10 +109,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // For now, this assumes that the primary/secondary/accent variables are the main ones changed by palettes.
     // The base :root and .dark in index.css will provide the full shade spectrum for the "default" look.
 
-  }, [colorPalette, theme]); // Rerun if theme changes to re-apply palette over new base styles
+  }, [currentColorPalette, currentTheme]); // Rerun if theme changes to re-apply palette over new base styles
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colorPalette, setColorPalette }}>
+    <ThemeContext.Provider value={{ theme: currentTheme, setTheme, colorPalette: currentColorPalette, setColorPalette }}>
       {children}
     </ThemeContext.Provider>
   );

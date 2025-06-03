@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
 
 // Layout and Page Components
 import Layout from './components/layout/Layout';
@@ -61,6 +61,7 @@ const MainAppLayoutContent: React.FC = () => {
 // This component defines the application's routing structure
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUser();
+  const location = useLocation();
 
   // Optional: Add a loading indicator while checking authentication status
   // This is more relevant if UserContext performs an async check for a persisted session on startup.
@@ -80,7 +81,7 @@ const AppRoutes: React.FC = () => {
       {/* Protected Application Routes */}
       <Route
         path="/*" // This will match all paths not caught by the auth routes above
-        element={isAuthenticated ? <MainAppLayoutContent /> : <Navigate to="/login" replace />}
+        element={isAuthenticated ? <MainAppLayoutContent /> : <Navigate to="/login" state={{ from: location }} replace />}
       >
         {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
         <Route index element={<Dashboard />} /> {/* Default route for "/" after login */}
