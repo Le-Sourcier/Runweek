@@ -155,20 +155,25 @@ const sampleUser: User = {
 };
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Default to false, login will set loading
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check localStorage
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!user;
 
-  // Remove the automatic user fetch, login will handle setting the user
-  // React.useEffect(() => {
-  //   setIsLoading(true);
-  //   setTimeout(() => {
-  //     setUser(sampleUser); // Or null if no persisted session
-  //     setIsLoading(false);
-  //   }, 1000);
-  // }, []);
+  React.useEffect(() => {
+    setIsLoading(true);
+    try {
+      const persistedUser = localStorage.getItem('user');
+      if (persistedUser) {
+        setUser(JSON.parse(persistedUser));
+      }
+    } catch (e) {
+      console.error("Failed to parse user from localStorage", e);
+      localStorage.removeItem('user'); // Clear corrupted data
+    }
+    setIsLoading(false);
+  }, []); // Empty dependency array to run only on mount
 
   const login = async (credentials: UserCredentials) => {
     setIsLoading(true);
@@ -182,6 +187,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     ) {
       // Hardcoded credentials
       setUser(sampleUser);
+      localStorage.setItem('user', JSON.stringify(sampleUser)); // Persist user
       setIsLoading(false);
     } else {
       setError("Invalid email or password.");
@@ -190,6 +196,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    localStorage.removeItem('user'); // Remove user from storage
     setUser(null);
     setError(null);
   };

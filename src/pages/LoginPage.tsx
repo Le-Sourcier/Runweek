@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useUser, UserCredentials } from '../context/UserContext'; // UserCredentials imported
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Activity } from 'lucide-react'; // For logo/app name
 
 // Define an interface for form inputs - matches UserCredentials for simplicity here
@@ -10,6 +10,8 @@ interface LoginFormInputs extends UserCredentials {}
 const LoginPage: React.FC = () => {
   const { login, error, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
   const { register, handleSubmit, formState: { errors: formErrors } } = useForm<LoginFormInputs>();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -20,9 +22,9 @@ const LoginPage: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/'); // Redirect to dashboard or home
+      navigate(from, { replace: true }); // Redirect to 'from' or '/'
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
