@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import Card from '../components/ui/Card';
 import { Brain, Send, Calendar, Clock, BarChart2, Target, ChevronDown, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+// Removed motion import as it's not used after old chat UI removal, ChatInterface handles its own animations
+// import { motion } from 'framer-motion';
+import ChatInterface, { ChatMessage, Suggestion } from '../../components/chat/ChatInterface'; // Import ChatInterface
 
 // Mock data for coach tips
 const coachTips = [
@@ -53,38 +55,87 @@ const trainingPlans = [
 
 export default function Coach() {
   const { user } = useUser();
-  const [query, setQuery] = useState('');
-  const [conversation, setConversation] = useState<Array<{role: 'user' | 'coach', message: string}>>([
+  // const [query, setQuery] = useState(''); // Removed old query state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([ // Renamed and typed state
     {
-      role: 'coach',
-      message: "Hi there! I'm your running coach AI. How can I help you today with your training?"
+      id: 'init-' + Date.now(),
+      text: "Hi there! I'm your running coach AI. How can I help you today with your training?",
+      sender: 'ai',
+      timestamp: new Date()
     }
   ]);
+  const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
   
-  const handleSendMessage = () => {
-    if (!query.trim()) return;
+  const handleSendMessage = async (messageText: string) => { // Updated signature
+    if (!messageText.trim()) return;
     
-    // Add user message
-    setConversation(prev => [...prev, { role: 'user', message: query }]);
+    const userMessage: ChatMessage = {
+      id: 'user-' + Date.now(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+    setIsAiTyping(true);
     
     // Simulate coach response
     setTimeout(() => {
-      let response = '';
-      if (query.toLowerCase().includes('half marathon')) {
-        response = "For half marathon training, I recommend focusing on building your long run each week. Based on your recent activities, you should aim for a 14km long run this weekend, with two shorter runs during the week. Make sure to include a recovery day after your long run.";
-      } else if (query.toLowerCase().includes('pace')) {
-        response = "Your current average pace is 5:32 min/km. To improve, try incorporating tempo runs once a week, where you run at a comfortably hard pace (about 5:10 min/km) for 20-30 minutes after a warm-up.";
-      } else if (query.toLowerCase().includes('injury') || query.toLowerCase().includes('pain')) {
-        response = "I notice you're concerned about injury. It's always important to listen to your body. Make sure you're warming up properly before runs, and consider adding strength training 2 days per week to build resilience. If pain persists, please consult a healthcare professional.";
+      let responseText = '';
+      if (messageText.toLowerCase().includes('half marathon')) {
+        responseText = "For half marathon training, I recommend focusing on building your long run each week. Based on your recent activities, you should aim for a 14km long run this weekend, with two shorter runs during the week. Make sure to include a recovery day after your long run.";
+      } else if (messageText.toLowerCase().includes('pace')) {
+        responseText = "Your current average pace is 5:32 min/km. To improve, try incorporating tempo runs once a week, where you run at a comfortably hard pace (about 5:10 min/km) for 20-30 minutes after a warm-up.";
+      } else if (messageText.toLowerCase().includes('injury') || messageText.toLowerCase().includes('pain')) {
+        responseText = "I notice you're concerned about injury. It's always important to listen to your body. Make sure you're warming up properly before runs, and consider adding strength training 2 days per week to build resilience. If pain persists, please consult a healthcare professional.";
       } else {
-        response = "Based on your recent running data, I'd suggest focusing on consistency this week. Try for 3-4 runs with at least one day of rest between harder efforts. Your endurance is improving nicely, and we should capitalize on that momentum.";
+        responseText = "Based on your recent running data, I'd suggest focusing on consistency this week. Try for 3-4 runs with at least one day of rest between harder efforts. Your endurance is improving nicely, and we should capitalize on that momentum.";
       }
       
-      setConversation(prev => [...prev, { role: 'coach', message: response }]);
+      const aiMessage: ChatMessage = {
+        id: 'ai-' + Date.now(),
+        text: responseText,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+      setIsAiTyping(false);
     }, 1000);
     
-    // Clear input
-    setQuery('');
+    // setQuery(''); // Removed, ChatInterface handles its own input
+  };
+
+  const handleSuggestionClick = (suggestion: Suggestion) => {
+    const userMessage: ChatMessage = {
+      id: 'user-suggestion-' + Date.now(),
+      text: suggestion.text,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+    setIsAiTyping(true);
+
+    // Simulate AI response based on suggestion
+    setTimeout(() => {
+      const aiResponse: ChatMessage = {
+        id: 'ai-suggestion-response-' + Date.now(),
+        text: `Regarding "${suggestion.text}", let's explore that. (This is a demo AI response for suggestions)`,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, aiResponse]);
+      setIsAiTyping(false);
+    }, 1000);
+  };
+
+  const handleTalkToHumanClick = () => {
+    const systemMessage: ChatMessage = {
+      id: 'system-' + Date.now(),
+      text: 'Talk to Human requested. An expert will be notified (demo).',
+      sender: 'system',
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, systemMessage]);
+    console.log("Talk to human requested from main Coach page.");
   };
 
   return (
@@ -96,62 +147,21 @@ export default function Coach() {
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Coach chat */}
-        <Card className="lg:col-span-8 p-0 flex flex-col h-[600px]">
-          {/* Chat header */}
-          <div className="p-4 border-b flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white">
-              <Brain size={20} />
-            </div>
-            <div>
-              <h3 className="font-medium">Running Coach AI</h3>
-              <p className="text-sm text-gray-500">Personalized training advice</p>
-            </div>
-          </div>
-          
-          {/* Chat messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
-            {conversation.map((msg, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index, duration: 0.3 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    msg.role === 'user' 
-                      ? 'bg-primary text-white rounded-tr-none'
-                      : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                  }`}
-                >
-                  {msg.message}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* Chat input */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask your coach something..."
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <button 
-                onClick={handleSendMessage}
-                disabled={!query.trim()}
-                className="btn btn-primary flex items-center gap-2"
-              >
-                <Send size={16} />
-                Send
-              </button>
-            </div>
-          </div>
+        <Card className="lg:col-span-8 p-0 flex flex-col h-[600px] overflow-hidden"> {/* Added overflow-hidden */}
+          {/* ChatInterface will fill this card */}
+          <ChatInterface
+            initialMessages={chatMessages}
+            onSendMessage={handleSendMessage}
+            suggestionChips={[
+              { id: 's1', text: 'What was my average pace last week?' },
+              { id: 's2', text: 'Suggest a workout for today.' },
+              { id: 's3', text: 'How to prevent shin splints?' }
+            ]}
+            onSuggestionClick={handleSuggestionClick}
+            onTalkToHumanClick={handleTalkToHumanClick}
+            isLoadingAiResponse={isAiTyping}
+            // className="h-full" is default and should work with parent's h-[600px] and flex-col
+          />
         </Card>
         
         {/* Sidebar */}
