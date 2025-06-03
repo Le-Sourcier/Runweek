@@ -36,3 +36,11 @@ export type NotificationPreferences = {
     [key in NotificationType]: boolean;
   };
 };
+
+export type PersonalRecord = {
+  id: string; // unique identifier
+  distance: number; // in kilometers, e.g., 5, 10, 21.1, 42.2
+  time: string; // formatted as HH:MM:SS
+  date: string; // ISO date string, e.g., "2024-07-28"
+  notes?: string; // optional, for any additional details
+};

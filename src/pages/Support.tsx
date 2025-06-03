@@ -79,7 +79,35 @@ const tutorials = [
 export default function Support() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaqs, setExpandedFaqs] = useState<string[]>([]);
+  const [selectedHelpCategory, setSelectedHelpCategory] = useState<string | null>(null);
+
+  // Placeholder FAQs for selected categories
+  const categorySpecificFaqs: Record<string, { id: string; question: string; answer: string; categoryId?: string }[]> = {
+    'c1': [{ id: 'gs1', question: 'How do I sign up for Runweek?', answer: 'Visit our website and click the "Sign Up" button. Follow the on-screen instructions.' }, { id: 'gs2', question: 'What are the main features?', answer: 'Run tracking, AI coaching, goal setting, achievements, and more!' }],
+    'c2': [{ id: 'as1', question: 'How can I change my registered email address?', answer: 'Go to Profile > Edit Profile to update your email.' }, { id: 'as2', question: 'Where can I manage my subscription?', answer: 'Subscription details can be found in Settings > Billing.' }],
+    'c3': [{ id: 'td1', question: 'My GPS data seems inaccurate, what can I do?', answer: 'Ensure your device has a clear view of the sky and that location services are enabled with high accuracy.' }],
+    'c4': [{ id: 'ga1', question: 'How are goal completion percentages calculated?', answer: 'It is based on the progress you make towards the target you set for each goal.' }],
+    'c5': [{ id: 'ai1', question: 'How often does the AI coach provide new recommendations?', answer: 'The AI coach typically updates recommendations weekly, or after significant changes in your training.' }],
+    'c6': [{ id: 'ts1', question: 'The app is crashing, what should I do?', answer: 'Try restarting the app. If the problem persists, check for updates or contact our support team.' }],
+  };
   
+  let displayedFaqs = faqs; // Default to all FAQs
+  let faqTitle = "Frequently Asked Questions";
+
+  if (selectedHelpCategory) {
+    const category = helpCategories.find(c => c.id === selectedHelpCategory);
+    if (category) {
+      faqTitle = `FAQs for ${category.title}`;
+      displayedFaqs = categorySpecificFaqs[selectedHelpCategory] ||
+                      [{id: 'cat_ph', question: `No specific FAQs for ${category.title} yet.`, answer: 'Placeholder content for this category will appear here. Broader FAQs are shown below.'}, ...faqs];
+      if (!categorySpecificFaqs[selectedHelpCategory]) {
+         // If no specific FAQs, we can also choose to show *only* the placeholder message
+         // displayedFaqs = [{id: 'cat_ph', question: `Content for ${category.title}`, answer: 'Placeholder content for this category will appear here.'}];
+      }
+    }
+  }
+
+
   // Toggle FAQ expansion
   const toggleFaq = (id: string) => {
     setExpandedFaqs(prev => 
@@ -114,15 +142,20 @@ export default function Support() {
             <motion.div
               key={category.id}
               whileHover={{ scale: 1.02 }}
-              className="p-4 border rounded-lg hover:border-primary hover:shadow-sm transition-all cursor-pointer"
+              onClick={() => setSelectedHelpCategory(category.id === selectedHelpCategory ? null : category.id)}
+              className={`p-4 border rounded-lg hover:border-primary hover:shadow-sm transition-all cursor-pointer ${
+                selectedHelpCategory === category.id ? 'border-primary bg-primary-50 dark:bg-primary-900/30 shadow-md' : 'dark:border-border'
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center text-primary shrink-0">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                  selectedHelpCategory === category.id ? 'bg-primary text-primary-foreground' : 'bg-primary bg-opacity-10 dark:bg-muted text-primary dark:text-primary-300'
+                }`}>
                   {category.icon}
                 </div>
                 <div>
-                  <h3 className="font-medium">{category.title}</h3>
-                  <p className="text-sm text-gray-500">{category.count} articles</p>
+                  <h3 className={`font-medium ${selectedHelpCategory === category.id ? 'text-primary dark:text-primary-300' : 'text-foreground'}`}>{category.title}</h3>
+                  <p className={`text-sm ${selectedHelpCategory === category.id ? 'text-primary/80 dark:text-primary-300/80' : 'text-muted-foreground'}`}>{category.count} articles</p>
                 </div>
               </div>
             </motion.div>
@@ -133,22 +166,22 @@ export default function Support() {
       {/* Quick Help Tabs */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* FAQs */}
-        <Card className="md:col-span-7" title="Frequently Asked Questions">
+        <Card className="md:col-span-7" title={faqTitle}>
           <div className="space-y-3">
-            {faqs.map((faq) => (
+            {displayedFaqs.map((faq) => (
               <div 
                 key={faq.id}
-                className="border rounded-lg overflow-hidden"
+                className="border dark:border-border rounded-lg overflow-hidden"
               >
                 <button 
-                  className="w-full p-4 flex items-center justify-between hover:bg-gray-50 focus:outline-none"
+                  className="w-full p-4 flex items-center justify-between hover:bg-muted/50 dark:hover:bg-muted/20 focus:outline-none"
                   onClick={() => toggleFaq(faq.id)}
                 >
-                  <h3 className="font-medium text-left">{faq.question}</h3>
+                  <h3 className="font-medium text-left text-foreground">{faq.question}</h3>
                   {expandedFaqs.includes(faq.id) ? (
-                    <ChevronUp size={18} className="text-gray-500 shrink-0" />
+                    <ChevronUp size={18} className="text-muted-foreground shrink-0" />
                   ) : (
-                    <ChevronDown size={18} className="text-gray-500 shrink-0" />
+                    <ChevronDown size={18} className="text-muted-foreground shrink-0" />
                   )}
                 </button>
                 
@@ -159,14 +192,17 @@ export default function Support() {
                     transition={{ duration: 0.3 }}
                     className="px-4 pb-4"
                   >
-                    <p className="text-gray-600">{faq.answer}</p>
+                    <p className="text-muted-foreground">{faq.answer}</p>
                   </motion.div>
                 )}
               </div>
             ))}
           </div>
           
-          <button className="mt-4 text-primary font-medium flex items-center gap-1 hover:underline">
+          <button
+            onClick={() => setSelectedHelpCategory(null)}
+            className="mt-4 text-primary font-medium flex items-center gap-1 hover:underline"
+          >
             View all FAQs <ArrowRight size={14} />
           </button>
         </Card>

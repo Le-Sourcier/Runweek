@@ -3,6 +3,143 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Base Colors */
+    --background: 210 40% 98%; /* #F8FAFC */
+    --foreground: 215 28% 17%; /* #1E293B - Slightly adjusted for better contrast */
+
+    /* Cards & Popovers */
+    --card: 210 40% 98%; /* #F8FAFC */
+    --card-foreground: 215 28% 17%; /* #1E293B */
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 215 28% 17%; /* #1E293B */
+
+    /* Borders & Inputs */
+    --border: 215 20% 90%; /* Lightened #CBD5E1 for softer borders */
+    --input: 215 20% 85%; /* Slightly darker than border for input fields */
+    --ring: 238 82% 76%; /* Lighter shade of primary for focus rings */
+
+    /* Primary Palette (Default - Indigo-ish) */
+    --primary: 238 82% 69%; /* #6366F1 */
+    --primary-50: 238 82% 96%;
+    --primary-100: 238 82% 92%;
+    --primary-200: 238 82% 87%;
+    --primary-300: 238 82% 81%;
+    --primary-400: 238 82% 75%;
+    --primary-500: 238 82% 69%; /* DEFAULT */
+    --primary-600: 238 70% 62%;
+    --primary-700: 238 60% 55%;
+    --primary-800: 238 50% 48%;
+    --primary-900: 238 45% 40%;
+    --primary-foreground: 0 0% 100%; /* White */
+
+    /* Secondary Palette (Default - Green) */
+    --secondary: 161 83% 39%; /* #10B981 */
+    --secondary-50: 161 83% 95%;
+    --secondary-100: 161 83% 89%;
+    --secondary-200: 161 83% 79%;
+    --secondary-300: 161 83% 69%;
+    --secondary-400: 161 83% 59%;
+    --secondary-500: 161 83% 39%; /* DEFAULT */
+    --secondary-600: 161 70% 33%;
+    --secondary-700: 161 60% 28%;
+    --secondary-800: 161 50% 23%;
+    --secondary-900: 161 45% 19%;
+    --secondary-foreground: 0 0% 100%; /* White */
+
+    /* Accent Palette (Default - Amber/Orange) */
+    --accent: 38 93% 50%; /* #F59E0B */
+    --accent-50: 38 93% 95%;
+    --accent-100: 38 93% 89%;
+    --accent-200: 38 93% 79%;
+    --accent-300: 38 93% 69%;
+    --accent-400: 38 93% 59%;
+    --accent-500: 38 93% 50%; /* DEFAULT */
+    --accent-600: 38 80% 44%;
+    --accent-700: 38 70% 38%;
+    --accent-800: 38 60% 32%;
+    --accent-900: 38 50% 27%;
+    --accent-foreground: 215 28% 17%; /* Dark for contrast */
+
+    /* Destructive Palette (Default - Red) */
+    --destructive: 0 84% 60%; /* #EF4444 */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    /* Muted Colors */
+    --muted: 215 20% 93%; /* Softer gray */
+    --muted-foreground: 215 15% 50%; /* Dimmed text */
+
+    --radius: 0.5rem; /* For border radius consistency */
+  }
+
+  .dark {
+    /* Base Colors */
+    --background: 215 28% 17%; /* #1E293B */
+    --foreground: 210 40% 98%; /* #F8FAFC */
+
+    /* Cards & Popovers */
+    --card: 215 28% 17%; /* #1E293B */
+    --card-foreground: 210 40% 98%; /* #F8FAFC */
+    --popover: 224 71% 4%; /* #020817 - Very dark */
+    --popover-foreground: 210 40% 98%; /* #F8FAFC */
+
+    /* Borders & Inputs */
+    --border: 215 20% 30%; /* Darkened border */
+    --input: 215 20% 40%;  /* Darkened input */
+    --ring: 238 70% 55%; /* Adjusted primary for dark rings */
+
+    /* Primary Palette (Default - Indigo-ish for Dark Mode) */
+    /* Keep similar to light or adjust if needed, often brighter/more saturated */
+    --primary: 238 75% 72%; /* Brighter #7986CB */
+    --primary-50: 238 75% 30%;
+    --primary-100: 238 75% 38%;
+    --primary-200: 238 75% 46%;
+    --primary-300: 238 75% 54%;
+    --primary-400: 238 75% 63%;
+    --primary-500: 238 75% 72%; /* DEFAULT */
+    --primary-600: 238 80% 78%;
+    --primary-700: 238 85% 82%;
+    --primary-800: 238 90% 86%;
+    --primary-900: 238 95% 90%;
+    --primary-foreground: 0 0% 100%; /* White, could be dark if primary is very light */
+
+    /* Secondary Palette (Default - Green for Dark Mode) */
+    --secondary: 161 70% 45%; /* Brighter #2DD4BF */
+    --secondary-50: 161 70% 20%;
+    --secondary-100: 161 70% 26%;
+    --secondary-200: 161 70% 32%;
+    --secondary-300: 161 70% 38%;
+    --secondary-400: 161 70% 42%;
+    --secondary-500: 161 70% 45%; /* DEFAULT */
+    --secondary-600: 161 75% 55%;
+    --secondary-700: 161 80% 65%;
+    --secondary-800: 161 85% 75%;
+    --secondary-900: 161 90% 85%;
+    --secondary-foreground: 215 28% 17%; /* Dark for contrast */
+
+    /* Accent Palette (Default - Amber/Orange for Dark Mode) */
+    --accent: 38 90% 55%; /* Brighter #FBBF24 */
+    --accent-50: 38 90% 25%;
+    --accent-100: 38 90% 30%;
+    --accent-200: 38 90% 35%;
+    --accent-300: 38 90% 40%;
+    --accent-400: 38 90% 48%;
+    --accent-500: 38 90% 55%; /* DEFAULT */
+    --accent-600: 38 95% 60%;
+    --accent-700: 38 100% 65%;
+    --accent-800: 38 100% 70%;
+    --accent-900: 38 100% 75%;
+    --accent-foreground: 215 28% 17%; /* Dark for contrast */
+
+    /* Destructive Palette (Default - Red for Dark Mode) */
+    --destructive: 0 75% 65%; /* Brighter #F87171 */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    /* Muted Colors */
+    --muted: 215 20% 25%; /* Darker gray */
+    --muted-foreground: 215 15% 65%; /* Lighter muted text */
+  }
+
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -58,7 +195,7 @@
 @layer components {
   /* Card Components */
   .card {
-    @apply bg-white rounded-xl shadow-card border border-gray-100/50 p-6 transition-shadow hover:shadow-card-hover;
+    @apply bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 transition-shadow hover:shadow-xl; /* Updated to use theme variables & standard shadow/radius */
   }
   
   /* Button Variants */
