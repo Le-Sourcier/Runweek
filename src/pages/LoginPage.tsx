@@ -11,7 +11,10 @@ const LoginPage: React.FC = () => {
   const { login, error, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
+  const fromLocation = location.state?.from; // Get the full 'from' location object
+  const redirectTo = fromLocation
+    ? `${fromLocation.pathname}${fromLocation.search || ''}${fromLocation.hash || ''}`
+    : '/';
   const { register, handleSubmit, formState: { errors: formErrors } } = useForm<LoginFormInputs>();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -22,9 +25,9 @@ const LoginPage: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true }); // Redirect to 'from' or '/'
+      navigate(redirectTo, { replace: true }); // Redirect to 'from' or '/'
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
