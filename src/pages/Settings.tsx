@@ -68,8 +68,6 @@ export default function Settings() {
     achievements: true,
     reminders: true,
     updates: false
-    reminders: true,
-    updates: false
   });
   const [syncSettings, setSyncSettings] = useState({
     autoSync: true,
