@@ -39,103 +39,89 @@ type User = {
   achievements: UserAchievement[];
 };
 
+// Define UserCredentials type for login
+export type UserCredentials = {
+  email: string;
+  password?: string; // Password might be optional if using OAuth or magic links later
+};
+
 type UserContextType = {
   user: User | null;
   isLoading: boolean;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  isAuthenticated: boolean; // Added for easier auth checks
+  error: string | null; // For login/auth errors
+  login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
+  logout: () => void;
+  // setUser: React.Dispatch<React.SetStateAction<User | null>>; // Keep if direct manipulation is needed, or remove if only via login/logout
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+// Hardcoded sample user for login
+const sampleUser: User = {
+  id: '1',
+  name: 'Alex Runner',
+  email: 'alex@example.com', // Login with this email
+  profileImage: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150',
+  joinedDate: '2023-05-15',
+  stats: {
+    totalDistance: 327.5,
+    weeklyDistance: 23.4,
+    totalRuns: 42,
+    averagePace: '5:32',
+    streakDays: 12,
+    level: 8,
+    points: 3450,
+  },
+  goals: [
+    { id: 'g1', title: 'Weekly Distance', target: 40, current: 23.4, unit: 'km', deadline: '2025-06-01', completed: false },
+    { id: 'g2', title: 'Run a Half Marathon', target: 21.1, current: 15, unit: 'km', deadline: '2025-07-15', completed: false },
+  ],
+  achievements: [
+    { id: 'a1', title: 'First Run', description: 'Completed your first run', icon: 'Award', earnedDate: '2023-05-18' },
+    { id: 'a2', title: '10K Club', description: 'Completed a 10K run', icon: 'Medal', earnedDate: '2023-06-02' },
+  ]
+};
+
+
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Default to false, login will set loading
   const [user, setUser] = useState<User | null>(null);
-  
-  // Simulating user fetch
-  React.useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setUser({
-        id: '1',
-        name: 'Alex Runner',
-        email: 'alex@example.com',
-        profileImage: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150',
-        joinedDate: '2023-05-15',
-        stats: {
-          totalDistance: 327.5,
-          weeklyDistance: 23.4,
-          totalRuns: 42,
-          averagePace: '5:32',
-          streakDays: 12,
-          level: 8,
-          points: 3450,
-        },
-        goals: [
-          {
-            id: 'g1',
-            title: 'Weekly Distance',
-            target: 40,
-            current: 23.4,
-            unit: 'km',
-            deadline: '2025-06-01',
-            completed: false,
-          },
-          {
-            id: 'g2',
-            title: 'Run a Half Marathon',
-            target: 21.1,
-            current: 15,
-            unit: 'km',
-            deadline: '2025-07-15',
-            completed: false,
-          },
-          {
-            id: 'g3',
-            title: 'Morning Runs',
-            target: 15,
-            current: 12,
-            unit: 'runs',
-            deadline: '2025-06-30',
-            completed: false,
-          },
-        ],
-        achievements: [
-          {
-            id: 'a1',
-            title: 'First Run',
-            description: 'Completed your first run',
-            icon: 'Award',
-            earnedDate: '2023-05-18',
-          },
-          {
-            id: 'a2',
-            title: '10K Club',
-            description: 'Completed a 10K run',
-            icon: 'Medal',
-            earnedDate: '2023-06-02',
-          },
-          {
-            id: 'a3',
-            title: 'Early Bird',
-            description: 'Completed 5 runs before 7 AM',
-            icon: 'Sunrise',
-            earnedDate: '2023-07-10',
-          },
-          {
-            id: 'a4',
-            title: 'Half Marathon',
-            description: 'Completed a half marathon distance',
-            icon: 'Trophy',
-            earnedDate: null,
-          },
-        ]
-      });
+  const [error, setError] = useState<string | null>(null);
+
+  const isAuthenticated = !!user;
+
+  // Remove the automatic user fetch, login will handle setting the user
+  // React.useEffect(() => {
+  //   setIsLoading(true);
+  //   setTimeout(() => {
+  //     setUser(sampleUser); // Or null if no persisted session
+  //     setIsLoading(false);
+  //   }, 1000);
+  // }, []);
+
+  const login = async (credentials: UserCredentials) => {
+    setIsLoading(true);
+    setError(null);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (credentials.email === sampleUser.email && credentials.password === 'password123') { // Hardcoded credentials
+      setUser(sampleUser);
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    } else {
+      setError('Invalid email or password.');
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setError(null);
+  };
   
   return (
-    <UserContext.Provider value={{ user, isLoading, setUser }}>
+    <UserContext.Provider value={{ user, isLoading, isAuthenticated, error, login, logout }}>
       {children}
     </UserContext.Provider>
   );

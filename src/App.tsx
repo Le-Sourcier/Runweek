@@ -1,4 +1,6 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet } from 'react-router-dom';
+
+// Layout and Page Components
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Statistics from './pages/Statistics';
@@ -10,39 +12,37 @@ import Profile from './pages/Profile';
 import Support from './pages/Support';
 import Settings from './pages/Settings';
 import PersonalRecords from './pages/PersonalRecords';
-import { UserProvider } from './context/UserContext';
+
+// Auth Page Components
+import LoginPage from './pages/LoginPage';
+import RegistrationPage from './pages/RegistrationPage';
+import PasswordRecoveryRequestPage from './pages/PasswordRecoveryRequestPage';
+import PasswordResetPage from './pages/PasswordResetPage';
+
+// Context Providers
+import { UserProvider, useUser } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { PRProvider } from './context/PRContext';
+
+// Other Imports
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-function App() {
+// This component wraps the main application layout and its specific context providers
+const MainAppLayoutContent: React.FC = () => {
   return (
-    <UserProvider>
-      <SearchProvider>
-        <NotificationProvider>
-          <PRProvider>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/statistics" element={<Statistics />} />
-                <Route path="/coach" element={<Coach />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/personal-records" element={<PersonalRecords />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </Layout>
-          </PRProvider>
+    <SearchProvider>
+      <NotificationProvider>
+        <PRProvider>
+          <Layout> {/* Layout should contain an <Outlet /> for the nested routes */}
+            <Outlet />
+          </Layout>
           <ToastContainer
-            position="top-right" // Using template's props
-            autoClose={3000}    // Using template's props
+            position="top-right"
+            autoClose={3000}
             hideProgressBar={false}
-            newestOnTop={false} // Using template's props
+            newestOnTop={false}
             closeOnClick
             rtl={false}
             pauseOnFocusLoss
@@ -50,8 +50,59 @@ function App() {
             pauseOnHover
             theme="light"
           />
-        </NotificationProvider>
-      </SearchProvider>
+        </PRProvider>
+      </NotificationProvider>
+    </SearchProvider>
+  );
+};
+
+// This component defines the application's routing structure
+const AppRoutes: React.FC = () => {
+  const { isAuthenticated, isLoading } = useUser();
+
+  // Optional: Add a loading indicator while checking authentication status
+  // This is more relevant if UserContext performs an async check for a persisted session on startup.
+  // For this example, UserContext initializes `isLoading` to false if no user.
+  // if (isLoading) {
+  //   return <div>Loading application...</div>; // Or a global spinner component
+  // }
+
+  return (
+    <Routes>
+      {/* Public Authentication Routes: Redirect if already authenticated */}
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegistrationPage />} />
+      <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" replace /> : <PasswordRecoveryRequestPage />} />
+      <Route path="/reset-password/:token" element={isAuthenticated ? <Navigate to="/" replace /> : <PasswordResetPage />} />
+
+      {/* Protected Application Routes */}
+      <Route
+        path="/*" // This will match all paths not caught by the auth routes above
+        element={isAuthenticated ? <MainAppLayoutContent /> : <Navigate to="/login" replace />}
+      >
+        {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
+        <Route index element={<Dashboard />} /> {/* Default route for "/" after login */}
+        <Route path="statistics" element={<Statistics />} />
+        <Route path="coach" element={<Coach />} />
+        <Route path="calendar" element={<Calendar />} />
+        <Route path="goals" element={<Goals />} />
+        <Route path="achievements" element={<Achievements />} />
+        <Route path="personal-records" element={<PersonalRecords />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="support" element={<Support />} />
+        <Route path="settings" element={<Settings />} />
+        {/* Fallback for any unmatched protected routes - redirect to dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
+};
+
+// Main App component: Sets up UserProvider and renders the AppRoutes
+function App() {
+  return (
+    <UserProvider>
+      <AppRoutes />
     </UserProvider>
   );
 }
