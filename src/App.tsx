@@ -8,6 +8,7 @@ import Goals from './pages/Goals';
 import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
+import Settings from './pages/Settings';
 import { UserProvider } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -29,6 +30,7 @@ function App() {
               <Route path="/achievements" element={<Achievements />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/support" element={<Support />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </Layout>
           <ToastContainer
