@@ -37,8 +37,9 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>
-            <ToastContainer
-              position="bottom-right"
+          </PRProvider> {/* PRProvider closes before ToastContainer */}
+          <ToastContainer
+            position="bottom-right"
             autoClose={5000}
             hideProgressBar={false}
             newestOnTop
