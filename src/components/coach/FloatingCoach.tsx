@@ -1,7 +1,7 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useFloatingCoach } from '../../context/FloatingCoachContext';
-import { Bot, X, ChevronsLeftRight as PositionIcon } from 'lucide-react'; // Using ChevronsLeftRight for position toggle
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useFloatingCoach } from "../../context/FloatingCoachContext";
+import { Bot, X, ChevronsLeftRight as PositionIcon } from "lucide-react"; // Using ChevronsLeftRight for position toggle
 
 const FloatingCoach: React.FC = () => {
   const {
@@ -13,14 +13,30 @@ const FloatingCoach: React.FC = () => {
     openCoachPanel, // Use openCoachPanel for FAB to ensure coach is active
   } = useFloatingCoach();
 
-  const positionClasses = coachPosition === 'bottom-right'
-    ? 'bottom-4 right-4 items-end'
-    : 'bottom-4 left-4 items-start';
+  const positionClasses =
+    coachPosition === "bottom-right"
+      ? "bottom-4 right-4 items-end"
+      : "bottom-4 left-4 items-start";
 
   const panelVariants = {
-    hidden: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2, ease: "easeOut" } },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.3, ease: "easeIn" } },
-    exit: { opacity: 0, scale: 0.8, y: 30, transition: { duration: 0.2, ease: "easeOut" } },
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50,
+      transition: { duration: 0.2, ease: "easeOut" },
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { duration: 0.3, ease: "easeIn" },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: 30,
+      transition: { duration: 0.2, ease: "easeOut" },
+    },
   };
 
   const fabVariants = {
@@ -49,10 +65,18 @@ const FloatingCoach: React.FC = () => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-3 border-b border-border bg-muted/50">
-              <h3 className="font-semibold text-sm text-foreground">Coach AI</h3>
+              <h3 className="font-semibold text-sm text-foreground">
+                Coach AI
+              </h3>
               <div className="flex items-center gap-1">
                 <motion.button
-                  onClick={() => setCoachPosition(coachPosition === 'bottom-left' ? 'bottom-right' : 'bottom-left')}
+                  onClick={() =>
+                    setCoachPosition(
+                      coachPosition === "bottom-left"
+                        ? "bottom-right"
+                        : "bottom-left"
+                    )
+                  }
                   className="p-1.5 rounded-md hover:bg-background/80 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Toggle coach position"
                   whileTap={{ scale: 0.9 }}

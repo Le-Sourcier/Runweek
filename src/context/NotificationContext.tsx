@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Notification, NotificationPreferences, NotificationType } from '../types';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { Notification, NotificationPreferences } from "../types";
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -12,7 +18,9 @@ interface NotificationContextType {
   updatePreferences: (preferences: Partial<NotificationPreferences>) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   email: true,
@@ -23,52 +31,51 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
     goal: true,
     system: true,
     social: true,
-    reminder: true
-  }
+    reminder: true,
+  },
 };
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
-  
+  const [preferences, setPreferences] =
+    useState<NotificationPreferences>(DEFAULT_PREFERENCES);
+
   useEffect(() => {
     // Mock initial notifications
     setNotifications([
       {
-        id: '1',
-        type: 'achievement',
-        title: 'New Achievement!',
-        message: 'You\'ve completed your first 5K run!',
+        id: "1",
+        type: "achievement",
+        title: "New Achievement!",
+        message: "You've completed your first 5K run!",
         timestamp: Date.now(),
         read: false,
-        actionUrl: '/achievements',
-        icon: 'trophy'
+        actionUrl: "/achievements",
+        icon: "trophy",
       },
       // Add more mock notifications
     ]);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
       )
     );
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, read: true }))
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
     );
   };
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev =>
-      prev.filter(notification => notification.id !== id)
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
     );
   };
 
@@ -76,8 +83,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications([]);
   };
 
-  const updatePreferences = (newPreferences: Partial<NotificationPreferences>) => {
-    setPreferences(prev => ({ ...prev, ...newPreferences }));
+  const updatePreferences = (
+    newPreferences: Partial<NotificationPreferences>
+  ) => {
+    setPreferences((prev) => ({ ...prev, ...newPreferences }));
   };
 
   return (
@@ -90,7 +99,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         markAllAsRead,
         deleteNotification,
         deleteAllNotifications,
-        updatePreferences
+        updatePreferences,
       }}
     >
       {children}
@@ -101,7 +110,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider"
+    );
   }
   return context;
 }
