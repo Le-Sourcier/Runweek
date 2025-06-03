@@ -346,7 +346,7 @@ export default function Calendar() {
                 className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
               >
                 <div className="flex justify-between items-start mb-1">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center bg-primary/10 text-primary`}> {/* Icon theming */}
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-primary/10 text-primary"> {/* Icon theming */}
                     {event.type === 'Run' ? <TrendingUp size={16} /> :
                      event.type === 'Bike' ? <ActivityIcon size={16} /> : // Using ActivityIcon as placeholder for Bike/Swim/Gym
                      event.type === 'Swim' ? <ActivityIcon size={16} /> :
