@@ -14,6 +14,7 @@ interface FloatingCoachContextType extends FloatingCoachState {
   toggleCoachPanelOpen: () => void;
   openCoachPanel: () => void;
   closeCoachPanel: () => void;
+  deactivateFloatingCoach: () => void; // Added new function signature
 }
 
 // 3. Create the context
@@ -58,6 +59,11 @@ export const FloatingCoachProvider: React.FC<FloatingCoachProviderProps> = ({ ch
     setIsCoachPanelOpen(false);
   };
 
+  const deactivateFloatingCoach = () => {
+    setIsFloatingCoachActive(false);
+    setIsCoachPanelOpen(false); // Also ensure the panel is marked as closed
+  };
+
   const value = {
     isFloatingCoachActive,
     coachPosition,
@@ -67,6 +73,7 @@ export const FloatingCoachProvider: React.FC<FloatingCoachProviderProps> = ({ ch
     toggleCoachPanelOpen,
     openCoachPanel,
     closeCoachPanel,
+    deactivateFloatingCoach, // Added new function to context value
   };
 
   return (
