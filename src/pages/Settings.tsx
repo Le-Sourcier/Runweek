@@ -204,7 +204,7 @@ export default function Settings() {
               <button
                 key={section.id}
                 onClick={() => setActiveTab(section.id)}
-                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors ${
+                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
                   activeTab === section.id
                     ? 'bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -236,7 +236,7 @@ export default function Settings() {
           </nav>
 
           <div className="mt-6 pt-6 border-t dark:border-gray-700">
-            <button className="w-full p-3 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+            <button className="w-full p-3 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]">
               <Trash2 size={20} />
               <span className="font-medium">Supprimer le compte</span>
             </button>
@@ -260,7 +260,7 @@ export default function Settings() {
                         <button
                           key={option}
                           onClick={() => setCurrentThemeOption(option)}
-                          className={`px-4 py-2 rounded-lg font-medium ${
+                          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97] ${
                             currentThemeOption === option
                               ? 'bg-primary text-white'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -279,7 +279,7 @@ export default function Settings() {
                         <button
                           key={palette.id}
                           onClick={() => setColorPalette(palette.id)}
-                          className={`p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                          className={`p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-transform duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97] ${
                             colorPalette === palette.id ? 'ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-primary' : ''
                           }`}
                           title={palette.name}
@@ -296,7 +296,7 @@ export default function Settings() {
                      {colorPalette !== 'default' && (
                         <button
                             onClick={() => setColorPalette('default')}
-                            className="mt-4 text-sm text-primary hover:underline"
+                            className="mt-4 text-sm text-primary hover:underline transition-colors duration-150 ease-in-out"
                         >
                             Réinitialiser la palette
                         </button>

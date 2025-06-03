@@ -68,7 +68,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
     <div className="space-y-6">
       <button
         onClick={onBack}
-        className="btn btn-ghost mb-4 text-sm hover:bg-muted transition-colors"
+        className="btn btn-ghost mb-4 text-sm hover:bg-muted" /* transition-colors is part of .btn's transition-all */
       >
         <ArrowLeft size={16} className="mr-1" />
         Back to Account Settings
@@ -123,7 +123,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
           <div className="pt-2">
             <button
               type="submit"
-              className="btn btn-primary w-full sm:w-auto transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="btn btn-primary w-full sm:w-auto" /* Inherits hover/active scale from .btn */
               disabled={isChangingPassword}
             >
               {isChangingPassword ? (
@@ -147,7 +147,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
           </div>
           <button
             onClick={handleToggleTwoFactor}
-            className={`btn ${isTwoFactorEnabled ? 'btn-outline border-destructive text-destructive hover:bg-destructive/10' : 'btn-primary'} transition-all hover:scale-[1.02] active:scale-[0.98]`}
+            className={`btn ${isTwoFactorEnabled ? 'btn-outline border-destructive text-destructive hover:bg-destructive/10' : 'btn-primary'}`} /* Inherits hover/active scale from .btn */
           >
             <ShieldCheck size={16} className="mr-2" />
             {isTwoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}

@@ -35,7 +35,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-lg hover:bg-muted md:hidden"
+            className="p-2 rounded-lg hover:bg-muted md:hidden transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
           >
             <Menu size={20} className="text-muted-foreground" />
           </button>
@@ -63,7 +63,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           {/* Notifications */}
-          <button className="p-2 rounded-full hover:bg-muted relative">
+          <button className="p-2 rounded-full hover:bg-muted relative transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]">
             <Bell size={20} className="text-muted-foreground" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
           </button>
@@ -71,7 +71,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Theme Toggle Button */}
           <button
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="p-2 rounded-full hover:bg-muted"
+            className="p-2 rounded-full hover:bg-muted transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
             aria-label="Toggle theme"
             data-testid="theme-toggle-button" // Added data-testid
           >

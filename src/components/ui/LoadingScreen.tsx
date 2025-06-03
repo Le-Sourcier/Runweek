@@ -10,7 +10,7 @@ export default function LoadingScreen() {
         transition={{ duration: 0.5 }}
         className="flex flex-col items-center"
       >
-        <Activity className="h-12 w-12 text-primary mb-4" />
+        <Activity className="h-12 w-12 text-primary mb-4 animate-spin" />
         <h1 className="text-2xl font-bold mb-2">Runweek</h1>
         <p className="text-gray-500 mb-8">Loading your fitness dashboard...</p>
         

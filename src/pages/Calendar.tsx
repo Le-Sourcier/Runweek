@@ -14,6 +14,7 @@ import {
   Activity as ActivityIcon, // For workout type
   Tag as TagIcon, // For workout type as well
   PlusCircle, // For Add Workout Button
+  Trash2, // For Delete button
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -120,6 +121,7 @@ export default function Calendar() {
     const days = [];
     const daysCount = daysInMonth(currentYear, currentMonth);
     const firstDay = firstDayOfMonth(currentYear, currentMonth);
+    const todayStr = new Date().toISOString().split("T")[0]; // Define todayStr
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
@@ -130,7 +132,9 @@ export default function Calendar() {
     for (let i = 1; i <= daysCount; i++) {
       const date = new Date(currentYear, currentMonth, i);
       const formattedDate = date.toISOString().split("T")[0];
-      const hasEvent = events.some((event) => event.date === formattedDate);
+      const hasEvent = events.some(
+        (event) => event.date === formattedDate && formattedDate >= todayStr // Updated hasEvent logic
+      );
 
       days.push({
         day: i,
@@ -160,7 +164,10 @@ export default function Calendar() {
     return events.filter((event) => event.date === date);
   };
 
-  const selectedDateEvents = getEventsForDate(selectedDate);
+  const todayStr = new Date().toISOString().split("T")[0]; // Define todayStr for selectedDateEvents
+  const selectedDateEvents = selectedDate < todayStr
+    ? []
+    : events.filter((event) => event.date === selectedDate); // Updated selectedDateEvents logic
 
   const handleOpenAddWorkoutModal = () => {
     setNewWorkoutTitle("");
@@ -202,6 +209,12 @@ export default function Calendar() {
     setIsAddWorkoutModalOpen(false);
   };
 
+  const handleDeleteWorkout = (eventId: string) => {
+    if (window.confirm("Are you sure you want to delete this workout?")) {
+      setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -226,7 +239,7 @@ export default function Calendar() {
             <div className="flex items-center gap-2">
               <button
                 onClick={goToPreviousMonth}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -235,13 +248,13 @@ export default function Calendar() {
                   setCurrentDate(new Date());
                   setSelectedDate(new Date().toISOString().split("T")[0]);
                 }}
-                className="btn btn-outline text-sm dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                className="btn btn-outline text-sm dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20" /* Inherits from .btn */
               >
                 Today
               </button>
               <button
                 onClick={goToNextMonth}
-                className="btn btn-ghost p-2 hover:bg-muted"
+                className="btn btn-ghost p-2 hover:bg-muted" /* Inherits from .btn */
               >
                 <ChevronRight size={20} />
               </button>
@@ -331,11 +344,20 @@ export default function Calendar() {
                     <h4 className="font-medium text-foreground">
                       {event.title}
                     </h4>
-                    {event.distance && (
-                      <Badge variant="primary" className="text-xs">
-                        {event.distance} km
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2"> {/* Container for badge and delete button */}
+                      {event.distance && (
+                        <Badge variant="primary" className="text-xs">
+                          {event.distance} km
+                        </Badge>
+                      )}
+                      <button
+                        onClick={() => handleDeleteWorkout(event.id)}
+                        className="p-1 text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label="Delete workout"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-1 space-y-0.5">
                     {event.time && (
@@ -377,7 +399,7 @@ export default function Calendar() {
               <p className="text-gray-500">
                 No workouts scheduled for this day
               </p>
-              <button className="mt-3 text-primary font-medium text-sm hover:underline" onClick={handleOpenAddWorkoutModal}>
+              <button className="mt-3 text-primary font-medium text-sm hover:underline transition-colors duration-150 ease-in-out" onClick={handleOpenAddWorkoutModal}>
                 Add a workout
               </button>
             </div>
@@ -413,11 +435,21 @@ export default function Calendar() {
               ) // Sort by date
               .slice(0, 4) // Take first 4
               .map((event) => (
-                <div key={event.id}>
-                  <h4>{event.title}</h4>
-                  <p>
-                    {new Date(event.date + "T00:00:00").toLocaleDateString()}
+                <div key={event.id} className="flex flex-col items-start p-3 border rounded-lg bg-background hover:shadow-sm transition-shadow"> {/* Added styling */}
+                  <div className="flex justify-between w-full items-center">
+                    <h4 className="font-medium text-foreground text-sm">{event.title}</h4> {/* Adjusted text size */}
+                    <button
+                      onClick={() => handleDeleteWorkout(event.id)}
+                      className="p-1 text-destructive hover:text-destructive/80 transition-colors"
+                      aria-label="Delete workout"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Adjusted text size and margin */}
+                    {new Date(event.date + "T00:00:00").toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
                   </p>
+                  {/* Consider adding more details like time or type if space allows and it's useful */}
                 </div>
               ))}
           </div>

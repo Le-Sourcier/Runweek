@@ -43,7 +43,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
           <span className="font-bold text-xl">Runweek</span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="md:hidden p-1 rounded-md hover:bg-gray-100 transition-colors">
+          <button onClick={onClose} className="md:hidden p-1 rounded-md hover:bg-gray-100 transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]">
             <X size={20} />
           </button>
         )}
