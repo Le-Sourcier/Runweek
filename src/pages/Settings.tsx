@@ -23,7 +23,8 @@ import {
   Twitter, // Added Twitter icon
   Instagram, // Added Instagram icon
   Linkedin, // Added Linkedin icon
-  Link2 // Added Link2 icon as a fallback
+  Link2, // Added Link2 icon as a fallback
+  Download // Added Download icon for billing history
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -168,14 +169,17 @@ export default function Settings() {
       setSelectedLanguage(user.preferences.language || 'fr');
       setSelectedRegion(user.preferences.region || 'FR');
     }
-  }, [location.search, activeTab, user]); // Rerun when query string, activeTab, or user object changes
+    // Make sure settingSections is included in dependency array if it's defined inside the component
+    // or if its contents can change and affect getInitialTab logic indirectly via find.
+    // For now, assuming settingSections is stable or defined outside if getInitialTab relies on it at mount.
+  }, [location.search, activeTab, user, settingSections]); // Added settingSections
 
 
   const handleSaveLanguageRegion = () => {
     if (user && updateUserPreferences) {
       updateUserPreferences({
         // It's crucial to spread existing preferences to not overwrite them
-        ...user.preferences,
+        ...(user.preferences || {}), // Ensure preferences object exists before spreading
         language: selectedLanguage,
         region: selectedRegion,
       });
@@ -637,6 +641,131 @@ export default function Settings() {
                       </button>
                     </div>
                   ))}
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
+          {activeTab === 'billing' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <Card title="Votre Abonnement" className="bg-card text-card-foreground border-border">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Plan Actuel:</span>
+                    <Badge variant="primary" className="text-sm">Pro</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Prochain renouvellement:</span>
+                    <span className="text-foreground font-medium">15 Avril 2024</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Prix:</span>
+                    <span className="text-foreground font-medium">9.99€ / mois</span>
+                  </div>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row gap-3">
+                  <button className="btn btn-primary w-full sm:w-auto">Changer de Plan</button>
+                  <button className="btn btn-outline w-full sm:w-auto dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20">Annuler l'Abonnement</button>
+                </div>
+              </Card>
+
+              <Card title="Moyens de Paiement" className="bg-card text-card-foreground border-border">
+                <div className="space-y-3">
+                  {/* Mock Payment Method 1 */}
+                  <div className="flex justify-between items-center p-3 border border-border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <CreditCard size={20} className="text-primary" />
+                      <div>
+                        <p className="font-medium text-foreground">Visa se terminant par 1234</p>
+                        <p className="text-xs text-muted-foreground">Expire le 12/25</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="btn btn-ghost btn-sm text-xs p-1 h-auto">Modifier</button>
+                      <button className="btn btn-ghost btn-sm text-xs text-destructive p-1 h-auto">Supprimer</button>
+                    </div>
+                  </div>
+                  {/* Mock Payment Method 2 */}
+                  <div className="flex justify-between items-center p-3 border border-border rounded-lg">
+                     <div className="flex items-center gap-3">
+                      <CreditCard size={20} className="text-primary" /> {/* Could use a different icon for Mastercard, etc. */}
+                      <div>
+                        <p className="font-medium text-foreground">Mastercard se terminant par 5678</p>
+                        <p className="text-xs text-muted-foreground">Expire le 08/26</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="btn btn-ghost btn-sm text-xs p-1 h-auto">Modifier</button>
+                      <button className="btn btn-ghost btn-sm text-xs text-destructive p-1 h-auto">Supprimer</button>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <button className="btn btn-outline w-full sm:w-auto dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20">
+                    + Ajouter un moyen de paiement
+                  </button>
+                </div>
+              </Card>
+
+              <Card title="Historique de Facturation" className="bg-card text-card-foreground border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-left">
+                      <tr className="border-b border-border">
+                        <th className="py-2 pr-2 font-medium text-muted-foreground">Date</th>
+                        <th className="py-2 px-2 font-medium text-muted-foreground">Description</th>
+                        <th className="py-2 px-2 font-medium text-muted-foreground">Montant</th>
+                        <th className="py-2 px-2 font-medium text-muted-foreground">Statut</th>
+                        <th className="py-2 pl-2 font-medium text-muted-foreground text-right">Facture</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Mock Billing History Item 1 */}
+                      <tr className="border-b border-border">
+                        <td className="py-3 pr-2 text-foreground">15 Mars 2024</td>
+                        <td className="py-3 px-2 text-foreground">Abonnement Mensuel Pro</td>
+                        <td className="py-3 px-2 text-foreground">9.99€</td>
+                        <td className="py-3 px-2"><Badge variant="success" className="text-xs">Payé</Badge></td>
+                        <td className="py-3 pl-2 text-right">
+                          <button className="btn btn-ghost btn-sm text-xs p-1 h-auto">
+                            <Download size={14} className="mr-1" />
+                            Télécharger
+                          </button>
+                        </td>
+                      </tr>
+                      {/* Mock Billing History Item 2 */}
+                      <tr className="border-b border-border">
+                        <td className="py-3 pr-2 text-foreground">15 Février 2024</td>
+                        <td className="py-3 px-2 text-foreground">Abonnement Mensuel Pro</td>
+                        <td className="py-3 px-2 text-foreground">9.99€</td>
+                        <td className="py-3 px-2"><Badge variant="success" className="text-xs">Payé</Badge></td>
+                        <td className="py-3 pl-2 text-right">
+                           <button className="btn btn-ghost btn-sm text-xs p-1 h-auto">
+                            <Download size={14} className="mr-1" />
+                            Télécharger
+                          </button>
+                        </td>
+                      </tr>
+                       {/* Mock Billing History Item 3 */}
+                      <tr className="border-b border-border">
+                        <td className="py-3 pr-2 text-foreground">15 Janvier 2024</td>
+                        <td className="py-3 px-2 text-foreground">Abonnement Mensuel Pro</td>
+                        <td className="py-3 px-2 text-foreground">9.99€</td>
+                        <td className="py-3 px-2"><Badge variant="success" className="text-xs">Payé</Badge></td>
+                        <td className="py-3 pl-2 text-right">
+                           <button className="btn btn-ghost btn-sm text-xs p-1 h-auto">
+                            <Download size={14} className="mr-1" />
+                            Télécharger
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </Card>
             </motion.div>

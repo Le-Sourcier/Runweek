@@ -70,7 +70,8 @@ type UserContextType = {
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => void;
-  updateUserPreferences: (preferences: UserPreferences) => void; // Added updateUserPreferences
+  updateUserPreferences: (preferences: UserPreferences) => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>; // Added changePassword
   // setUser: React.Dispatch<React.SetStateAction<User | null>>; // Keep if direct manipulation is needed, or remove if only via login/logout
 };
 
@@ -175,9 +176,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
     //   localStorage.setItem('user', JSON.stringify({ ...user, preferences: { ...user.preferences, ...preferences } }));
     // }
   };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    console.log('UserContext: Attempting to change password.');
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 700));
+
+    // Mock validation: In a real app, verify currentPassword against the stored one.
+    // For this mock, let's assume 'password123' is the "current" password for the sampleUser if a user is logged in.
+    // This check should ideally be against the actual current user's password hash.
+    if (user && currentPassword === 'password123') { // Simple mock check
+      console.log('UserContext: Password change successful (mocked). New password would be:', newPassword);
+      // In a real app, you might update a lastPasswordChangedAt field in user state,
+      // and the backend would handle storing the new hashed password.
+      return { success: true, message: 'Password changed successfully! (This is a mock response)' };
+    } else {
+      console.warn('UserContext: Password change failed - incorrect current password or no user (mocked).');
+      return { success: false, message: 'Incorrect current password. (This is a mock response)' };
+    }
+  };
   
   return (
-    <UserContext.Provider value={{ user, isLoading, isAuthenticated, error, login, logout, updateUserProfile, updateUserPreferences }}>
+    <UserContext.Provider value={{ user, isLoading, isAuthenticated, error, login, logout, updateUserProfile, updateUserPreferences, changePassword }}>
       {children}
     </UserContext.Provider>
   );

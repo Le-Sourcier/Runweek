@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { useUser } from '../context/UserContext';
 import Card from '../components/ui/Card';
+import Modal from '../components/ui/Modal'; // Import Modal
 import Badge from '../components/ui/Badge';
 import { 
   Calendar as CalendarIcon, 
@@ -9,26 +10,48 @@ import {
   Plus, 
   Clock, 
   TrendingUp, 
-  MapPin
+  MapPin,
+  Activity as ActivityIcon, // For workout type
+  Tag as TagIcon, // For workout type as well
+  PlusCircle // For Add Workout Button
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mock data for events
-const mockEvents = [
+// Event type (can be moved to types.ts if shared)
+interface CalendarEventType {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:MM
+  type: 'Run' | 'Bike' | 'Swim' | 'Gym' | 'Other';
+  distance?: number; // in km
+  duration?: string; // e.g., "1:30:00" or "45 min"
+  location?: string;
+  notes?: string;
+}
+
+
+// Initial mock events
+const initialMockEvents: CalendarEventType[] = [
   { 
     id: 'e1', 
     title: 'Long Run', 
     date: '2025-05-25', 
     time: '07:00', 
+    type: 'Run',
     distance: 12,
-    location: 'City Park'
+    duration: "1:15:00",
+    location: 'City Park',
+    notes: 'Feeling great, steady pace.'
   },
   { 
     id: 'e2', 
     title: 'Tempo Run', 
     date: '2025-05-27', 
     time: '18:30', 
+    type: 'Run',
     distance: 6,
+    duration: "0:35:00",
     location: 'Riverside Trail'
   },
   { 
@@ -36,7 +59,9 @@ const mockEvents = [
     title: 'Easy Recovery', 
     date: '2025-05-29', 
     time: '08:00', 
+    type: 'Run',
     distance: 5,
+    duration: "0:30:00",
     location: 'Neighborhood Loop'
   },
   { 
@@ -44,8 +69,11 @@ const mockEvents = [
     title: 'Interval Training', 
     date: '2025-06-01', 
     time: '17:30', 
+    type: 'Run',
     distance: 8,
-    location: 'Track'
+    duration: "0:50:00",
+    location: 'Track',
+    notes: '8x400m repeats'
   },
 ];
 
@@ -58,7 +86,26 @@ export default function Calendar() {
   const { user } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  
+  const [events, setEvents] = useState<CalendarEventType[]>(initialMockEvents);
+
+  // Modal and Form States
+  const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
+  const [newWorkoutTitle, setNewWorkoutTitle] = useState('');
+  const [newWorkoutDate, setNewWorkoutDate] = useState(selectedDate);
+  const [newWorkoutTime, setNewWorkoutTime] = useState('');
+  const [newWorkoutType, setNewWorkoutType] = useState<CalendarEventType['type']>('Run');
+  const [newWorkoutDistance, setNewWorkoutDistance] = useState<number | ''>('');
+  const [newWorkoutDuration, setNewWorkoutDuration] = useState('');
+  const [newWorkoutLocation, setNewWorkoutLocation] = useState('');
+  const [newWorkoutNotes, setNewWorkoutNotes] = useState('');
+
+  // Update newWorkoutDate when selectedDate changes and modal is not open
+  useEffect(() => {
+    if (!isAddWorkoutModalOpen) {
+      setNewWorkoutDate(selectedDate);
+    }
+  }, [selectedDate, isAddWorkoutModalOpen]);
+
   // Get current year and month
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -78,7 +125,7 @@ export default function Calendar() {
     for (let i = 1; i <= daysCount; i++) {
       const date = new Date(currentYear, currentMonth, i);
       const formattedDate = date.toISOString().split('T')[0];
-      const hasEvent = mockEvents.some(event => event.date === formattedDate);
+      const hasEvent = events.some(event => event.date === formattedDate);
       
       days.push({ 
         day: i, 
@@ -105,10 +152,43 @@ export default function Calendar() {
   
   // Get events for selected date
   const getEventsForDate = (date: string) => {
-    return mockEvents.filter(event => event.date === date);
+    return events.filter(event => event.date === date);
   };
   
   const selectedDateEvents = getEventsForDate(selectedDate);
+
+  const handleOpenAddWorkoutModal = () => {
+    setNewWorkoutTitle('');
+    setNewWorkoutDate(selectedDate || new Date().toISOString().split('T')[0]);
+    setNewWorkoutTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })); // Default to current time
+    setNewWorkoutType('Run');
+    setNewWorkoutDistance('');
+    setNewWorkoutDuration('');
+    setNewWorkoutLocation('');
+    setNewWorkoutNotes('');
+    setIsAddWorkoutModalOpen(true);
+  };
+
+  const handleSaveNewWorkout = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!newWorkoutTitle || !newWorkoutDate || !newWorkoutType) {
+      alert('Please fill in Title, Date, and Type.'); // Basic validation
+      return;
+    }
+    const newWorkout: CalendarEventType = {
+      id: `e${Date.now()}`,
+      title: newWorkoutTitle,
+      date: newWorkoutDate,
+      time: newWorkoutTime || undefined,
+      type: newWorkoutType,
+      distance: newWorkoutDistance === '' ? undefined : Number(newWorkoutDistance),
+      duration: newWorkoutDuration || undefined,
+      location: newWorkoutLocation || undefined,
+      notes: newWorkoutNotes || undefined,
+    };
+    setEvents(prevEvents => [newWorkout, ...prevEvents]);
+    setIsAddWorkoutModalOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -139,14 +219,14 @@ export default function Calendar() {
                 <ChevronLeft size={20} />
               </button>
               <button
-                onClick={() => setCurrentDate(new Date())}
-                className="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+                onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date().toISOString().split('T')[0]); }}
+                className="btn btn-outline text-sm dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
               >
                 Today
               </button>
               <button 
                 onClick={goToNextMonth}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="btn btn-ghost p-2 hover:bg-muted"
               >
                 <ChevronRight size={20} />
               </button>
@@ -156,7 +236,7 @@ export default function Calendar() {
           {/* Weekday headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center font-medium text-gray-500 text-sm py-2">
+              <div key={day} className="text-center font-medium text-muted-foreground text-sm py-2">
                 {day}
               </div>
             ))}
@@ -175,15 +255,15 @@ export default function Calendar() {
               >
                 {day.day && (
                   <div 
-                    className={`h-full w-full rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all
-                      ${day.isToday ? 'bg-primary text-white font-bold' : ''}
-                      ${selectedDate === day.date && !day.isToday ? 'bg-primary-light bg-opacity-20' : ''}
-                      ${!day.isToday && !selectedDate ? 'hover:bg-gray-100' : ''}
+                    className={`h-full w-full rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all text-sm
+                      ${day.isToday ? 'bg-primary text-primary-foreground font-bold' : ''}
+                      ${selectedDate === day.date && !day.isToday ? 'bg-primary/20 dark:bg-primary/30 text-primary font-semibold' : 'text-foreground'}
+                      ${!day.isToday && selectedDate !== day.date ? 'hover:bg-muted dark:hover:bg-muted/50' : ''}
                     `}
                   >
                     <span>{day.day}</span>
                     {day.hasEvent && (
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${day.isToday ? 'bg-white' : 'bg-primary'}`}></div>
+                      <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${day.isToday ? 'bg-primary-foreground' : 'bg-primary'}`}></div>
                     )}
                   </div>
                 )}
@@ -193,26 +273,48 @@ export default function Calendar() {
         </Card>
         
         {/* Events for selected date */}
-        <Card className="lg:col-span-4" title={`Schedule for ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`}>
+        <Card
+          className="lg:col-span-4 bg-card text-card-foreground border-border"
+          title={`Schedule for ${new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}`}
+          titleClassName="text-lg"
+        >
           {selectedDateEvents.length > 0 ? (
             <div className="space-y-3">
               {selectedDateEvents.map((event) => (
                 <div 
                   key={event.id}
-                  className="p-3 border rounded-lg hover:border-primary hover:shadow-sm transition-all"
+                  className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
                 >
                   <div className="flex justify-between items-start">
-                    <h4 className="font-medium">{event.title}</h4>
-                    <Badge variant="primary">{event.distance} km</Badge>
+                    <h4 className="font-medium text-foreground">{event.title}</h4>
+                    {event.distance && <Badge variant="primary" className="text-xs">{event.distance} km</Badge>}
                   </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <Clock size={14} />
-                      <span>{event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <MapPin size={14} />
-                      <span>{event.location}</span>
+                  <div className="mt-1 space-y-0.5">
+                    {event.time &&
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock size={12} />
+                        <span>{event.time}</span>
+                      </div>
+                    }
+                    {event.type &&
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <TagIcon size={12} />
+                        <span>{event.type}</span>
+                      </div>
+                    }
+                    {event.location &&
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin size={12} />
+                        <span>{event.location}</span>
+                      </div>
+                    }
+                    {event.duration &&
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <ActivityIcon size={12} />
+                        <span>{event.duration}</span>
+                      </div>
+                    }
+                    {event.notes && <p className="text-xs text-muted-foreground mt-1 pt-1 border-t border-border">{event.notes}</p>}
                     </div>
                   </div>
                 </div>
@@ -230,37 +332,113 @@ export default function Calendar() {
         </Card>
       </div>
       
-      {/* Upcoming events */}
-      <Card title="Upcoming Workouts">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {mockEvents.map((event) => (
-            <div 
-              key={event.id}
-              className="p-4 border rounded-lg hover:border-primary hover:shadow-sm transition-all"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center text-primary">
-                  <TrendingUp size={18} />
+      {/* Upcoming events - uses events state now */}
+      <Card title="Upcoming Workouts" className="bg-card text-card-foreground border-border">
+        {events.filter(e => new Date(e.date + 'T00:00:00') >= new Date(new Date().toISOString().split('T')[0])).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0,4).length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {events
+              .filter(e => new Date(e.date + 'T00:00:00') >= new Date(new Date().toISOString().split('T')[0])) // Filter for upcoming
+              .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort by date
+              .slice(0,4) // Take first 4
+              .map((event) => (
+              <div
+                key={event.id}
+                className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center bg-primary/10 text-primary`}> {/* Icon theming */}
+                    {event.type === 'Run' ? <TrendingUp size={16} /> :
+                     event.type === 'Bike' ? <ActivityIcon size={16} /> : // Using ActivityIcon as placeholder for Bike/Swim/Gym
+                     event.type === 'Swim' ? <ActivityIcon size={16} /> :
+                     event.type === 'Gym' ? <ActivityIcon size={16} /> :
+                     <ActivityIcon size={16} />}
+                  </div>
+                  {event.distance && <Badge variant="primary" className="text-xs">{event.distance} km</Badge>}
                 </div>
-                <Badge variant="primary">{event.distance} km</Badge>
+                <h4 className="font-medium text-foreground text-sm mb-0.5">{event.title}</h4>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <CalendarIcon size={12} />
+                  <span>{new Date(event.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                </div>
+                {event.time &&
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock size={12} />
+                    <span>{event.time}</span>
+                  </div>
+                }
+                {event.location &&
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MapPin size={12} />
+                    <span>{event.location}</span>
+                  </div>
+                }
               </div>
-              <h4 className="font-medium mb-1">{event.title}</h4>
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <CalendarIcon size={14} />
-                <span>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Clock size={14} />
-                <span>{event.time}</span>
-              </div>
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <MapPin size={14} />
-                <span>{event.location}</span>
-              </div>
+            ))}
+          </div>
+        ) : (
+           <div className="p-6 text-center">
+              <CalendarIcon className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
+              <p className="text-muted-foreground">No upcoming workouts scheduled.</p>
             </div>
-          ))}
-        </div>
+        )}
       </Card>
+
+      {/* Add Workout Modal */}
+      <Modal
+        isOpen={isAddWorkoutModalOpen}
+        onClose={() => setIsAddWorkoutModalOpen(false)}
+        title="Add New Workout"
+        size="lg"
+      >
+        <form onSubmit={handleSaveNewWorkout} className="space-y-4">
+          <div>
+            <label htmlFor="workout-title" className="block text-sm font-medium text-muted-foreground mb-1">Title</label>
+            <input type="text" id="workout-title" value={newWorkoutTitle} onChange={(e) => setNewWorkoutTitle(e.target.value)} className="input w-full bg-background text-foreground border-border" required />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="workout-date" className="block text-sm font-medium text-muted-foreground mb-1">Date</label>
+              <input type="date" id="workout-date" value={newWorkoutDate} onChange={(e) => setNewWorkoutDate(e.target.value)} className="input w-full bg-background text-foreground border-border" required />
+            </div>
+            <div>
+              <label htmlFor="workout-time" className="block text-sm font-medium text-muted-foreground mb-1">Time (Optional)</label>
+              <input type="time" id="workout-time" value={newWorkoutTime} onChange={(e) => setNewWorkoutTime(e.target.value)} className="input w-full bg-background text-foreground border-border" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="workout-type" className="block text-sm font-medium text-muted-foreground mb-1">Type</label>
+              <select id="workout-type" value={newWorkoutType} onChange={(e) => setNewWorkoutType(e.target.value as CalendarEventType['type'])} className="input w-full appearance-none bg-background text-foreground border-border pr-8">
+                <option value="Run">Run</option>
+                <option value="Bike">Bike</option>
+                <option value="Swim">Swim</option>
+                <option value="Gym">Gym</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+             <div>
+              <label htmlFor="workout-distance" className="block text-sm font-medium text-muted-foreground mb-1">Distance (km, optional)</label>
+              <input type="number" id="workout-distance" value={newWorkoutDistance} onChange={(e) => setNewWorkoutDistance(e.target.value === '' ? '' : parseFloat(e.target.value))} className="input w-full bg-background text-foreground border-border" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="workout-duration" className="block text-sm font-medium text-muted-foreground mb-1">Duration (e.g., 45 min, 1:30:00, optional)</label>
+            <input type="text" id="workout-duration" value={newWorkoutDuration} onChange={(e) => setNewWorkoutDuration(e.target.value)} className="input w-full bg-background text-foreground border-border" />
+          </div>
+          <div>
+            <label htmlFor="workout-location" className="block text-sm font-medium text-muted-foreground mb-1">Location (Optional)</label>
+            <input type="text" id="workout-location" value={newWorkoutLocation} onChange={(e) => setNewWorkoutLocation(e.target.value)} className="input w-full bg-background text-foreground border-border" />
+          </div>
+          <div>
+            <label htmlFor="workout-notes" className="block text-sm font-medium text-muted-foreground mb-1">Notes (Optional)</label>
+            <textarea id="workout-notes" value={newWorkoutNotes} onChange={(e) => setNewWorkoutNotes(e.target.value)} className="input w-full bg-background text-foreground border-border" rows={3}></textarea>
+          </div>
+          <div className="flex justify-end space-x-3 pt-2">
+            <button type="button" onClick={() => setIsAddWorkoutModalOpen(false)} className="btn btn-outline dark:border-muted dark:text-muted-foreground">Cancel</button>
+            <button type="submit" className="btn btn-primary">Save Workout</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

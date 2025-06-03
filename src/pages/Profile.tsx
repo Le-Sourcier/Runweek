@@ -20,7 +20,7 @@ import {
 import { motion } from 'framer-motion';
 
 export default function Profile() {
-  const { user, updateUserProfile, updateUserPreferences } = useUser(); // Added updateUserPreferences
+  const { user, updateUserProfile, updateUserPreferences, logout } = useUser(); // Added logout
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account');
   const [accountSubView, setAccountSubView] = useState<'overview' | 'password'>('overview');
@@ -320,7 +320,13 @@ export default function Profile() {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-border flex justify-end">
-                    <button className="flex items-center gap-2 text-destructive hover:text-red-400"> {/* Updated to use destructive color */}
+                    <button
+                      onClick={() => {
+                        logout();
+                        navigate('/login');
+                      }}
+                      className="btn btn-ghost text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                    >
                       <LogOut size={16} />
                       <span>Sign Out</span>
                     </button>

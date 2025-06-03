@@ -1,46 +1,61 @@
 import React, { useState } from 'react';
-import Card from '../ui/Card'; // Assuming Card component can be used here
-import { ArrowLeft, ShieldCheck, LockKeyhole } from 'lucide-react'; // Using new LockKeyhole
+import Card from '../ui/Card';
+import { ArrowLeft, ShieldCheck, LockKeyhole, Loader2 } from 'lucide-react'; // Added Loader2
+import { useUser } from '../../context/UserContext'; // Import useUser
 
 interface PasswordSecuritySettingsProps {
   onBack: () => void;
 }
 
 const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onBack }) => {
+  const { changePassword } = useUser(); // Get changePassword from context
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false); // Loading state
 
   // 2FA state - simple placeholder
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => { // Made async
     e.preventDefault();
     setPasswordError(null);
     setPasswordSuccess(null);
+    setIsChangingPassword(true);
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
       setPasswordError('All password fields are required.');
+      setIsChangingPassword(false);
       return;
     }
     if (newPassword !== confirmNewPassword) {
       setPasswordError('New password and confirmation do not match.');
+      setIsChangingPassword(false);
       return;
     }
     if (newPassword.length < 8) {
       setPasswordError('New password must be at least 8 characters long.');
+      setIsChangingPassword(false);
       return;
     }
 
-    // Placeholder for actual password change logic
-    console.log('Attempting to change password:', { currentPassword, newPassword });
-    setPasswordSuccess('Password changed successfully! (Placeholder)');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    // In a real app, you would call an API here.
+    try {
+      const result = await changePassword(currentPassword, newPassword);
+      if (result.success) {
+        setPasswordSuccess(result.message);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      } else {
+        setPasswordError(result.message);
+      }
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : 'An unexpected error occurred.');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleToggleTwoFactor = () => {
@@ -102,13 +117,21 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
           </div>
 
           {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
-          {passwordSuccess && <p className="text-sm text-green-500 dark:text-green-400">{passwordSuccess}</p>} {/* Consider a theme color for success */}
+          {passwordSuccess && <p className="text-sm text-success">{passwordSuccess}</p>} {/* Use text-success */}
 
 
           <div className="pt-2">
-            <button type="submit" className="btn btn-primary w-full sm:w-auto">
-              <LockKeyhole size={16} className="mr-2" />
-              Change Password
+            <button
+              type="submit"
+              className="btn btn-primary w-full sm:w-auto"
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? (
+                <Loader2 size={16} className="mr-2 animate-spin" />
+              ) : (
+                <LockKeyhole size={16} className="mr-2" />
+              )}
+              {isChangingPassword ? 'Changing...' : 'Change Password'}
             </button>
           </div>
         </form>
