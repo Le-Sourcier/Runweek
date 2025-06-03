@@ -32,10 +32,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
           onClick={onClose} // Close on overlay click
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50 }} // Start further down and smaller
+            initial={{ opacity: 0, scale: 0.95, y: 30 }} // Softened: scale 0.9 to 0.95, y 50 to 30
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 50 }} // Exit to the same state
-            transition={{ duration: 0.3, ease: "easeOut" }} // Slightly longer duration for a smoother feel
+            exit={{ opacity: 0, scale: 0.95, y: 30 }} // Softened: scale 0.9 to 0.95, y 50 to 30
+            transition={{ duration: 0.25, ease: "easeOut" }} // Softened: duration 0.3 to 0.25
             className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 w-full ${sizeClasses[size]}`}
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
           >

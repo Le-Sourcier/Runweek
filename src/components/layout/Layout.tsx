@@ -61,11 +61,11 @@ export default function Layout({ children }: LayoutProps) {
               animate="animate"
               exit="exit"
               variants={{
-                initial: { opacity: 0, y: 20 },
+                initial: { opacity: 0, y: 10 }, // Softened: y: 20 to y: 10
                 animate: { opacity: 1, y: 0 },
-                exit: { opacity: 0, y: -20 },
+                exit: { opacity: 0, y: -10 }, // Softened: y: -20 to y: -10
               }}
-              transition={{ duration: 0.3, ease: "easeInOut" }} // Adjust duration and easing as needed
+              transition={{ duration: 0.25, ease: "easeOut" }} // Softened: duration 0.3 to 0.25, easeInOut to easeOut
             >
               {children}
             </motion.div>

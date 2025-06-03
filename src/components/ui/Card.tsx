@@ -9,7 +9,7 @@ type CardProps = {
 
 export default function Card({ children, className = "", title, action }: CardProps) {
   return (
-    <div className={`card ${className} transition-all hover:scale-[1.02] hover:shadow-lg`}>
+    <div className={`card ${className} transition-all hover:scale-[1.015] hover:shadow-lg`}> {/* Softened scale */}
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
           {title && <h3 className="font-medium text-card-foreground">{title}</h3>}

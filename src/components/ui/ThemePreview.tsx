@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useTheme } from "../../context/ThemeContext";
+import React, { useEffect, useState } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ColorDisplayProps {
   colorVar: string;
@@ -7,14 +7,12 @@ interface ColorDisplayProps {
 }
 
 const ColorSwatch: React.FC<ColorDisplayProps> = ({ colorVar, name }) => {
-  const [bgColor, setBgColor] = useState("");
+  const [bgColor, setBgColor] = useState('');
 
   useEffect(() => {
     // Function to fetch CSS variable value
     const getColorValue = () => {
-      const colorValue = getComputedStyle(document.documentElement)
-        .getPropertyValue(colorVar)
-        .trim();
+      const colorValue = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim();
       if (colorValue) {
         setBgColor(colorValue);
       }
@@ -25,10 +23,7 @@ const ColorSwatch: React.FC<ColorDisplayProps> = ({ colorVar, name }) => {
     // Optional: Listen for theme changes if variables might be updated without a full re-render
     // This might be overkill if useTheme already triggers re-renders effectively
     const observer = new MutationObserver(getColorValue);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["style", "class"],
-    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
 
     return () => observer.disconnect();
   }, [colorVar]);
@@ -40,9 +35,7 @@ const ColorSwatch: React.FC<ColorDisplayProps> = ({ colorVar, name }) => {
         style={{ backgroundColor: bgColor }}
       />
       <span className="text-sm font-medium text-foreground">{name}</span>
-      <span className="text-xs text-muted-foreground">
-        {bgColor || colorVar}
-      </span>
+      <span className="text-xs text-muted-foreground">{bgColor || colorVar}</span>
     </div>
   );
 };
@@ -56,18 +49,15 @@ const ThemePreview: React.FC = () => {
 
   return (
     <div className="mt-6 p-4 border rounded-lg bg-card">
-      <h3 className="text-lg font-semibold text-foreground mb-4">
-        Color Palette Preview
-      </h3>
+      <h3 className="text-lg font-semibold text-foreground mb-4">Color Palette Preview</h3>
       <div className="grid grid-cols-3 gap-4 pt-2">
         <ColorSwatch colorVar="--primary" name="Primary" />
         <ColorSwatch colorVar="--secondary" name="Secondary" />
         <ColorSwatch colorVar="--accent" name="Accent" />
       </div>
       <p className="text-xs text-muted-foreground mt-4">
-        Current theme: {theme}, Current palette: {colorPalette}. Colors are
-        derived from CSS variables.
-      </p>
+        Current theme: {theme}, Current palette: {colorPalette}. Colors are derived from CSS variables.
+      p>
     </div>
   );
 };
