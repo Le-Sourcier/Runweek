@@ -11,7 +11,6 @@ const FloatingCoach: React.FC = () => {
     setCoachPosition,
     closeCoachPanel,
     openCoachPanel,
-    deactivateFloatingCoach, // Added deactivateFloatingCoach
   } = useFloatingCoach();
 
   const positionClasses =
