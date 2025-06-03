@@ -9,9 +9,11 @@ import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
 import Settings from './pages/Settings';
+import PersonalRecords from './pages/PersonalRecords'; // Import PersonalRecords page
 import { UserProvider } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { PRProvider } from './context/PRContext'; // Import PRProvider
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,21 +22,23 @@ function App() {
     <UserProvider>
       <SearchProvider>
         <NotificationProvider>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/statistics" element={<Statistics />} />
-              <Route path="/coach" element={<Coach />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </Layout>
-          <ToastContainer
-            position="bottom-right"
+          <PRProvider> {/* Wrap with PRProvider */}
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/statistics" element={<Statistics />} />
+                <Route path="/coach" element={<Coach />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/achievements" element={<Achievements />} />
+                <Route path="/personal-records" element={<PersonalRecords />} /> {/* Add PersonalRecords route */}
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </Layout>
+            <ToastContainer
+              position="bottom-right"
             autoClose={5000}
             hideProgressBar={false}
             newestOnTop

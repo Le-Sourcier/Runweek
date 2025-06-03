@@ -5,7 +5,7 @@ import {
   Brain, 
   Calendar as CalendarIcon, 
   Target, 
-  Award, 
+  Award,
   User, 
   HelpCircle, 
   X,
@@ -29,6 +29,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
     { icon: <CalendarIcon size={20} />, label: 'Calendrier', path: '/calendar' },
     { icon: <Target size={20} />, label: 'Objectifs', path: '/goals' },
     { icon: <Award size={20} />, label: 'Réalisations', path: '/achievements' },
+    { icon: <Award size={20} />, label: 'Records Perso', path: '/personal-records' }, // Added line
     { icon: <User size={20} />, label: 'Profil', path: '/profile' },
     { icon: <HelpCircle size={20} />, label: 'Aide & Support', path: '/support' },
   ];
