@@ -3,6 +3,7 @@ import { useUser } from '../../context/UserContext';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge'; // Assuming Badge component exists and is styled
 import { Activity, Smartphone, Check, X, PlusCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ConnectedDevicesSettingsProps {
   onBack: () => void;
@@ -89,8 +90,14 @@ export default function ConnectedDevicesSettings({ onBack }: ConnectedDevicesSet
 
       <div className="space-y-4 mb-6">
         {devices.length > 0 ? (
-          devices.map((device) => (
-            <div key={device.id} className="p-4 border border-border rounded-lg flex items-center justify-between hover:border-primary/50 transition-colors">
+          devices.map((device, index) => (
+            <motion.div
+              key={device.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.075, duration: 0.25, ease: "easeOut" }}
+              className="p-4 border border-border rounded-lg flex items-center justify-between hover:border-primary/50 transition-colors"
+            >
               <div className="flex items-center gap-4">
                 {getDeviceIcon(device.type)}
                 <div>
@@ -113,7 +120,7 @@ export default function ConnectedDevicesSettings({ onBack }: ConnectedDevicesSet
                   <X size={18} />
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))
         ) : (
           <p className="text-muted-foreground text-center py-4">No devices connected.</p>

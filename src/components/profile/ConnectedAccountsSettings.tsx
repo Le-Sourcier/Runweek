@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../context/UserContext';
 import Card from '../ui/Card';
 import { Users, Link2, Facebook, Twitter, Zap, BarChart2 } from 'lucide-react'; // Example icons
+import { motion } from 'framer-motion';
 
 interface ConnectedAccountsSettingsProps {
   onBack: () => void;
@@ -84,12 +85,18 @@ export default function ConnectedAccountsSettings({ onBack }: ConnectedAccountsS
       </button>
 
       <div className="space-y-4">
-        {availableSocialIntegrations.map((integration) => {
+        {availableSocialIntegrations.map((integration, index) => {
           const accountStatus = socialAccounts[integration.id];
           const isConnected = accountStatus?.connected;
 
           return (
-            <div key={integration.id} className="p-4 border border-border rounded-lg flex items-center justify-between hover:border-primary/50 transition-colors">
+            <motion.div
+              key={integration.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.075, duration: 0.25, ease: "easeOut" }}
+              className="p-4 border border-border rounded-lg flex items-center justify-between hover:border-primary/50 transition-colors"
+            >
               <div className="flex items-center gap-4">
                 <span className="text-primary">{integration.icon}</span>
                 <div>
@@ -107,7 +114,7 @@ export default function ConnectedAccountsSettings({ onBack }: ConnectedAccountsS
                 {isConnected ? 'Disconnect' : 'Connect'}
                 <Link2 size={16} className="ml-2" />
               </button>
-            </div>
+            </motion.div>
           );
         })}
       </div>

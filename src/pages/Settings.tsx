@@ -325,10 +325,15 @@ export default function Settings() {
         {/* Settings Navigation */}
         <Card className="lg:col-span-4 bg-white dark:bg-gray-800">
           <nav className="space-y-1">
-            {settingSections.map((section) => (
-              <button
+            {settingSections.map((section, index) => ( // Added index for delay
+              <motion.div // Wrapped button with motion.div
                 key={section.id}
-                onClick={() => setActiveTab(section.id)}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.2, ease: "easeOut" }}
+              >
+                <button
+                  onClick={() => setActiveTab(section.id)}
                 className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
                   activeTab === section.id
                     ? "bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300"
@@ -363,7 +368,8 @@ export default function Settings() {
                     className="text-gray-400 dark:text-gray-500"
                   />
                 </div>
-              </button>
+                </button>
+              </motion.div>
             ))}
           </nav>
 
@@ -381,7 +387,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Apparence" className="bg-white dark:bg-gray-800">
                 <div className="space-y-6">
@@ -478,7 +484,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card
                 title="Langue et Région"
@@ -574,7 +580,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card
                 title="Préférences de notifications"
@@ -723,7 +729,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Appareils connectés">
                 <div className="space-y-4">
@@ -889,7 +895,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Confidentialité">
                 <div className="space-y-6">
@@ -991,7 +997,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card
                 title="Comptes connectés"
@@ -1053,7 +1059,7 @@ export default function Settings() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className="space-y-6"
             >
               <Card

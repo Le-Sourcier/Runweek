@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../context/UserContext';
 import Card from '../ui/Card';
 import { Bell } from 'lucide-react'; // Assuming Bell icon is suitable
+import { motion } from 'framer-motion';
 
 interface NotificationSettingsProps {
   onBack: () => void;
@@ -79,8 +80,14 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
       </button>
 
       <div className="space-y-6">
-        {notificationOptions.map((option) => (
-          <div key={option.key} className="flex items-center justify-between p-4 border border-border rounded-lg">
+        {notificationOptions.map((option, index) => (
+          <motion.div
+            key={option.key}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.075, duration: 0.25, ease: "easeOut" }}
+            className="flex items-center justify-between p-4 border border-border rounded-lg"
+          >
             <div>
               <h4 className="font-medium text-foreground">{option.label}</h4>
               <p className="text-sm text-muted-foreground">{option.description}</p>
@@ -104,7 +111,7 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
                 }`}></span>
               </label>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 

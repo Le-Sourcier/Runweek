@@ -322,7 +322,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               {accountSubView === 'overview' && (
                 <Card title="Account Settings" className="bg-card text-card-foreground border-border">
@@ -332,7 +332,7 @@ export default function Profile() {
                         key={setting.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.1, duration: 0.25, ease: "easeOut" }}
                         className="p-4 border border-border rounded-lg hover:border-primary hover:shadow-sm transition-all flex justify-between items-center cursor-pointer"
                         onClick={setting.action}
                       >
@@ -388,7 +388,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Running Preferences" className="bg-card text-card-foreground border-border">
                 <div className="space-y-6">
@@ -478,7 +478,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Privacy Settings" className="bg-card text-card-foreground border-border">
                 <div className="space-y-6">
