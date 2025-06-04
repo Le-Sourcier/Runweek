@@ -1,7 +1,18 @@
 import { useState } from "react";
 // import { useUser } from "../context/UserContext";
 import Card from "../components/ui/Card";
-import { Calendar, Clock, Target, ArrowRight, Footprints, HeartPulse, ListChecks, Zap, ShieldCheck, TrendingUp, Lightbulb, Activity } from "lucide-react"; // Added new icons
+import {
+  Clock,
+  Target,
+  ArrowRight,
+  Footprints,
+  HeartPulse,
+  Zap,
+  ShieldCheck,
+  TrendingUp,
+  Lightbulb,
+  Activity,
+} from "lucide-react"; // Added new icons
 import ChatInterface, {
   ChatMessage,
   Suggestion,
@@ -196,7 +207,9 @@ export default function Coach() {
                 <Target size={20} />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200">Building Base Endurance</h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-200">
+                  Building Base Endurance
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   This week, focus on easy runs to build your aerobic base. Keep
                   your heart rate below 75% of your max.
@@ -205,13 +218,20 @@ export default function Coach() {
             </div>
 
             <div className="mt-4">
-              <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">Suggested Workouts</h4>
+              <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">
+                Suggested Workouts
+              </h4>
               <div className="space-y-3">
                 {/* Suggested Workout Item 1 */}
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <Footprints size={18} className="text-blue-500 dark:text-blue-400" />
+                  <Footprints
+                    size={18}
+                    className="text-blue-500 dark:text-blue-400"
+                  />
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">Easy Run</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-200">
+                      Easy Run
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       5-6 km at conversational pace
                     </p>
@@ -219,9 +239,15 @@ export default function Coach() {
                 </div>
                 {/* Suggested Workout Item 2 */}
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <Footprints size={18} className="text-green-500 dark:text-green-400" /> {/* Changed to Footprints for consistency, could be specific for long run if desired */}
+                  <Footprints
+                    size={18}
+                    className="text-green-500 dark:text-green-400"
+                  />{" "}
+                  {/* Changed to Footprints for consistency, could be specific for long run if desired */}
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">Long Run</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-200">
+                      Long Run
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       10-12 km at easy pace
                     </p>
@@ -229,9 +255,14 @@ export default function Coach() {
                 </div>
                 {/* Suggested Workout Item 3 */}
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <HeartPulse size={18} className="text-red-500 dark:text-red-400" />
+                  <HeartPulse
+                    size={18}
+                    className="text-red-500 dark:text-red-400"
+                  />
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">Recovery</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-200">
+                      Recovery
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       3-4 km very easy + strength
                     </p>
@@ -250,7 +281,9 @@ export default function Coach() {
                   className="p-3 border dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:shadow-sm transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">{plan.title}</h4>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">
+                      {plan.title}
+                    </h4>
                     <span className="bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300 px-2 py-0.5 text-xs rounded-full font-medium">
                       {plan.duration}
                     </span>
@@ -260,7 +293,10 @@ export default function Coach() {
                   </p>
                   <button className="group mt-2 text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1">
                     <span className="group-hover:underline">View plan</span>
-                    <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    <ArrowRight
+                      size={14}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
                   </button>
                 </div>
               ))}
@@ -281,13 +317,32 @@ export default function Coach() {
                 {tip.icon === "Zap" && <Zap size={20} />}
                 {tip.icon === "ShieldCheck" && <ShieldCheck size={20} />}
                 {tip.icon === "TrendingUp" && <TrendingUp size={20} />}
-                {tip.icon === "Clock" && <Clock size={20} />} {/* Default/fallback */}
-                {tip.icon === "Activity" && <Activity size={20} />} {/* Default/fallback */}
-                {tip.icon === "Lightbulb" && <Lightbulb size={20} />} {/* Default/fallback */}
-                {!["Zap", "ShieldCheck", "TrendingUp", "Clock", "Activity", "Lightbulb"].includes(tip.icon) && <Lightbulb size={20} /> /* Fallback for any other unspecified icon */}
+                {tip.icon === "Clock" && <Clock size={20} />}{" "}
+                {/* Default/fallback */}
+                {tip.icon === "Activity" && <Activity size={20} />}{" "}
+                {/* Default/fallback */}
+                {tip.icon === "Lightbulb" && <Lightbulb size={20} />}{" "}
+                {/* Default/fallback */}
+                {
+                  ![
+                    "Zap",
+                    "ShieldCheck",
+                    "TrendingUp",
+                    "Clock",
+                    "Activity",
+                    "Lightbulb",
+                  ].includes(tip.icon) && (
+                    <Lightbulb size={20} />
+                  ) /* Fallback for any other unspecified icon */
+                }
               </div>
-              <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-100">{tip.title}</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">{tip.description}</p> {/* Added flex-grow to make text take available space */}
+              <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-100">
+                {tip.title}
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                {tip.description}
+              </p>{" "}
+              {/* Added flex-grow to make text take available space */}
             </div>
           ))}
         </div>
