@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"; // Added useEffect
-// import { useUser } from "../context/UserContext";
+import { useUser } from "../context/UserContext";
 import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal"; // Import Modal
 import Badge from "../components/ui/Badge";
@@ -9,9 +9,11 @@ import {
   ChevronRight,
   Plus,
   Clock,
+  TrendingUp,
   MapPin,
   Activity as ActivityIcon, // For workout type
   Tag as TagIcon, // For workout type as well
+  PlusCircle, // For Add Workout Button
   Trash2, // For Delete button
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -84,7 +86,7 @@ const getMonthName = (month: number) =>
   new Date(0, month).toLocaleString("default", { month: "long" });
 
 export default function Calendar() {
-  // const { user } = useUser();
+  const { user } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -158,15 +160,14 @@ export default function Calendar() {
   };
 
   // Get events for selected date
-  // const getEventsForDate = (date: string) => {
-  //   return events.filter((event) => event.date === date);
-  // };
+  const getEventsForDate = (date: string) => {
+    return events.filter((event) => event.date === date);
+  };
 
   const todayStr = new Date().toISOString().split("T")[0]; // Define todayStr for selectedDateEvents
-  const selectedDateEvents =
-    selectedDate < todayStr
-      ? []
-      : events.filter((event) => event.date === selectedDate); // Updated selectedDateEvents logic
+  const selectedDateEvents = selectedDate < todayStr
+    ? []
+    : events.filter((event) => event.date === selectedDate); // Updated selectedDateEvents logic
 
   const handleOpenAddWorkoutModal = () => {
     setNewWorkoutTitle("");
@@ -210,9 +211,7 @@ export default function Calendar() {
 
   const handleDeleteWorkout = (eventId: string) => {
     if (window.confirm("Are you sure you want to delete this workout?")) {
-      setEvents((prevEvents) =>
-        prevEvents.filter((event) => event.id !== eventId)
-      );
+      setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
     }
   };
 
@@ -224,10 +223,7 @@ export default function Calendar() {
           <p className="text-gray-600">Schedule and track your workouts</p>
         </div>
 
-        <button
-          className="btn btn-primary flex items-center gap-2"
-          onClick={handleOpenAddWorkoutModal}
-        >
+        <button className="btn btn-primary flex items-center gap-2" onClick={handleOpenAddWorkoutModal}>
           <Plus size={16} />
           Add Workout
         </button>
@@ -335,85 +331,79 @@ export default function Calendar() {
             month: "short",
             day: "numeric",
           })}`}
+          titleClassName="text-lg"
         >
-          <h2 className="text-lg">
-            {selectedDateEvents.length > 0 ? (
-              <div className="space-y-3">
-                {selectedDateEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-foreground">
-                        {event.title}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        {" "}
-                        {/* Container for badge and delete button */}
-                        {event.distance && (
-                          <Badge variant="primary" className="text-xs">
-                            {event.distance} km
-                          </Badge>
-                        )}
-                        <button
-                          onClick={() => handleDeleteWorkout(event.id)}
-                          className="p-1 text-destructive hover:text-destructive/80 transition-colors"
-                          aria-label="Delete workout"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      {event.time && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock size={12} />
-                          <span>{event.time}</span>
-                        </div>
+          {selectedDateEvents.length > 0 ? (
+            <div className="space-y-3">
+              {selectedDateEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="p-3 border border-border rounded-lg hover:shadow-md transition-all bg-background"
+                >
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-medium text-foreground">
+                      {event.title}
+                    </h4>
+                    <div className="flex items-center gap-2"> {/* Container for badge and delete button */}
+                      {event.distance && (
+                        <Badge variant="primary" className="text-xs">
+                          {event.distance} km
+                        </Badge>
                       )}
-                      {event.type && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <TagIcon size={12} />
-                          <span>{event.type}</span>
-                        </div>
-                      )}
-                      {event.location && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin size={12} />
-                          <span>{event.location}</span>
-                        </div>
-                      )}
-                      {event.duration && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <ActivityIcon size={12} />
-                          <span>{event.duration}</span>
-                        </div>
-                      )}
-                      {event.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 pt-1 border-t border-border">
-                          {event.notes}
-                        </p>
-                      )}
+                      <button
+                        onClick={() => handleDeleteWorkout(event.id)}
+                        className="p-1 text-destructive hover:text-destructive/80 transition-colors"
+                        aria-label="Delete workout"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 text-center">
-                <CalendarIcon className="mx-auto h-10 w-10 text-gray-300 mb-2" />
-                <p className="text-gray-500">
-                  No workouts scheduled for this day
-                </p>
-                <button
-                  className="mt-3 text-primary font-medium text-sm hover:underline transition-colors duration-150 ease-in-out"
-                  onClick={handleOpenAddWorkoutModal}
-                >
-                  Add a workout
-                </button>
-              </div>
-            )}
-          </h2>
+                  <div className="mt-1 space-y-0.5">
+                    {event.time && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock size={12} />
+                        <span>{event.time}</span>
+                      </div>
+                    )}
+                    {event.type && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <TagIcon size={12} />
+                        <span>{event.type}</span>
+                      </div>
+                    )}
+                    {event.location && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin size={12} />
+                        <span>{event.location}</span>
+                      </div>
+                    )}
+                    {event.duration && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <ActivityIcon size={12} />
+                        <span>{event.duration}</span>
+                      </div>
+                    )}
+                    {event.notes && (
+                      <p className="text-xs text-muted-foreground mt-1 pt-1 border-t border-border">
+                        {event.notes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 text-center">
+              <CalendarIcon className="mx-auto h-10 w-10 text-gray-300 mb-2" />
+              <p className="text-gray-500">
+                No workouts scheduled for this day
+              </p>
+              <button className="mt-3 text-primary font-medium text-sm hover:underline transition-colors duration-150 ease-in-out" onClick={handleOpenAddWorkoutModal}>
+                Add a workout
+              </button>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -445,17 +435,9 @@ export default function Calendar() {
               ) // Sort by date
               .slice(0, 4) // Take first 4
               .map((event) => (
-                <div
-                  key={event.id}
-                  className="flex flex-col items-start p-3 border rounded-lg bg-background hover:shadow-sm transition-shadow"
-                >
-                  {" "}
-                  {/* Added styling */}
+                <div key={event.id} className="flex flex-col items-start p-3 border rounded-lg bg-background hover:shadow-sm transition-shadow"> {/* Added styling */}
                   <div className="flex justify-between w-full items-center">
-                    <h4 className="font-medium text-foreground text-sm">
-                      {event.title}
-                    </h4>{" "}
-                    {/* Adjusted text size */}
+                    <h4 className="font-medium text-foreground text-sm">{event.title}</h4> {/* Adjusted text size */}
                     <button
                       onClick={() => handleDeleteWorkout(event.id)}
                       className="p-1 text-destructive hover:text-destructive/80 transition-colors"
@@ -464,13 +446,8 @@ export default function Calendar() {
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {" "}
-                    {/* Adjusted text size and margin */}
-                    {new Date(event.date + "T00:00:00").toLocaleDateString(
-                      undefined,
-                      { month: "short", day: "numeric", year: "numeric" }
-                    )}
+                  <p className="text-xs text-muted-foreground mt-0.5"> {/* Adjusted text size and margin */}
+                    {new Date(event.date + "T00:00:00").toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}
                   </p>
                   {/* Consider adding more details like time or type if space allows and it's useful */}
                 </div>

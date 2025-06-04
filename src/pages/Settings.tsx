@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"; // Added useEffect
 import { useLocation } from "react-router-dom"; // Added useLocation
-import { useUser } from "../context/UserContext";
+import { useUser, SocialAccountConnection } from "../context/UserContext"; // Added SocialAccountConnection
 import { useTheme } from "../context/ThemeContext";
 import { useFloatingCoach } from "../context/FloatingCoachContext"; // Import useFloatingCoach
 import Card from "../components/ui/Card";
@@ -1005,8 +1005,10 @@ export default function Settings() {
               >
                 <div className="space-y-4">
                   {availableSocialIntegrations.map((integration) => {
-                    const contextAccount = user?.socialAccounts?.find(
-                      (sa) => sa.id === integration.id
+                    // Ensure user.socialAccounts is treated as an array for the .find() operation
+                    const socialAccountsArray = (user && Array.isArray(user.socialAccounts)) ? user.socialAccounts : [];
+                    const contextAccount = socialAccountsArray.find(
+                      (sa: SocialAccountConnection) => sa.id === integration.id
                     );
                     const isConnected = contextAccount
                       ? contextAccount.connected
