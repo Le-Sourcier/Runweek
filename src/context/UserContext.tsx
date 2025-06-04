@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { toast } from 'react-toastify';
 
 type UserStats = {
   totalDistance: number;
@@ -10,15 +11,18 @@ type UserStats = {
   points: number;
 };
 
-type UserGoal = {
-  id: string;
-  title: string;
-  target: number;
-  current: number;
-  unit: string;
-  deadline: string;
-  completed: boolean;
-};
+// UserGoal type is now imported from ../types
+// type UserGoal = {
+//   id: string;
+//   title: string;
+//   target: number;
+//   current: number;
+//   unit: string;
+//   deadline: string;
+//   completed: boolean;
+// };
+
+import { UserGoal, GoalCategory } from '../types'; // Import UserGoal and GoalCategory
 
 type UserAchievement = {
   id: string;
@@ -109,6 +113,10 @@ type UserContextType = {
     currentPassword: string,
     newPassword: string
   ) => Promise<{ success: boolean; message: string }>; // Added changePassword
+  unlockSpecificAchievement: () => void; // Added for new achievement simulation
+  addGoal: (goalData: Omit<UserGoal, 'id' | 'current' | 'completed'>) => void;
+  updateGoal: (goalId: string, updatedData: Partial<Omit<UserGoal, 'id'>>) => void;
+  deleteGoal: (goalId: string) => void;
   // setUser: React.Dispatch<React.SetStateAction<User | null>>; // Keep if direct manipulation is needed, or remove if only via login/logout
 };
 
@@ -135,6 +143,8 @@ const sampleUser: User = {
     {
       id: "g1",
       title: "Weekly Distance",
+      category: 'distance' as GoalCategory,
+      description: "Run 40km this week",
       target: 40,
       current: 23.4,
       unit: "km",
@@ -144,8 +154,10 @@ const sampleUser: User = {
     {
       id: "g2",
       title: "Run a Half Marathon",
+      category: 'event' as GoalCategory,
+      description: "Complete a 21.1km race.",
       target: 21.1,
-      current: 15,
+      current: 15, // Current longest run towards this, perhaps
       unit: "km",
       deadline: "2025-07-15",
       completed: false,
@@ -252,9 +264,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Hardcoded credentials
       setUser(sampleUser);
       localStorage.setItem('user', JSON.stringify(sampleUser)); // Persist user
+      toast.success("Logged in successfully!");
       setIsLoading(false);
     } else {
       setError("Invalid email or password.");
+      toast.error("Invalid email or password.");
       setIsLoading(false);
     }
   };
@@ -263,6 +277,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user'); // Remove user from storage
     setUser(null);
     setError(null);
+    toast.info("You have been logged out.");
   };
 
   const updateUserProfile = (updatedProfileData: Partial<User>) => {
@@ -270,6 +285,67 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!prevUser) return null;
       const updatedUser = { ...prevUser, ...updatedProfileData };
       localStorage.setItem('user', JSON.stringify(updatedUser)); // Persist changes
+      toast.success("Profile updated successfully!");
+      return updatedUser;
+    });
+  };
+
+  const addGoal = (goalData: Omit<UserGoal, 'id' | 'current' | 'completed'>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const newGoal: UserGoal = {
+        ...goalData,
+        id: `goal_${Date.now().toString()}_${Math.random().toString(36).substring(2, 9)}`,
+        current: 0,
+        completed: false,
+      };
+      const updatedUser = { ...prevUser, goals: [newGoal, ...prevUser.goals] };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      toast.success("Goal added successfully: " + newGoal.title);
+      return updatedUser;
+    });
+  };
+
+  const updateGoal = (goalId: string, updatedData: Partial<Omit<UserGoal, 'id'>>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      let goalCompletedToast = false;
+      const updatedGoals = prevUser.goals.map(goal => {
+        if (goal.id === goalId) {
+          const fullyUpdatedGoal = { ...goal, ...updatedData };
+          // Check for auto-completion
+          if (typeof fullyUpdatedGoal.current === 'number' && typeof fullyUpdatedGoal.target === 'number' && fullyUpdatedGoal.current >= fullyUpdatedGoal.target && !goal.completed) {
+            fullyUpdatedGoal.completed = true;
+            goalCompletedToast = true;
+          }
+          return fullyUpdatedGoal;
+        }
+        return goal;
+      });
+      const updatedUser = { ...prevUser, goals: updatedGoals };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      if (goalCompletedToast) {
+        const completedGoal = updatedGoals.find(g => g.id === goalId);
+        toast.success(`Goal completed: ${completedGoal?.title}!`);
+      } else {
+        toast.success("Goal updated successfully!");
+      }
+      return updatedUser;
+    });
+  };
+
+  const deleteGoal = (goalId: string) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const goalToDelete = prevUser.goals.find(g => g.id === goalId);
+      const updatedGoals = prevUser.goals.filter(goal => goal.id !== goalId);
+      const updatedUser = { ...prevUser, goals: updatedGoals };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      if (goalToDelete) {
+        toast.info(`Goal deleted: ${goalToDelete.title}`);
+      } else {
+        toast.info("Goal deleted.");
+      }
       return updatedUser;
     });
   };
@@ -282,6 +358,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         preferences: { ...(prevUser.preferences || {}), ...preferences },
       };
       localStorage.setItem('user', JSON.stringify(updatedUser)); // Persist changes
+      toast.success("Preferences saved successfully!");
       return updatedUser;
     });
   };
@@ -320,6 +397,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const unlockSpecificAchievement = () => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+
+      const achievementIdToUnlock = "a3"; // A new, predefined ID
+      const isAlreadyUnlocked = prevUser.achievements.some(ach => ach.id === achievementIdToUnlock);
+
+      if (isAlreadyUnlocked) {
+        toast.info("You've already unlocked the 'Early Riser' achievement!");
+        return prevUser;
+      }
+
+      const newAchievement: UserAchievement = {
+        id: achievementIdToUnlock,
+        title: "Early Riser",
+        description: "Completed a run before 7 AM!",
+        icon: "Sunrise", // Example icon name (Lucide icon names are typically capitalized)
+        earnedDate: new Date().toISOString(),
+      };
+
+      const updatedUser = {
+        ...prevUser,
+        achievements: [...prevUser.achievements, newAchievement],
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      toast.success("Achievement Unlocked: Early Riser!");
+      return updatedUser;
+    });
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -332,6 +439,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         updateUserProfile,
         updateUserPreferences,
         changePassword,
+        unlockSpecificAchievement,
+        addGoal,
+        updateGoal,
+        deleteGoal,
       }}
     >
       {children}

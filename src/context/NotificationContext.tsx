@@ -5,12 +5,14 @@ interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   preferences: NotificationPreferences;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   deleteNotification: (id: string) => void;
   deleteAllNotifications: () => void;
   updatePreferences: (preferences: Partial<NotificationPreferences>) => void;
 }
+
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
@@ -80,12 +82,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setPreferences(prev => ({ ...prev, ...newPreferences }));
   };
 
+  const addNotification = (notificationData: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: Notification = {
+      ...notificationData,
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9), // Unique ID
+      timestamp: Date.now(),
+      read: false,
+    };
+    // Optional: Check preferences before adding
+    // if (preferences.inApp && preferences.categories[newNotification.type]) { ... }
+    setNotifications(prev => [newNotification, ...prev]);
+  };
+
   return (
     <NotificationContext.Provider
       value={{
         notifications,
         unreadCount,
         preferences,
+        addNotification,
         markAsRead,
         markAllAsRead,
         deleteNotification,

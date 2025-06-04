@@ -44,3 +44,18 @@ export type PersonalRecord = {
   date: string; // ISO date string, e.g., "2024-07-28"
   notes?: string; // optional, for any additional details
 };
+
+// Goal Management Types
+export type GoalCategory = 'distance' | 'speed' | 'consistency' | 'event' | 'other';
+
+export type UserGoal = {
+  id: string;
+  title: string;
+  category: GoalCategory;
+  description?: string;
+  target: number;
+  current: number;
+  unit: string; // e.g., 'km', 'miles', 'hours', 'minutes', 'runs', 'workouts'
+  deadline: string; // ISO date string or simple YYYY-MM-DD
+  completed: boolean;
+};

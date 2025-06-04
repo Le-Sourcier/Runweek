@@ -1,21 +1,46 @@
-import { useUser } from '../context/UserContext';
-import { usePRs } from '../context/PRContext'; // Import usePRs
-import { isThisMonth, parseISO, format } from 'date-fns'; // Import date-fns functions & format
-import { fr } from 'date-fns/locale'; // Import French locale for date formatting
-import { Heart, Activity, Moon, Footprints, Calendar, Trophy, ArrowRight, PlusCircle } from 'lucide-react'; // Added PlusCircle
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useUser } from "../context/UserContext";
+import { usePRs } from "../context/PRContext"; // Import usePRs
+import { useNotifications } from "../context/NotificationContext"; // Import for notifications
+import { toast } from "react-toastify"; // Import for toasts
+import { isThisMonth, parseISO, format } from "date-fns"; // Import date-fns functions & format
+import { fr } from "date-fns/locale"; // Import French locale for date formatting
+import {
+  Heart,
+  Activity,
+  Moon,
+  Footprints,
+  Calendar,
+  Trophy,
+  ArrowRight,
+  PlusCircle,
+  Sunrise,
+  MessageSquare,
+} from "lucide-react"; // Added PlusCircle, Sunrise, MessageSquare
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import Card from "../components/ui/Card"; // Import Card component for the new test buttons
 
 export default function Dashboard() {
-  const { user } = useUser();
-  const { prs } = usePRs(); // Fetch PRs
-  
+  const userContext = useUser(); // Use userContext to access unlockSpecificAchievement
+  const { user } = userContext;
+  const notificationContext = useNotifications(); // Use notificationContext to access addNotification
+  const { processedPRs: prs } = usePRs(); // Fetch PRs
+
   if (!user) return null;
 
   // Calculate PR statistics
   const totalPRs = prs?.length || 0;
-  const prsThisMonth = prs?.filter(pr => pr.date && isThisMonth(parseISO(pr.date))).length || 0;
+  const prsThisMonth =
+    prs?.filter((pr) => pr.date && isThisMonth(parseISO(pr.date))).length || 0;
 
   // Process PRs for "Recent Personal Records" section
   const recentPRs = (prs || [])
@@ -23,7 +48,7 @@ export default function Dashboard() {
     .sort((a, b) => {
       try {
         return parseISO(b.date).getTime() - parseISO(a.date).getTime();
-      } catch (e) {
+      } catch {
         // Handle invalid date strings if necessary, e.g., by pushing them to the end or logging an error
         return 0;
       }
@@ -32,43 +57,43 @@ export default function Dashboard() {
 
   // Mock data for heart rate trend
   const heartRateData = [
-    { day: 'Mar', value: 72 },
-    { day: 'Mer', value: 74 },
-    { day: 'Jeu', value: 71 },
-    { day: 'Ven', value: 73 },
-    { day: 'Sam', value: 70 },
-    { day: 'Dim', value: 71 },
-    { day: 'Lun', value: 72 },
+    { day: "Mar", value: 72 },
+    { day: "Mer", value: 74 },
+    { day: "Jeu", value: 71 },
+    { day: "Ven", value: 73 },
+    { day: "Sam", value: 70 },
+    { day: "Dim", value: 71 },
+    { day: "Lun", value: 72 },
   ];
 
   // Mock data for upcoming workouts
   const upcomingWorkouts = [
     {
-      title: 'Course longue',
-      time: 'Demain',
-      distance: '10.0 km',
-      duration: '1h 30m'
+      title: "Course longue",
+      time: "Demain",
+      distance: "10.0 km",
+      duration: "1h 30m",
     },
     {
-      title: 'Entraînement par intervalles',
-      time: 'Dans 2 jours',
-      distance: '5.0 km',
-      duration: '45m'
-    }
+      title: "Entraînement par intervalles",
+      time: "Dans 2 jours",
+      distance: "5.0 km",
+      duration: "45m",
+    },
   ];
 
   // Mock data for recent achievements
   const recentAchievements = [
     {
-      title: 'Nouveau record de distance',
-      description: '15km en une séance',
-      time: 'Il y a 2 jours'
+      title: "Nouveau record de distance",
+      description: "15km en une séance",
+      time: "Il y a 2 jours",
     },
     {
-      title: 'Objectif hebdomadaire atteint',
-      description: '4 entraînements cette semaine',
-      time: 'Hier'
-    }
+      title: "Objectif hebdomadaire atteint",
+      description: "4 entraînements cette semaine",
+      time: "Hier",
+    },
   ];
 
   return (
@@ -143,7 +168,9 @@ export default function Dashboard() {
               <Footprints className="text-orange-500" size={24} />
               <span className="stat-value">8,432</span>
             </div>
-            <span className="text-orange-500 text-sm font-medium">1,568 restants</span>
+            <span className="text-orange-500 text-sm font-medium">
+              1,568 restants
+            </span>
           </div>
         </motion.div>
 
@@ -162,7 +189,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-sm text-gray-500 ml-8">{prsThisMonth} Ce Mois-ci</span>
+            <span className="text-sm text-gray-500 ml-8">
+              {prsThisMonth} Ce Mois-ci
+            </span>
           </div>
         </motion.div>
       </div>
@@ -172,8 +201,12 @@ export default function Dashboard() {
         <div className="lg:col-span-2 chart-container">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h3 className="font-medium text-gray-900">Tendance de fréquence cardiaque</h3>
-              <p className="text-sm text-gray-500">Moyenne des 7 derniers jours</p>
+              <h3 className="font-medium text-gray-900">
+                Tendance de fréquence cardiaque
+              </h3>
+              <p className="text-sm text-gray-500">
+                Moyenne des 7 derniers jours
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Moy:</span>
@@ -181,38 +214,38 @@ export default function Dashboard() {
               <span className="text-green-500">↑</span>
             </div>
           </div>
-          
+
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={heartRateData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis 
-                  dataKey="day" 
+                <XAxis
+                  dataKey="day"
                   stroke="#6B7280"
                   fontSize={12}
                   tickLine={false}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6B7280"
                   fontSize={12}
                   tickLine={false}
-                  domain={['dataMin - 5', 'dataMax + 5']}
+                  domain={["dataMin - 5", "dataMax + 5"]}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#EF4444" 
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#EF4444"
                   strokeWidth={2}
-                  dot={{ fill: '#EF4444', strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: '#EF4444' }}
+                  dot={{ fill: "#EF4444", strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: "#EF4444" }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -222,28 +255,32 @@ export default function Dashboard() {
         <div className="chart-container">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-medium text-gray-900">Entraînements à venir</h3>
-            <Link 
-              to="/calendar" 
+            <Link
+              to="/calendar"
               className="text-primary-500 text-sm font-medium hover:text-primary-600 flex items-center gap-1"
             >
               Voir calendrier
               <Calendar size={14} />
             </Link>
           </div>
-          
+
           <div className="space-y-4">
             {upcomingWorkouts.map((workout, index) => (
-              <div 
+              <div
                 key={index}
                 className="p-4 rounded-lg border border-gray-100 hover:border-primary-100 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium text-gray-900">{workout.title}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {workout.title}
+                    </h4>
                     <p className="text-sm text-gray-500">{workout.time}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">{workout.distance}</p>
+                    <p className="font-medium text-gray-900">
+                      {workout.distance}
+                    </p>
                     <p className="text-sm text-gray-500">{workout.duration}</p>
                   </div>
                 </div>
@@ -257,7 +294,7 @@ export default function Dashboard() {
       <div className="chart-container">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-medium text-gray-900">Réalisations récentes</h3>
-          <Link 
+          <Link
             to="/achievements"
             className="text-primary-500 text-sm font-medium hover:text-primary-600 flex items-center gap-1"
           >
@@ -265,7 +302,7 @@ export default function Dashboard() {
             <Trophy size={14} />
           </Link>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentAchievements.map((achievement, index) => (
             <motion.div
@@ -279,8 +316,12 @@ export default function Dashboard() {
                 <Trophy className="text-primary-500" size={20} />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">{achievement.title}</h4>
-                <p className="text-sm text-gray-500">{achievement.description}</p>
+                <h4 className="font-medium text-gray-900">
+                  {achievement.title}
+                </h4>
+                <p className="text-sm text-gray-500">
+                  {achievement.description}
+                </p>
                 <p className="text-xs text-gray-400 mt-1">{achievement.time}</p>
               </div>
             </motion.div>
@@ -292,7 +333,9 @@ export default function Dashboard() {
       <div className="chart-container">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-medium text-gray-900">Records Récents</h3>
-          <div className="flex items-center gap-3"> {/* Updated to gap-3 for spacing */}
+          <div className="flex items-center gap-3">
+            {" "}
+            {/* Updated to gap-3 for spacing */}
             <Link
               to="/personal-records"
               className="text-primary-500 text-sm font-medium hover:text-primary-600 flex items-center gap-1"
@@ -312,8 +355,11 @@ export default function Dashboard() {
 
         {recentPRs.length === 0 ? (
           <p className="text-sm text-gray-500">
-            Aucun record personnel enregistré pour le moment.{' '}
-            <Link to="/personal-records" className="text-primary-500 hover:text-primary-600 font-medium">
+            Aucun record personnel enregistré pour le moment.{" "}
+            <Link
+              to="/personal-records"
+              className="text-primary-500 hover:text-primary-600 font-medium"
+            >
               En ajoutez un!
             </Link>
           </p>
@@ -326,16 +372,29 @@ export default function Dashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-semibold text-primary-600">{pr.distance} km Record</h4>
-                    <p className="text-sm text-gray-700">Temps: <span className="font-medium">{pr.time}</span></p>
+                    <h4 className="font-semibold text-primary-600">
+                      {pr.distance} km Record
+                    </h4>
+                    <p className="text-sm text-gray-700">
+                      Temps: <span className="font-medium">{pr.time}</span>
+                    </p>
                   </div>
                   <div className="text-right">
                     {pr.date && (
-                       <p className="text-xs text-gray-500">
-                         {format(parseISO(pr.date), 'd MMM yyyy', { locale: fr })}
-                       </p>
+                      <p className="text-xs text-gray-500">
+                        {format(parseISO(pr.date), "d MMM yyyy", {
+                          locale: fr,
+                        })}
+                      </p>
                     )}
-                    {pr.notes && <p className="text-xs text-gray-400 mt-1 truncate" title={pr.notes}>{pr.notes}</p>}
+                    {pr.notes && (
+                      <p
+                        className="text-xs text-gray-400 mt-1 truncate"
+                        title={pr.notes}
+                      >
+                        {pr.notes}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -348,14 +407,80 @@ export default function Dashboard() {
       <div className="bg-primary-500 rounded-xl p-6 text-white">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="font-medium text-xl mb-2">Connectez votre appareil Garmin</h3>
-            <p className="text-white/90">Suivez vos activités automatiquement et obtenez des analyses détaillées</p>
+            <h3 className="font-medium text-xl mb-2">
+              Connectez votre appareil Garmin
+            </h3>
+            <p className="text-white/90">
+              Suivez vos activités automatiquement et obtenez des analyses
+              détaillées
+            </p>
           </div>
           <button className="px-6 py-2.5 bg-white text-primary-500 rounded-lg hover:bg-white/90 transition-colors font-medium">
             Connecter
           </button>
         </div>
       </div>
+
+      {/* Temporary Test Buttons Card */}
+      <Card title="Test Notifications & Achievements">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+          <button
+            onClick={() => {
+              if (userContext.unlockSpecificAchievement) {
+                // Check current state before unlocking to determine if it was *newly* unlocked
+                const currentAchievements =
+                  userContext.user?.achievements || [];
+                const achievementIdToUnlock = "a3";
+                const isAlreadyUnlocked = currentAchievements.some(
+                  (ach) => ach.id === achievementIdToUnlock
+                );
+
+                userContext.unlockSpecificAchievement(); // This will show a toast via UserContext
+
+                // Check again after calling (or ideally, unlockSpecificAchievement should return a status)
+                // For simplicity, we'll assume if it wasn't already unlocked, it is now, and add notification
+                if (!isAlreadyUnlocked && notificationContext.addNotification) {
+                  // Check if it's *now* unlocked (UserContext updates asynchronously)
+                  // A more robust way is for unlockSpecificAchievement to return if it was newly unlocked.
+                  // For this test, we'll add notification if it wasn't already unlocked.
+                  // This might lead to notification even if user object hasn't updated yet.
+                  notificationContext.addNotification({
+                    type: "achievement",
+                    title: "Early Riser Unlocked!",
+                    message: "You completed a run before 7 AM.",
+                    actionUrl: "/achievements",
+                    icon: "Sunrise", // Ensure 'Sunrise' matches an icon key or component
+                  });
+                }
+              }
+            }}
+            className="btn btn-secondary"
+          >
+            <Sunrise size={16} className="mr-2" />
+            Unlock Early Riser Achievement
+          </button>
+          <button
+            onClick={() => {
+              toast.info(
+                "New message from Coach AI: Check your updated training plan!"
+              );
+              if (notificationContext.addNotification) {
+                notificationContext.addNotification({
+                  type: "social", // or 'message', 'info' depending on your NotificationType
+                  title: "New Message from Coach AI",
+                  message: "Check your updated training plan!",
+                  actionUrl: "/coach",
+                  icon: "MessageSquare", // Ensure 'MessageSquare' matches an icon key or component
+                });
+              }
+            }}
+            className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+          >
+            <MessageSquare size={16} className="mr-2" />
+            Simulate New Message
+          </button>
+        </div>
+      </Card>
     </div>
   );
 }

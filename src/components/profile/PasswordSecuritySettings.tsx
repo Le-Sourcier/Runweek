@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../ui/Card';
 import { ArrowLeft, ShieldCheck, LockKeyhole, Loader2 } from 'lucide-react'; // Added Loader2
 import { useUser } from '../../context/UserContext'; // Import useUser
+import { toast } from 'react-toastify';
 
 interface PasswordSecuritySettingsProps {
   onBack: () => void;
@@ -12,30 +13,30 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  // const [passwordError, setPasswordError] = useState<string | null>(null); // Replaced by toast
+  // const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null); // Replaced by toast
   const [isChangingPassword, setIsChangingPassword] = useState(false); // Loading state
 
   const isTwoFactorEnabled = user?.preferences?.isTwoFactorEnabled || false;
 
   const handleChangePassword = async (e: React.FormEvent) => { // Made async
     e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(null);
+    // setPasswordError(null); // Replaced by toast
+    // setPasswordSuccess(null); // Replaced by toast
     setIsChangingPassword(true);
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      setPasswordError('All password fields are required.');
+      toast.error('All password fields are required.');
       setIsChangingPassword(false);
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setPasswordError('New password and confirmation do not match.');
+      toast.error('New password and confirmation do not match.');
       setIsChangingPassword(false);
       return;
     }
     if (newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long.');
+      toast.error('New password must be at least 8 characters long.');
       setIsChangingPassword(false);
       return;
     }
@@ -43,15 +44,15 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
     try {
       const result = await changePassword(currentPassword, newPassword);
       if (result.success) {
-        setPasswordSuccess(result.message);
+        toast.success(result.message);
         setCurrentPassword('');
         setNewPassword('');
         setConfirmNewPassword('');
       } else {
-        setPasswordError(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred.');
     } finally {
       setIsChangingPassword(false);
     }
@@ -122,9 +123,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
             />
           </div>
 
-          {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
-          {passwordSuccess && <p className="text-sm text-success">{passwordSuccess}</p>} {/* Use text-success */}
-
+          {/* Error/Success messages are now handled by toasts */}
 
           <div className="pt-2">
             <button
