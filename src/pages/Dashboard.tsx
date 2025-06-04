@@ -43,7 +43,7 @@ export default function Dashboard() {
 
   // Process goals for "Goal Summary" section
   const activeGoals = (user?.goals || [])
-    .filter(goal => !goal.completed)
+    .filter((goal) => !goal.completed)
     .sort((a, b) => {
       try {
         return parseISO(a.deadline).getTime() - parseISO(b.deadline).getTime();
@@ -133,7 +133,9 @@ export default function Dashboard() {
               <Heart className="text-red-500 dark:text-red-400" size={24} />
               <span className="stat-value">72 bpm</span>
             </div>
-            <span className="text-green-500 dark:text-green-400 text-sm font-medium">+2</span>
+            <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+              +2
+            </span>
           </div>
         </motion.div>
 
@@ -146,10 +148,15 @@ export default function Dashboard() {
           <span className="stat-label">Score d'activité</span>
           <div className="flex items-baseline gap-2 mt-2">
             <div className="flex items-center gap-2">
-              <Activity className="text-primary-500 dark:text-primary-400" size={24} />
+              <Activity
+                className="text-primary-500 dark:text-primary-400"
+                size={24}
+              />
               <span className="stat-value">85/100</span>
             </div>
-            <span className="text-green-500 dark:text-green-400 text-sm font-medium">+5 pts</span>
+            <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+              +5 pts
+            </span>
           </div>
         </motion.div>
 
@@ -162,10 +169,15 @@ export default function Dashboard() {
           <span className="stat-label">Qualité du sommeil</span>
           <div className="flex items-baseline gap-2 mt-2">
             <div className="flex items-center gap-2">
-              <Moon className="text-purple-500 dark:text-purple-400" size={24} />
+              <Moon
+                className="text-purple-500 dark:text-purple-400"
+                size={24}
+              />
               <span className="stat-value">7.5 hrs</span>
             </div>
-            <span className="text-green-500 dark:text-green-400 text-sm font-medium">Bon</span>
+            <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+              Bon
+            </span>
           </div>
         </motion.div>
 
@@ -178,7 +190,10 @@ export default function Dashboard() {
           <span className="stat-label">Pas quotidiens</span>
           <div className="flex items-baseline gap-2 mt-2">
             <div className="flex items-center gap-2">
-              <Footprints className="text-orange-500 dark:text-orange-400" size={24} />
+              <Footprints
+                className="text-orange-500 dark:text-orange-400"
+                size={24}
+              />
               <span className="stat-value">8,432</span>
             </div>
             <span className="text-orange-500 dark:text-orange-400 text-sm font-medium">
@@ -197,12 +212,17 @@ export default function Dashboard() {
           <span className="stat-label">Records Personnels</span>
           <div className="flex items-baseline gap-2 mt-2">
             <div className="flex items-center gap-2">
-              <Trophy className="text-yellow-500 dark:text-yellow-400" size={24} />
+              <Trophy
+                className="text-yellow-500 dark:text-yellow-400"
+                size={24}
+              />
               <span className="stat-value">{totalPRs} Total</span>
             </div>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-sm text-muted-foreground ml-8"> {/* Changed text-gray-500 to text-muted-foreground */}
+            <span className="text-sm text-muted-foreground ml-8">
+              {" "}
+              {/* Changed text-gray-500 to text-muted-foreground */}
               {prsThisMonth} Ce Mois-ci
             </span>
           </div>
@@ -211,67 +231,86 @@ export default function Dashboard() {
 
       {/* Heart Rate Trend */}
       <div className="chart-container mb-8">
-        <div className="flex justify-between items-start mb-4"> {/* mb-6 to mb-4 as per new style */}
+        <div className="flex justify-between items-start mb-4">
+          {" "}
+          {/* mb-6 to mb-4 as per new style */}
           <div>
-            <h3 className="text-xl font-semibold text-card-foreground mb-1"> {/* Applied new title style, reduced bottom margin */}
-                Tendance de fréquence cardiaque
-              </h3>
-              <p className="text-sm text-muted-foreground"> {/* text-gray-500 to text-muted-foreground */}
-                Moyenne des 7 derniers jours
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Moy:</span> {/* text-gray-500 to text-muted-foreground */}
-              <span className="font-medium text-red-500 dark:text-red-400">72 BPM</span> {/* Added dark variant */}
-              <span className="text-green-500 dark:text-green-400">↑</span>
-            </div>
+            <h3 className="text-xl font-semibold text-card-foreground mb-1">
+              {" "}
+              {/* Applied new title style, reduced bottom margin */}
+              Tendance de fréquence cardiaque
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {" "}
+              {/* text-gray-500 to text-muted-foreground */}
+              Moyenne des 7 derniers jours
+            </p>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Moy:</span>{" "}
+            {/* text-gray-500 to text-muted-foreground */}
+            <span className="font-medium text-red-500 dark:text-red-400">
+              72 BPM
+            </span>{" "}
+            {/* Added dark variant */}
+            <span className="text-green-500 dark:text-green-400">↑</span>
+          </div>
+        </div>
 
-          <div className="h-[240px]"> {/* mb-6 was on parent, adjusted title's mb */}
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={heartRateData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="day"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  domain={["dataMin - 5", "dataMax + 5"]}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)", // Using theme radius
-                  }}
-                  // itemStyle and labelStyle are often better handled by global CSS overrides for recharts if needed
-                  // For direct props:
-                  // itemStyle={{ color: "hsl(var(--popover-foreground))" }}
-                  // labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="hsl(var(--destructive))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }} // Added r:4 for dot size
-                  activeDot={{ r: 6, fill: "hsl(var(--destructive))" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="h-[240px]">
+          {" "}
+          {/* mb-6 was on parent, adjusted title's mb */}
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={heartRateData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+              />
+              <XAxis
+                dataKey="day"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+                tickLine={false}
+                domain={["dataMin - 5", "dataMax + 5"]}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "var(--radius)", // Using theme radius
+                }}
+                // itemStyle and labelStyle are often better handled by global CSS overrides for recharts if needed
+                // For direct props:
+                // itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+                // labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="hsl(var(--destructive))"
+                strokeWidth={2}
+                dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }} // Added r:4 for dot size
+                activeDot={{ r: 6, fill: "hsl(var(--destructive))" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
       {/* Upcoming Workouts */}
       <div className="chart-container mb-8">
-        <div className="flex justify-between items-center mb-4"> {/* mb-6 to mb-4 */}
-          <h3 className="text-xl font-semibold text-card-foreground">Entraînements à venir</h3> {/* Applied new title style */}
+        <div className="flex justify-between items-center mb-4">
+          {" "}
+          {/* mb-6 to mb-4 */}
+          <h3 className="text-xl font-semibold text-card-foreground">
+            Entraînements à venir
+          </h3>{" "}
+          {/* Applied new title style */}
           <Link
             to="/calendar"
             className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1" /* Ensured base primary color */
@@ -288,16 +327,26 @@ export default function Dashboard() {
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="font-medium text-card-foreground"> {/* text-gray-900 to text-card-foreground */}
+                  <h4 className="font-medium text-card-foreground">
+                    {" "}
+                    {/* text-gray-900 to text-card-foreground */}
                     {workout.title}
                   </h4>
-                  <p className="text-sm text-muted-foreground">{workout.time}</p> {/* text-gray-500 to text-muted-foreground */}
+                  <p className="text-sm text-muted-foreground">
+                    {workout.time}
+                  </p>{" "}
+                  {/* text-gray-500 to text-muted-foreground */}
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-card-foreground"> {/* text-gray-900 to text-card-foreground */}
+                  <p className="font-medium text-card-foreground">
+                    {" "}
+                    {/* text-gray-900 to text-card-foreground */}
                     {workout.distance}
                   </p>
-                  <p className="text-sm text-muted-foreground">{workout.duration}</p> {/* text-gray-500 to text-muted-foreground */}
+                  <p className="text-sm text-muted-foreground">
+                    {workout.duration}
+                  </p>{" "}
+                  {/* text-gray-500 to text-muted-foreground */}
                 </div>
               </div>
             </div>
@@ -321,16 +370,25 @@ export default function Dashboard() {
         {activeGoals.length > 0 ? (
           <div className="space-y-4">
             {activeGoals.map((goal) => (
-              <div key={goal.id} className="mb-4 last:mb-0"> {/* Added last:mb-0 to prevent double margin if only one item */}
+              <div key={goal.id} className="mb-4 last:mb-0">
+                {" "}
+                {/* Added last:mb-0 to prevent double margin if only one item */}
                 <div className="flex justify-between items-baseline mb-1">
-                  <h4 className="font-medium text-card-foreground">{goal.title}</h4>
+                  <h4 className="font-medium text-card-foreground">
+                    {goal.title}
+                  </h4>
                   {goal.deadline && (
-                     <p className="text-xs text-muted-foreground">
-                       Échéance: {format(parseISO(goal.deadline), "MMM d", { locale: fr })}
-                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Échéance:{" "}
+                      {format(parseISO(goal.deadline), "MMM d", { locale: fr })}
+                    </p>
                   )}
                 </div>
-                <ProgressBar value={goal.current} max={goal.target} height="sm" />
+                <ProgressBar
+                  value={goal.current}
+                  max={goal.target}
+                  height="sm"
+                />
                 <p className="text-sm text-muted-foreground mt-1">
                   {goal.current} / {goal.target} {goal.unit}
                 </p>
@@ -340,7 +398,9 @@ export default function Dashboard() {
         ) : (
           <div className="text-center py-4">
             <Target size={24} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-3">Vous n'avez aucun objectif actif pour le moment.</p>
+            <p className="text-muted-foreground mb-3">
+              Vous n'avez aucun objectif actif pour le moment.
+            </p>
             <Link to="/goals" className="btn btn-outline btn-sm">
               Définir un Nouvel Objectif
             </Link>
@@ -350,8 +410,13 @@ export default function Dashboard() {
 
       {/* Recent Achievements */}
       <div className="chart-container mb-8">
-        <div className="flex justify-between items-center mb-4"> {/* mb-6 to mb-4 */}
-          <h3 className="text-xl font-semibold text-card-foreground">Réalisations récentes</h3> {/* Applied new title style */}
+        <div className="flex justify-between items-center mb-4">
+          {" "}
+          {/* mb-6 to mb-4 */}
+          <h3 className="text-xl font-semibold text-card-foreground">
+            Réalisations récentes
+          </h3>{" "}
+          {/* Applied new title style */}
           <Link
             to="/achievements"
             className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1" /* Ensured base primary color */
@@ -369,17 +434,30 @@ export default function Dashboard() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700" // Added bg and border for dark mode consistency
             >
-              <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center"> {/* Adjusted dark bg for primary accent */}
-                <Trophy className="text-primary dark:text-primary-400" size={20} /> {/* Ensured base primary color */}
+              <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center">
+                {" "}
+                {/* Adjusted dark bg for primary accent */}
+                <Trophy
+                  className="text-primary dark:text-primary-400"
+                  size={20}
+                />{" "}
+                {/* Ensured base primary color */}
               </div>
               <div>
-                <h4 className="font-medium text-card-foreground"> {/* text-gray-900 to text-card-foreground */}
+                <h4 className="font-medium text-card-foreground">
+                  {" "}
+                  {/* text-gray-900 to text-card-foreground */}
                   {achievement.title}
                 </h4>
-                <p className="text-sm text-muted-foreground"> {/* text-gray-500 to text-muted-foreground */}
+                <p className="text-sm text-muted-foreground">
+                  {" "}
+                  {/* text-gray-500 to text-muted-foreground */}
                   {achievement.description}
                 </p>
-                <p className="text-xs text-muted-foreground/80 mt-1">{achievement.time}</p> {/* text-gray-400 to text-muted-foreground/80 */}
+                <p className="text-xs text-muted-foreground/80 mt-1">
+                  {achievement.time}
+                </p>{" "}
+                {/* text-gray-400 to text-muted-foreground/80 */}
               </div>
             </motion.div>
           ))}
@@ -388,8 +466,13 @@ export default function Dashboard() {
 
       {/* Recent Personal Records Section */}
       <div className="chart-container mb-8">
-        <div className="flex justify-between items-center mb-4"> {/* mb-6 to mb-4 */}
-          <h3 className="text-xl font-semibold text-card-foreground">Records Récents</h3> {/* Applied new title style */}
+        <div className="flex justify-between items-center mb-4">
+          {" "}
+          {/* mb-6 to mb-4 */}
+          <h3 className="text-xl font-semibold text-card-foreground">
+            Records Récents
+          </h3>{" "}
+          {/* Applied new title style */}
           <div className="flex items-center gap-3">
             <Link
               to="/personal-records"
@@ -410,7 +493,9 @@ export default function Dashboard() {
         {recentPRs.length === 0 ? (
           <div className="text-center py-4">
             <Trophy size={24} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-3">Aucun record personnel pour le moment.</p>
+            <p className="text-muted-foreground mb-3">
+              Aucun record personnel pour le moment.
+            </p>
             <Link to="/personal-records" className="btn btn-outline btn-sm">
               Ajouter un Record
             </Link>
@@ -424,16 +509,22 @@ export default function Dashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-semibold text-primary dark:text-primary-400"> {/* Ensured base primary color */}
+                    <h4 className="font-semibold text-primary dark:text-primary-400">
+                      {" "}
+                      {/* Ensured base primary color */}
                       {pr.distance} km Record
                     </h4>
-                    <p className="text-sm text-card-foreground"> {/* text-gray-700 to text-card-foreground */}
+                    <p className="text-sm text-card-foreground">
+                      {" "}
+                      {/* text-gray-700 to text-card-foreground */}
                       Temps: <span className="font-medium">{pr.time}</span>
                     </p>
                   </div>
                   <div className="text-right">
                     {pr.date && (
-                      <p className="text-xs text-muted-foreground/80"> {/* text-gray-500 to text-muted-foreground/80 */}
+                      <p className="text-xs text-muted-foreground/80">
+                        {" "}
+                        {/* text-gray-500 to text-muted-foreground/80 */}
                         {format(parseISO(pr.date), "d MMM yyyy", {
                           locale: fr,
                         })}
@@ -456,7 +547,9 @@ export default function Dashboard() {
       </div>
 
       {/* Connect Device Banner - Conditionally Rendered */}
-      {!user?.connectedDevices?.some(device => device.status === 'connected') && (
+      {!user?.connectedDevices?.some(
+        (device) => device.status === "connected"
+      ) && (
         <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
           <div className="flex justify-between items-center">
             <div>
@@ -478,7 +571,9 @@ export default function Dashboard() {
       {/* Last Updated Time */}
       <div className="text-xs text-muted-foreground/80 dark:text-muted-foreground/60 mt-8 text-center">
         <span>Dernière mise à jour: 21:30</span>
-        <button className="ml-2 text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium"> {/* Ensured base primary color */}
+        <button className="ml-2 text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
+          {" "}
+          {/* Ensured base primary color */}
           Actualiser
         </button>
       </div>
