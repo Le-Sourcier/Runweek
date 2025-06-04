@@ -24,18 +24,11 @@ import { useState } from "react"; // Added useState for modal
 import { defaultDashboardWidgetsConfig } from "../context/UserContext"; // Added default config
 import WidgetManagementModal from "../components/dashboard/WidgetManagementModal"; // Added modal component
 import ProgressBar from "../components/ui/ProgressBar"; // Added ProgressBar for Goal Summary
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+// Removed recharts imports, they are now in HeartRateTrendWidget
 import Card from "../components/ui/Card";
 import WeeklySummaryWidget from '../components/dashboard/widgets/WeeklySummaryWidget'; // Added
 import TipOfTheDayWidget from '../components/dashboard/widgets/TipOfTheDayWidget'; // Added
+import HeartRateTrendWidget from '../components/dashboard/widgets/HeartRateTrendWidget'; // Added
 
 export default function Dashboard() {
   const userContext = useUser();
@@ -86,17 +79,6 @@ export default function Dashboard() {
       }
     })
     .slice(0, 3); // Take top 3 recent PRs
-
-  // Mock data for heart rate trend
-  const heartRateData = [
-    { day: "Mar", value: 72 },
-    { day: "Mer", value: 74 },
-    { day: "Jeu", value: 71 },
-    { day: "Ven", value: 73 },
-    { day: "Sam", value: 70 },
-    { day: "Dim", value: 71 },
-    { day: "Lun", value: 72 },
-  ];
 
   // Mock data for upcoming workouts
   const upcomingWorkouts = [
@@ -222,62 +204,8 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderHeartRateTrend = () => (
-    // chart-container class does not have mb-8 by default, so this Card wrapper adds it.
-    // However, the current Dashboard.tsx uses <div className="chart-container mb-8"> for these.
-    // To maintain consistency and ensure mb-8, let's keep the div structure as is for chart-like widgets.
-    <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-semibold text-card-foreground mb-1">
-            Tendance de fréquence cardiaque
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Moyenne des 7 derniers jours
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Moy:</span>
-          <span className="font-medium text-red-500 dark:text-red-400">72 BPM</span>
-          <span className="text-green-500 dark:text-green-400">↑</span>
-        </div>
-      </div>
-      <div className="h-[240px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={heartRateData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="day"
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              tickLine={false}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              tickLine={false}
-              domain={["dataMin - 5", "dataMax + 5"]}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "var(--radius)",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="hsl(var(--destructive))"
-              strokeWidth={2}
-              dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: "hsl(var(--destructive))" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
+  // renderHeartRateTrend is now a separate component: HeartRateTrendWidget
+  // No need for the function here anymore.
 
   const renderGoalSummary = () => (
     <Card // Card component itself will have mb-8 if specified in its usage, or rely on grid gap.
@@ -515,7 +443,8 @@ export default function Dashboard() {
               widgetContent = renderStatsGrid();
               break;
             case 'heartRateTrend':
-              widgetContent = renderHeartRateTrend();
+              // widgetContent = renderHeartRateTrend(); // Old way
+              widgetContent = <HeartRateTrendWidget />; // New way
               break;
             case 'goalSummary':
               widgetContent = renderGoalSummary();
