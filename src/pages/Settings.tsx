@@ -12,7 +12,6 @@ import {
   Lock,
   Smartphone,
   Palette,
-  Languages,
   CreditCard,
   Shield,
   Activity,
