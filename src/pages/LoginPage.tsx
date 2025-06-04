@@ -11,10 +11,20 @@ const LoginPage: React.FC = () => {
   const { login, error, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const fromLocation = location.state?.from; // Get the full 'from' location object
-  const redirectTo = fromLocation
-    ? `${fromLocation.pathname}${fromLocation.search || ''}${fromLocation.hash || ''}`
-    : '/';
+  // At the top of the component, after hook initializations
+  let finalRedirectTo = '/'; // Default redirect path
+
+  const stateFromLocation = location.state?.from; // Original location object from state
+
+  if (stateFromLocation) {
+    finalRedirectTo = `${stateFromLocation.pathname}${stateFromLocation.search || ''}${stateFromLocation.hash || ''}`;
+  } else {
+    const queryParams = new URLSearchParams(location.search);
+    const queryFrom = queryParams.get('from');
+    if (queryFrom) {
+      finalRedirectTo = queryFrom; // Use the path from query parameter
+    }
+  }
   const { register, handleSubmit, formState: { errors: formErrors } } = useForm<LoginFormInputs>();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -25,9 +35,9 @@ const LoginPage: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate(redirectTo, { replace: true }); // Redirect to 'from' or '/'
+      navigate(finalRedirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate, redirectTo]);
+  }, [isAuthenticated, navigate, finalRedirectTo]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -79,7 +89,10 @@ const LoginPage: React.FC = () => {
 
           <div className="flex items-center justify-end">
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to={`/forgot-password${finalRedirectTo !== '/' ? `?from=${encodeURIComponent(finalRedirectTo)}` : ''}`}
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -98,7 +111,10 @@ const LoginPage: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link
+              to={`/register${finalRedirectTo !== '/' ? `?from=${encodeURIComponent(finalRedirectTo)}` : ''}`}
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Sign up
             </Link>
           </p>

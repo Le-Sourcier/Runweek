@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserPlus, Activity } from 'lucide-react'; // Added Activity for consistency if preferred
 
 // Define an interface for form inputs
@@ -13,6 +13,9 @@ interface RegistrationFormInputs {
 
 const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Ensure useLocation is imported and used
+  const queryParams = new URLSearchParams(location.search);
+  const fromQuery = queryParams.get('from');
   // Using local state for registration messages, not context error for this page
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState<string | null>(null);
@@ -41,7 +44,7 @@ const RegistrationPage: React.FC = () => {
     setIsLoading(false);
 
     setTimeout(() => {
-      navigate('/login');
+      navigate(fromQuery ? `/login?from=${encodeURIComponent(fromQuery)}` : '/login');
     }, 2500); // 2.5 second delay before redirect
   };
 
@@ -146,7 +149,10 @@ const RegistrationPage: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link
+              to={`/login${fromQuery ? `?from=${encodeURIComponent(fromQuery)}` : ''}`}
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Log in
             </Link>
           </p>
