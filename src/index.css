@@ -248,25 +248,25 @@
   
   /* Stats and Metrics */
   .stat-card {
-    @apply bg-white rounded-xl shadow-soft border border-gray-100/50 p-5 transition-all hover:shadow-card;
+    @apply bg-card text-card-foreground border border-border rounded-lg shadow-lg p-5 transition-all hover:shadow-xl;
   }
   
   .stat-value {
-    @apply text-xl font-semibold text-gray-900;
+    @apply text-xl font-semibold text-card-foreground;
   }
   
   .stat-label {
-    @apply text-sm font-medium text-gray-500;
+    @apply text-sm font-medium text-muted-foreground;
   }
   
   /* Charts and Data Visualization */
   .chart-container {
-    @apply bg-white rounded-xl shadow-soft border border-gray-100/50 p-6;
+    @apply bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 transition-all hover:shadow-xl;
   }
   
   /* Achievement Cards */
   .achievement-card {
-    @apply flex items-start gap-4 bg-gray-50/50 rounded-xl p-4 transition-all hover:bg-gray-50;
+    @apply flex items-start gap-4 bg-background border border-border rounded-lg p-4 transition-all hover:bg-muted;
   }
 
   /* Loading States */

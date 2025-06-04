@@ -92,6 +92,13 @@ export interface UserPreferences {
     autoSync: boolean;
     backgroundSync: boolean;
   };
+  dashboardWidgetsConfig?: {
+    [widgetId: string]: {
+      isVisible: boolean;
+      order: number;
+      defaultSpan?: number; // Added for column span on larger screens
+    };
+  };
 }
 
 // Define UserCredentials type for login
@@ -228,7 +235,36 @@ const sampleUser: User = {
     { id: 'linkedin', name: 'LinkedIn', connected: false },
     { id: 'strava', name: 'Strava', connected: true },
   ],
+  // preferences.dashboardWidgetsConfig is added below after defaultDashboardWidgetsConfig definition
 };
+
+// Define Default Widget Configuration
+export const defaultDashboardWidgetsConfig = {
+  statsGrid: { isVisible: true, order: 1, defaultSpan: 2 },
+  heartRateTrend: { isVisible: true, order: 2, defaultSpan: 2 },
+  goalSummary: { isVisible: true, order: 3, defaultSpan: 1 },
+  upcomingWorkouts: { isVisible: true, order: 4, defaultSpan: 1 },
+  recentAchievements: { isVisible: true, order: 5, defaultSpan: 1 },
+  recentPRs: { isVisible: true, order: 6, defaultSpan: 1 },
+  weeklySummary: { isVisible: true, order: 7, defaultSpan: 1 },
+  tipOfTheDay: { isVisible: true, order: 8, defaultSpan: 1 },
+};
+
+// Add dashboardWidgetsConfig to sampleUser's preferences
+sampleUser.preferences = {
+  ...sampleUser.preferences,
+  dashboardWidgetsConfig: {
+    statsGrid: { isVisible: true, order: 1, defaultSpan: 2 },
+    heartRateTrend: { isVisible: true, order: 2, defaultSpan: 2 },
+    goalSummary: { isVisible: true, order: 3, defaultSpan: 1 },
+    upcomingWorkouts: { isVisible: true, order: 4, defaultSpan: 1 },
+    recentAchievements: { isVisible: false, order: 5, defaultSpan: 1 }, // Example: hidden by default for sample user
+    recentPRs: { isVisible: true, order: 6, defaultSpan: 1 },
+    weeklySummary: { isVisible: true, order: 7, defaultSpan: 1 },
+    tipOfTheDay: { isVisible: false, order: 8, defaultSpan: 1 }, // Hidden for sample user
+  },
+};
+
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check localStorage
