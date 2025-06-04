@@ -198,7 +198,7 @@
 @layer components {
   /* Card Components */
   .card {
-    @apply bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 transition-shadow hover:shadow-xl; /* Updated to use theme variables & standard shadow/radius */
+    @apply bg-card text-card-foreground border border-border rounded-lg shadow-md p-6 transition-shadow hover:shadow-lg; /* Updated to use theme variables & standard shadow/radius */
     transition-property: background-color, color, border-color, box-shadow; /* Add color transitions alongside shadow */
     transition-duration: 0.2s; /* Consistent duration */
     transition-timing-function: ease-in-out;
@@ -206,7 +206,7 @@
   
   /* Button Variants */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-[1.02] active:scale-[0.98]; /* Softened scale */
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98]; /* Softened scale */
   }
   
   .btn-primary {

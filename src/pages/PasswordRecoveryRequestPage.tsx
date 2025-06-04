@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MailQuestion } from 'lucide-react'; // Optional icon
 
 interface PasswordRecoveryRequestFormInputs {
@@ -8,6 +8,9 @@ interface PasswordRecoveryRequestFormInputs {
 }
 
 const PasswordRecoveryRequestPage: React.FC = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const redirectQuery = queryParams.get('redirect');
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { register, handleSubmit, formState: { errors: formErrors }, reset } = useForm<PasswordRecoveryRequestFormInputs>({
@@ -81,7 +84,10 @@ const PasswordRecoveryRequestPage: React.FC = () => {
         )}
 
         <div className="mt-6 text-center">
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500 text-sm">
+          <Link
+            to={`/login${redirectQuery ? `?redirect=${encodeURIComponent(redirectQuery)}` : ''}`}
+            className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
+          >
             Back to Login
           </Link>
         </div>

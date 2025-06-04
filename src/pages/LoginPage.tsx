@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useUser, UserCredentials } from '../context/UserContext'; // UserCredentials imported
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Activity } from 'lucide-react'; // For logo/app name
 
 // Define an interface for form inputs - matches UserCredentials for simplicity here
@@ -10,11 +10,23 @@ interface LoginFormInputs extends UserCredentials {}
 const LoginPage: React.FC = () => {
   const { login, error, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
-  const location = useLocation();
-  const fromLocation = location.state?.from; // Get the full 'from' location object
-  const redirectTo = fromLocation
-    ? `${fromLocation.pathname}${fromLocation.search || ''}${fromLocation.hash || ''}`
-    : '/';
+  const [searchParams] = useSearchParams();
+  const redirectUrlFromQuery = searchParams.get('redirect');
+
+  const isValidRedirectPath = (path: string | null): boolean => {
+    if (!path) return false;
+    // Must be a relative path starting with '/'
+    if (!path.startsWith('/')) return false;
+    // Must not start with '//' or contain '://'
+    if (path.startsWith('//') || path.includes('://')) return false;
+    return true;
+  };
+
+  let finalRedirectPath = '/'; // Default
+  if (isValidRedirectPath(redirectUrlFromQuery)) {
+    finalRedirectPath = redirectUrlFromQuery!;
+  }
+
   const { register, handleSubmit, formState: { errors: formErrors } } = useForm<LoginFormInputs>();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -25,9 +37,9 @@ const LoginPage: React.FC = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate(redirectTo, { replace: true }); // Redirect to 'from' or '/'
+      navigate(finalRedirectPath, { replace: true });
     }
-  }, [isAuthenticated, navigate, redirectTo]);
+  }, [isAuthenticated, navigate, finalRedirectPath]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -79,7 +91,10 @@ const LoginPage: React.FC = () => {
 
           <div className="flex items-center justify-end">
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to={`/forgot-password${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ''}`}
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -98,7 +113,10 @@ const LoginPage: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link
+              to={`/register${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ''}`}
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Sign up
             </Link>
           </p>

@@ -4,6 +4,10 @@ import { useUser } from '../context/UserContext';
 import Card from '../components/ui/Card';
 import ProgressBar from '../components/ui/ProgressBar';
 import PasswordSecuritySettings from '../components/profile/PasswordSecuritySettings'; // Added import
+import PersonalInfoSettings from '../components/profile/PersonalInfoSettings'; // Added import
+import NotificationSettings from '../components/profile/NotificationSettings'; // Added import
+import ConnectedDevicesSettings from '../components/profile/ConnectedDevicesSettings'; // Added import
+import ConnectedAccountsSettings from '../components/profile/ConnectedAccountsSettings'; // Added import
 import { 
   User, 
   Mail, 
@@ -23,7 +27,7 @@ export default function Profile() {
   const { user, updateUserProfile, updateUserPreferences, logout } = useUser(); // Added logout
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('account');
-  const [accountSubView, setAccountSubView] = useState<'overview' | 'password'>('overview');
+  const [accountSubView, setAccountSubView] = useState<'overview' | 'personalInfo' | 'notifications' | 'password' | 'connectedDevices' | 'connectedAccounts'>('overview');
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
@@ -134,14 +138,14 @@ export default function Profile() {
       name: 'Personal Information',
       description: 'Update your name, email, and profile picture',
       icon: <User size={18} />,
-      action: () => setAccountSubView('overview') // Or could directly toggle isEditing if preferred for this item
+      action: () => setAccountSubView('personalInfo')
     },
     {
       id: 's2',
       name: 'Notifications',
       description: 'Configure email and push notification preferences',
       icon: <Bell size={18} />,
-      action: () => navigate('/settings?tab=notifications')
+      action: () => setAccountSubView('notifications')
     },
     {
       id: 's3',
@@ -155,14 +159,14 @@ export default function Profile() {
       name: 'Connected Devices',
       description: 'Manage devices that sync with your account',
       icon: <Activity size={18} />,
-      action: () => navigate('/settings?tab=devices') // Example: Assuming devices also on main settings
+      action: () => setAccountSubView('connectedDevices')
     },
     {
       id: 's5',
       name: 'Connected Accounts',
       description: 'Connect to other fitness services and social media',
       icon: <LinkIcon size={18} />,
-      action: () => navigate('/settings?tab=connected-accounts') // Example: Assuming connected accounts also on main settings
+      action: () => setAccountSubView('connectedAccounts')
     },
   ];
 
@@ -318,7 +322,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               {accountSubView === 'overview' && (
                 <Card title="Account Settings" className="bg-card text-card-foreground border-border">
@@ -328,7 +332,7 @@ export default function Profile() {
                         key={setting.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.1, duration: 0.25, ease: "easeOut" }}
                         className="p-4 border border-border rounded-lg hover:border-primary hover:shadow-sm transition-all flex justify-between items-center cursor-pointer"
                         onClick={setting.action}
                       >
@@ -364,6 +368,18 @@ export default function Profile() {
               {accountSubView === 'password' && (
                 <PasswordSecuritySettings onBack={() => setAccountSubView('overview')} />
               )}
+              {accountSubView === 'personalInfo' && (
+                <PersonalInfoSettings onBack={() => setAccountSubView('overview')} />
+              )}
+              {accountSubView === 'notifications' && (
+                <NotificationSettings onBack={() => setAccountSubView('overview')} />
+              )}
+              {accountSubView === 'connectedDevices' && (
+                <ConnectedDevicesSettings onBack={() => setAccountSubView('overview')} />
+              )}
+              {accountSubView === 'connectedAccounts' && (
+                <ConnectedAccountsSettings onBack={() => setAccountSubView('overview')} />
+              )}
             </motion.div>
           )}
           
@@ -372,7 +388,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Running Preferences" className="bg-card text-card-foreground border-border">
                 <div className="space-y-6">
@@ -462,7 +478,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <Card title="Privacy Settings" className="bg-card text-card-foreground border-border">
                 <div className="space-y-6">
