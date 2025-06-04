@@ -147,15 +147,17 @@ const FloatingCoach: React.FC = () => {
       <AnimatePresence>
         {isCoachPanelOpen && (
           <motion.div
-            className="bg-card text-card-foreground border border-border rounded-lg shadow-xl w-80 h-96 flex flex-col overflow-hidden"
+            // Increase Chatbot Size: Changed w-80 h-96 to w-96 h-[520px]
+            className="bg-card text-card-foreground border border-border rounded-lg shadow-xl w-96 h-[520px] flex flex-col overflow-hidden"
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
-            {/* Header */}
+            {/* Header Redesign */}
             <div className="flex items-center justify-between p-3 border-b border-border bg-muted/50">
-              <h3 className="font-semibold text-sm text-foreground">
+              {/* Increased prominence of Coach AI title */}
+              <h3 className="font-semibold text-base text-foreground">
                 Coach AI
               </h3>
               <div className="flex items-center gap-0.5">
