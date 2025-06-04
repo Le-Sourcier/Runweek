@@ -63,26 +63,27 @@ const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUser();
   const location = useLocation();
 
-  // Optional: Add a loading indicator while checking authentication status
-  // This is more relevant if UserContext performs an async check for a persisted session on startup.
-  // For this example, UserContext initializes `isLoading` to false if no user.
-  // if (isLoading) {
-  //   return <div>Loading application...</div>; // Or a global spinner component
-  // }
+  const loadingScreen = (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)', color: 'var(--foreground)' }}>
+      Loading application...
+    </div>
+  );
 
   return (
     <Routes>
       {/* Public Authentication Routes: Redirect if already authenticated */}
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegistrationPage />} />
-      <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" replace /> : <PasswordRecoveryRequestPage />} />
-      <Route path="/reset-password/:token" element={isAuthenticated ? <Navigate to="/" replace /> : <PasswordResetPage />} />
+      <Route path="/login" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <RegistrationPage />} />
+      <Route path="/forgot-password" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <PasswordRecoveryRequestPage />} />
+      <Route path="/reset-password/:token" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <PasswordResetPage />} />
 
       {/* Protected Application Routes */}
       <Route
         path="/*" // This will match all paths not caught by the auth routes above
         element={
-          isAuthenticated ? (
+          isLoading ? (
+            loadingScreen
+          ) : isAuthenticated ? (
             <MainAppLayoutContent />
           ) : (
             <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`} replace />
