@@ -24,18 +24,11 @@ import { useState } from "react"; // Added useState for modal
 import { defaultDashboardWidgetsConfig } from "../context/UserContext"; // Added default config
 import WidgetManagementModal from "../components/dashboard/WidgetManagementModal"; // Added modal component
 import ProgressBar from "../components/ui/ProgressBar"; // Added ProgressBar for Goal Summary
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+// Removed recharts imports, they are now in HeartRateTrendWidget
 import Card from "../components/ui/Card";
-import WeeklySummaryWidget from '../components/dashboard/widgets/WeeklySummaryWidget'; // Added
-import TipOfTheDayWidget from '../components/dashboard/widgets/TipOfTheDayWidget'; // Added
+import WeeklySummaryWidget from "../components/dashboard/widgets/WeeklySummaryWidget"; // Added
+import TipOfTheDayWidget from "../components/dashboard/widgets/TipOfTheDayWidget"; // Added
+import HeartRateTrendWidget from "../components/dashboard/widgets/HeartRateTrendWidget"; // Added
 
 export default function Dashboard() {
   const userContext = useUser();
@@ -50,7 +43,8 @@ export default function Dashboard() {
   const userName = user.name || "Utilisateur";
 
   // Determine active widget configuration
-  const activeWidgetConfig = user.preferences?.dashboardWidgetsConfig || defaultDashboardWidgetsConfig;
+  const activeWidgetConfig =
+    user.preferences?.dashboardWidgetsConfig || defaultDashboardWidgetsConfig;
 
   const sortedVisibleWidgetIds = Object.entries(activeWidgetConfig)
     .filter(([, config]) => config.isVisible)
@@ -59,7 +53,7 @@ export default function Dashboard() {
 
   // Process goals for "Goal Summary" section
   const activeGoals = (user?.goals || [])
-    .filter(goal => !goal.completed)
+    .filter((goal) => !goal.completed)
     .sort((a, b) => {
       try {
         return parseISO(a.deadline).getTime() - parseISO(b.deadline).getTime();
@@ -86,17 +80,6 @@ export default function Dashboard() {
       }
     })
     .slice(0, 3); // Take top 3 recent PRs
-
-  // Mock data for heart rate trend
-  const heartRateData = [
-    { day: "Mar", value: 72 },
-    { day: "Mer", value: 74 },
-    { day: "Jeu", value: 71 },
-    { day: "Ven", value: 73 },
-    { day: "Sam", value: 70 },
-    { day: "Dim", value: 71 },
-    { day: "Lun", value: 72 },
-  ];
 
   // Mock data for upcoming workouts
   const upcomingWorkouts = [
@@ -145,7 +128,9 @@ export default function Dashboard() {
             <Heart className="text-red-500 dark:text-red-400" size={24} />
             <span className="stat-value">72 bpm</span>
           </div>
-          <span className="text-green-500 dark:text-green-400 text-sm font-medium">+2</span>
+          <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+            +2
+          </span>
         </div>
       </motion.div>
 
@@ -158,10 +143,15 @@ export default function Dashboard() {
         <span className="stat-label">Score d'activité</span>
         <div className="flex items-baseline gap-2 mt-2">
           <div className="flex items-center gap-2">
-            <Activity className="text-primary-500 dark:text-primary-400" size={24} />
+            <Activity
+              className="text-primary-500 dark:text-primary-400"
+              size={24}
+            />
             <span className="stat-value">85/100</span>
           </div>
-          <span className="text-green-500 dark:text-green-400 text-sm font-medium">+5 pts</span>
+          <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+            +5 pts
+          </span>
         </div>
       </motion.div>
 
@@ -177,7 +167,9 @@ export default function Dashboard() {
             <Moon className="text-purple-500 dark:text-purple-400" size={24} />
             <span className="stat-value">7.5 hrs</span>
           </div>
-          <span className="text-green-500 dark:text-green-400 text-sm font-medium">Bon</span>
+          <span className="text-green-500 dark:text-green-400 text-sm font-medium">
+            Bon
+          </span>
         </div>
       </motion.div>
 
@@ -190,7 +182,10 @@ export default function Dashboard() {
         <span className="stat-label">Pas quotidiens</span>
         <div className="flex items-baseline gap-2 mt-2">
           <div className="flex items-center gap-2">
-            <Footprints className="text-orange-500 dark:text-orange-400" size={24} />
+            <Footprints
+              className="text-orange-500 dark:text-orange-400"
+              size={24}
+            />
             <span className="stat-value">8,432</span>
           </div>
           <span className="text-orange-500 dark:text-orange-400 text-sm font-medium">
@@ -209,7 +204,10 @@ export default function Dashboard() {
         <span className="stat-label">Records Personnels</span>
         <div className="flex items-baseline gap-2 mt-2">
           <div className="flex items-center gap-2">
-            <Trophy className="text-yellow-500 dark:text-yellow-400" size={24} />
+            <Trophy
+              className="text-yellow-500 dark:text-yellow-400"
+              size={24}
+            />
             <span className="stat-value">{totalPRs} Total</span>
           </div>
         </div>
@@ -222,67 +220,13 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderHeartRateTrend = () => (
-    // chart-container class does not have mb-8 by default, so this Card wrapper adds it.
-    // However, the current Dashboard.tsx uses <div className="chart-container mb-8"> for these.
-    // To maintain consistency and ensure mb-8, let's keep the div structure as is for chart-like widgets.
-    <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-semibold text-card-foreground mb-1">
-            Tendance de fréquence cardiaque
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Moyenne des 7 derniers jours
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Moy:</span>
-          <span className="font-medium text-red-500 dark:text-red-400">72 BPM</span>
-          <span className="text-green-500 dark:text-green-400">↑</span>
-        </div>
-      </div>
-      <div className="h-[240px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={heartRateData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="day"
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              tickLine={false}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              tickLine={false}
-              domain={["dataMin - 5", "dataMax + 5"]}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "var(--radius)",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="hsl(var(--destructive))"
-              strokeWidth={2}
-              dot={{ fill: "hsl(var(--destructive))", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: "hsl(var(--destructive))" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
+  // renderHeartRateTrend is now a separate component: HeartRateTrendWidget
+  // No need for the function here anymore.
 
   const renderGoalSummary = () => (
     <Card // Card component itself will have mb-8 if specified in its usage, or rely on grid gap.
-          // In this dynamic setup, the wrapper div for each widget in the map handles mb-8.
-          // So, the Card component itself does not need mb-8 here.
+      // In this dynamic setup, the wrapper div for each widget in the map handles mb-8.
+      // So, the Card component itself does not need mb-8 here.
       title="Vos Objectifs Actifs"
       action={
         <Link
@@ -299,10 +243,13 @@ export default function Dashboard() {
           {activeGoals.map((goal) => (
             <div key={goal.id} className="mb-4 last:mb-0">
               <div className="flex justify-between items-baseline mb-1">
-                <h4 className="font-medium text-card-foreground">{goal.title}</h4>
+                <h4 className="font-medium text-card-foreground">
+                  {goal.title}
+                </h4>
                 {goal.deadline && (
                   <p className="text-xs text-muted-foreground">
-                    Échéance: {format(parseISO(goal.deadline), "MMM d", { locale: fr })}
+                    Échéance:{" "}
+                    {format(parseISO(goal.deadline), "MMM d", { locale: fr })}
                   </p>
                 )}
               </div>
@@ -316,7 +263,9 @@ export default function Dashboard() {
       ) : (
         <div className="text-center py-4">
           <Target size={24} className="mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground mb-3">Vous n'avez aucun objectif actif pour le moment.</p>
+          <p className="text-muted-foreground mb-3">
+            Vous n'avez aucun objectif actif pour le moment.
+          </p>
           <Link to="/goals" className="btn btn-outline btn-sm">
             Définir un Nouvel Objectif
           </Link>
@@ -326,9 +275,13 @@ export default function Dashboard() {
   );
 
   const renderUpcomingWorkouts = () => (
-    <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
+    <div className="chart-container mb-8">
+      {" "}
+      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold text-card-foreground">Entraînements à venir</h3>
+        <h3 className="text-xl font-semibold text-card-foreground">
+          Entraînements à venir
+        </h3>
         <Link
           to="/calendar"
           className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
@@ -354,7 +307,9 @@ export default function Dashboard() {
                 <p className="font-medium text-card-foreground">
                   {workout.distance}
                 </p>
-                <p className="text-sm text-muted-foreground">{workout.duration}</p>
+                <p className="text-sm text-muted-foreground">
+                  {workout.duration}
+                </p>
               </div>
             </div>
           </div>
@@ -364,48 +319,61 @@ export default function Dashboard() {
   );
 
   const renderRecentAchievements = () => (
-     <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-card-foreground">Réalisations récentes</h3>
-          <Link
-            to="/achievements"
-            className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
-          >
-            Voir tout
-            <Trophy size={14} />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {recentAchievements.map((achievement, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700"
-            >
-              <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center">
-                <Trophy className="text-primary dark:text-primary-400" size={20} />
-              </div>
-              <div>
-                <h4 className="font-medium text-card-foreground">
-                  {achievement.title}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  {achievement.description}
-                </p>
-                <p className="text-xs text-muted-foreground/80 mt-1">{achievement.time}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+    <div className="chart-container mb-8">
+      {" "}
+      {/* Ensured mb-8 for spacing */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold text-card-foreground">
+          Réalisations récentes
+        </h3>
+        <Link
+          to="/achievements"
+          className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
+        >
+          Voir tout
+          <Trophy size={14} />
+        </Link>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {recentAchievements.map((achievement, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700"
+          >
+            <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center">
+              <Trophy
+                className="text-primary dark:text-primary-400"
+                size={20}
+              />
+            </div>
+            <div>
+              <h4 className="font-medium text-card-foreground">
+                {achievement.title}
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                {achievement.description}
+              </p>
+              <p className="text-xs text-muted-foreground/80 mt-1">
+                {achievement.time}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 
   const renderRecentPRs = () => (
-    <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
+    <div className="chart-container mb-8">
+      {" "}
+      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold text-card-foreground">Records Récents</h3>
+        <h3 className="text-xl font-semibold text-card-foreground">
+          Records Récents
+        </h3>
         <div className="flex items-center gap-3">
           <Link
             to="/personal-records"
@@ -426,7 +394,9 @@ export default function Dashboard() {
       {recentPRs.length === 0 ? (
         <div className="text-center py-4">
           <Trophy size={24} className="mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground mb-3">Aucun record personnel pour le moment.</p>
+          <p className="text-muted-foreground mb-3">
+            Aucun record personnel pour le moment.
+          </p>
           <Link to="/personal-records" className="btn btn-outline btn-sm">
             Ajouter un Record
           </Link>
@@ -473,20 +443,26 @@ export default function Dashboard() {
   );
 
   const renderWeeklySummaryWidget = () => (
-    <Card className="mb-8"> {/* Card provides padding and mb-8 for spacing */}
+    <Card className="mb-8">
+      {" "}
+      {/* Card provides padding and mb-8 for spacing */}
       <WeeklySummaryWidget />
     </Card>
   );
 
   const renderTipOfTheDayWidget = () => (
-    <Card className="mb-8"> {/* Card provides padding and mb-8 for spacing */}
+    <Card className="mb-8">
+      {" "}
+      {/* Card provides padding and mb-8 for spacing */}
       <TipOfTheDayWidget />
     </Card>
   );
 
   // --- Main Return ---
   return (
-    <div> {/* Removed space-y-6 */}
+    <div>
+      {" "}
+      {/* Removed space-y-6 */}
       {/* Dashboard Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -500,39 +476,39 @@ export default function Dashboard() {
           <LayoutGrid size={20} />
         </button>
       </div>
-
       {/* Dynamically Rendered Widgets in a Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sortedVisibleWidgetIds.map(widgetId => {
+        {sortedVisibleWidgetIds.map((widgetId) => {
           let widgetContent = null;
           const widgetConfig = activeWidgetConfig[widgetId];
           const span = widgetConfig?.defaultSpan || 1;
           // md:col-span-1 is default, md:col-span-2 for full width on medium screens if grid is md:grid-cols-2
-          const colSpanClass = span === 2 ? 'md:col-span-2' : 'md:col-span-1';
+          const colSpanClass = span === 2 ? "md:col-span-2" : "md:col-span-1";
 
           switch (widgetId) {
-            case 'statsGrid':
+            case "statsGrid":
               widgetContent = renderStatsGrid();
               break;
-            case 'heartRateTrend':
-              widgetContent = renderHeartRateTrend();
+            case "heartRateTrend":
+              // widgetContent = renderHeartRateTrend(); // Old way
+              widgetContent = <HeartRateTrendWidget />; // New way
               break;
-            case 'goalSummary':
+            case "goalSummary":
               widgetContent = renderGoalSummary();
               break;
-            case 'upcomingWorkouts':
+            case "upcomingWorkouts":
               widgetContent = renderUpcomingWorkouts();
               break;
-            case 'recentAchievements':
+            case "recentAchievements":
               widgetContent = renderRecentAchievements();
               break;
-            case 'recentPRs':
+            case "recentPRs":
               widgetContent = renderRecentPRs();
               break;
-            case 'weeklySummary':
+            case "weeklySummary":
               widgetContent = renderWeeklySummaryWidget();
               break;
-            case 'tipOfTheDay':
+            case "tipOfTheDay":
               widgetContent = renderTipOfTheDayWidget();
               break;
             default:
@@ -548,9 +524,10 @@ export default function Dashboard() {
           );
         })}
       </div>
-
       {/* Static Elements: Connect Device Banner */}
-      {!user?.connectedDevices?.some(device => device.status === 'connected') && (
+      {!user?.connectedDevices?.some(
+        (device) => device.status === "connected"
+      ) && (
         <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
           <div className="flex justify-between items-center">
             <div>
@@ -568,24 +545,28 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
       {/* Last Updated Time */}
       <div className="text-xs text-muted-foreground/80 dark:text-muted-foreground/60 mt-8 text-center">
         <span>Dernière mise à jour: 21:30</span>
-        <button className="ml-2 text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium"> {/* Ensured base primary color */}
+        <button className="ml-2 text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
+          {" "}
+          {/* Ensured base primary color */}
           Actualiser
         </button>
       </div>
-
       <WidgetManagementModal
         isOpen={isWidgetModalOpen}
         onClose={() => setIsWidgetModalOpen(false)}
-        currentConfig={user.preferences?.dashboardWidgetsConfig || defaultDashboardWidgetsConfig}
+        currentConfig={
+          user.preferences?.dashboardWidgetsConfig ||
+          defaultDashboardWidgetsConfig
+        }
         onSave={(newConfig) => {
-          if (updateUserPreferences) { // Ensure function exists before calling
+          if (updateUserPreferences) {
+            // Ensure function exists before calling
             updateUserPreferences({
               ...(user.preferences || {}),
-              dashboardWidgetsConfig: newConfig
+              dashboardWidgetsConfig: newConfig,
             });
           }
         }}
