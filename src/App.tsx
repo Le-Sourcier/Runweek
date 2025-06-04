@@ -20,7 +20,7 @@ import PasswordRecoveryRequestPage from './pages/PasswordRecoveryRequestPage';
 import PasswordResetPage from './pages/PasswordResetPage';
 
 // Context Providers
-import { ThemeProvider } from './context/ThemeContext'; // Added ThemeProvider import
+import { ThemeProvider, useTheme } from './context/ThemeContext'; // Added useTheme import
 import { FloatingCoachProvider } from './context/FloatingCoachContext'; // Import FloatingCoachProvider
 import { UserProvider, useUser } from './context/UserContext';
 import { SearchProvider } from './context/SearchContext';
@@ -33,6 +33,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // This component wraps the main application layout and its specific context providers
 const MainAppLayoutContent: React.FC = () => {
+  const { theme: appTheme } = useTheme(); // Get current app theme
+
   return (
     <SearchProvider>
       <NotificationProvider>
@@ -50,7 +52,7 @@ const MainAppLayoutContent: React.FC = () => {
             pauseOnFocusLoss
             draggable
             pauseOnHover
-            theme="light"
+            theme={appTheme} // Dynamically set theme
           />
         </PRProvider>
       </NotificationProvider>

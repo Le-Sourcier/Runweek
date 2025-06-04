@@ -325,61 +325,52 @@ export default function Settings() {
         {/* Settings Navigation */}
         <Card className="lg:col-span-4 bg-white dark:bg-gray-800">
           <nav className="space-y-1">
-            {settingSections.map(
-              (
-                section,
-                index // Added index for delay
-              ) => (
-                <motion.div // Wrapped button with motion.div
-                  key={section.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: index * 0.05,
-                    duration: 0.2,
-                    ease: "easeOut",
-                  }}
-                >
-                  <button
-                    onClick={() => setActiveTab(section.id)}
-                    className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
+            {settingSections.map((section, index) => ( // Added index for delay
+              <motion.div // Wrapped button with motion.div
+                key={section.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.2, ease: "easeOut" }}
+              >
+                <button
+                  onClick={() => setActiveTab(section.id)}
+                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
+                  activeTab === section.id
+                    ? "bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`${
                       activeTab === section.id
-                        ? "bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        ? "text-primary dark:text-primary-300"
+                        : "text-gray-500 dark:text-gray-400"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`${
-                          activeTab === section.id
-                            ? "text-primary dark:text-primary-300"
-                            : "text-gray-500 dark:text-gray-400"
-                        }`}
-                      >
-                        {section.icon}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium">{section.title}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {section.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {section.badge && (
-                        <Badge variant={section.badge.variant}>
-                          {section.badge.text}
-                        </Badge>
-                      )}
-                      <ChevronRight
-                        size={16}
-                        className="text-gray-400 dark:text-gray-500"
-                      />
-                    </div>
-                  </button>
-                </motion.div>
-              )
-            )}
+                    {section.icon}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium">{section.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {section.description}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {section.badge && (
+                    <Badge variant={section.badge.variant}>
+                      {section.badge.text}
+                    </Badge>
+                  )}
+                  <ChevronRight
+                    size={16}
+                    className="text-gray-400 dark:text-gray-500"
+                  />
+                </div>
+                </button>
+              </motion.div>
+            ))}
           </nav>
 
           <div className="mt-6 pt-6 border-t dark:border-gray-700">
