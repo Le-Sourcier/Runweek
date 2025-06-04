@@ -340,90 +340,93 @@ export default function Goals() {
     </div>
   );
 }
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <Card className="bg-card text-card-foreground border-border py-8 text-center">
-            <Trophy size={32} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">No active goals. Set some new targets!</p>
-          </Card>
-        )}
-      </div>
+// The following lines were identified as extraneous and causing syntax errors.
+// They seem to be duplicated closing tags from the "Active Goals" mapping section.
+// Removing them:
+//                     </div>
+//                   </div>
+//                 </Card>
+//               </motion.div>
+//             ))}
+//           </div>
+//         ) : (
+//           <Card className="bg-card text-card-foreground border-border py-8 text-center">
+//             <Trophy size={32} className="mx-auto text-muted-foreground mb-2" />
+//             <p className="text-muted-foreground">No active goals. Set some new targets!</p>
+//           </Card>
+//         )}
+//       </div>
 
-      {/* Suggestions */}
-      <Card title="Suggested Goals" className="bg-card text-card-foreground border-border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {goalSuggestions.map((goal) => (
-            <div
-              key={goal.id}
-              className="p-4 border border-border rounded-lg hover:shadow-lg transition-all bg-background"
-            >
-              <Badge
-                variant={
-                  goal.category === 'distance' ? 'primary' :
-                  goal.category === 'speed' ? 'secondary' :
-                  goal.category === 'consistency' ? 'warning' : 'destructive'
-                }
-                className="mb-2 flex items-center gap-1 inline-flex text-xs"
-              >
-                {categoryIcons[goal.category as GoalCategory]} {goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}
-              </Badge>
-              <h4 className="font-medium text-foreground">{goal.title}</h4>
-              {goal.description && <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>}
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-sm font-medium text-foreground">
-                  Target: {goal.target} {goal.unit}
-                </span>
-                <button
-                  onClick={() => handleOpenAddGoalModal(goal)}
-                  className="btn btn-ghost btn-sm text-primary p-1 h-auto hover:bg-primary/10"
-                >
-                  Add <Plus size={14} className="ml-1" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+//       {/* Suggestions */}
+//       <Card title="Suggested Goals" className="bg-card text-card-foreground border-border">
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           {goalSuggestions.map((goal) => (
+//             <div
+//               key={goal.id}
+//               className="p-4 border border-border rounded-lg hover:shadow-lg transition-all bg-background"
+//             >
+//               <Badge
+//                 variant={
+//                   goal.category === 'distance' ? 'primary' :
+//                   goal.category === 'speed' ? 'secondary' :
+//                   goal.category === 'consistency' ? 'warning' : 'destructive'
+//                 }
+//                 className="mb-2 flex items-center gap-1 inline-flex text-xs"
+//               >
+//                 {categoryIcons[goal.category as GoalCategory]} {goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}
+//               </Badge>
+//               <h4 className="font-medium text-foreground">{goal.title}</h4>
+//               {goal.description && <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>}
+//               <div className="flex items-center justify-between mt-3">
+//                 <span className="text-sm font-medium text-foreground">
+//                   Target: {goal.target} {goal.unit}
+//                 </span>
+//                 <button
+//                   onClick={() => handleOpenAddGoalModal(goal)}
+//                   className="btn btn-ghost btn-sm text-primary p-1 h-auto hover:bg-primary/10"
+//                 >
+//                   Add <Plus size={14} className="ml-1" />
+//                 </button>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       </Card>
 
-      {/* Completed goals */}
-      <div className="pt-2">
-        <h2 className="text-xl font-semibold mb-3 text-foreground">Completed Goals</h2>
-        <Card className="bg-card text-card-foreground border-border">
-          {completedGoals.length > 0 ? (
-            <div className="divide-y divide-border">
-              {completedGoals.map((goal) => (
-                <div key={goal.id} className="py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
-                      <Trophy size={16} />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">{goal.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Completed on {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} {/* Assuming deadline is completion date for now */}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="success" className="text-xs">
-                    {goal.target} {goal.unit}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-6 text-center">
-              <Trophy className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
-              <h3 className="text-lg font-medium text-foreground mb-1">No completed goals yet</h3>
-              <p className="text-muted-foreground mb-4">Keep working toward your targets!</p>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
-  );
-}
+//       {/* Completed goals */}
+//       <div className="pt-2">
+//         <h2 className="text-xl font-semibold mb-3 text-foreground">Completed Goals</h2>
+//         <Card className="bg-card text-card-foreground border-border">
+//           {completedGoals.length > 0 ? (
+//             <div className="divide-y divide-border">
+//               {completedGoals.map((goal) => (
+//                 <div key={goal.id} className="py-3 flex items-center justify-between">
+//                   <div className="flex items-center gap-3">
+//                     <div className="h-8 w-8 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
+//                       <Trophy size={16} />
+//                     </div>
+//                     <div>
+//                       <h4 className="font-medium text-foreground">{goal.title}</h4>
+//                       <p className="text-sm text-muted-foreground">
+//                         Completed on {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} {/* Assuming deadline is completion date for now */}
+//                       </p>
+//                     </div>
+//                   </div>
+//                   <Badge variant="success" className="text-xs">
+//                     {goal.target} {goal.unit}
+//                   </Badge>
+//                 </div>
+//               ))}
+//             </div>
+//           ) : (
+//             <div className="p-6 text-center">
+//               <Trophy className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+//               <h3 className="text-lg font-medium text-foreground mb-1">No completed goals yet</h3>
+//               <p className="text-muted-foreground mb-4">Keep working toward your targets!</p>
+//             </div>
+//           )}
+//         </Card>
+//       </div>
+//     </div>
+//   );
+// }
