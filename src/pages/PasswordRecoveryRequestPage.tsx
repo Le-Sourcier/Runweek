@@ -8,9 +8,9 @@ interface PasswordRecoveryRequestFormInputs {
 }
 
 const PasswordRecoveryRequestPage: React.FC = () => {
-  const location = useLocation(); // Ensure useLocation is imported and used
+  const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const fromQuery = queryParams.get('from');
+  const redirectQuery = queryParams.get('redirect');
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { register, handleSubmit, formState: { errors: formErrors }, reset } = useForm<PasswordRecoveryRequestFormInputs>({
@@ -85,7 +85,7 @@ const PasswordRecoveryRequestPage: React.FC = () => {
 
         <div className="mt-6 text-center">
           <Link
-            to={`/login${fromQuery ? `?from=${encodeURIComponent(fromQuery)}` : ''}`}
+            to={`/login${redirectQuery ? `?redirect=${encodeURIComponent(redirectQuery)}` : ''}`}
             className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
           >
             Back to Login

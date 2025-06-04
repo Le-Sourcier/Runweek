@@ -81,7 +81,13 @@ const AppRoutes: React.FC = () => {
       {/* Protected Application Routes */}
       <Route
         path="/*" // This will match all paths not caught by the auth routes above
-        element={isAuthenticated ? <MainAppLayoutContent /> : <Navigate to="/login" state={{ from: location }} replace />}
+        element={
+          isAuthenticated ? (
+            <MainAppLayoutContent />
+          ) : (
+            <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`} replace />
+          )
+        }
       >
         {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
         <Route index element={<Dashboard />} /> {/* Default route for "/" after login */}
