@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"; // Added useEffect
+import { useState, useEffect, useMemo, useRef } from "react"; // Added useEffect, useRef
 import { useLocation } from "react-router-dom"; // Added useLocation
 import { useUser, SocialAccountConnection } from "../context/UserContext"; // Added SocialAccountConnection
 import { useTheme } from "../context/ThemeContext";
@@ -58,6 +58,7 @@ export default function Settings() {
   };
 
   const [activeTab, setActiveTab] = useState(getInitialTab());
+  const contentRef = useRef<HTMLDivElement>(null); // Ref for scrolling
   const [currentThemeOption, setCurrentThemeOption] = useState("system");
   // Language and Region States
   const [selectedLanguage, setSelectedLanguage] = useState("fr"); // Renamed from language
@@ -206,6 +207,13 @@ export default function Settings() {
     // or if its contents can change and affect getInitialTab logic indirectly via find.
     // For now, assuming settingSections is stable or defined outside if getInitialTab relies on it at mount.
   }, [location.search, activeTab, user, settingSections]); // Added settingSections
+
+  // Effect for scrolling content into view on tab change on small screens
+  useEffect(() => {
+    if (contentRef.current && contentRef.current.offsetLeft < 50) { // Check for small screen (single column)
+      contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeTab]);
 
   const handleToggleAccountConnection = (accountId: string) => {
     if (!user || !updateUserProfile) return;
@@ -382,7 +390,7 @@ export default function Settings() {
         </Card>
 
         {/* Settings Content */}
-        <div className="lg:col-span-8 space-y-6">
+        <div ref={contentRef} className="lg:col-span-8 space-y-6">
           {activeTab === "appearance" && (
             <motion.div
               initial={{ opacity: 0 }}
