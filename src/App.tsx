@@ -1,35 +1,35 @@
-import { Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 
 // Layout and Page Components
-import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
-import Statistics from './pages/Statistics';
-import Coach from './pages/Coach';
-import Calendar from './pages/Calendar';
-import Goals from './pages/Goals';
-import Achievements from './pages/Achievements';
-import Profile from './pages/Profile';
-import Support from './pages/Support';
-import Settings from './pages/Settings';
-import PersonalRecords from './pages/PersonalRecords';
+import Layout from "./components/layout/Layout";
+import Dashboard from "./pages/Dashboard";
+import Statistics from "./pages/Statistics";
+import Coach from "./pages/Coach";
+import Calendar from "./pages/Calendar";
+import Goals from "./pages/Goals";
+import Achievements from "./pages/Achievements";
+import Profile from "./pages/Profile";
+import Support from "./pages/Support";
+import Settings from "./pages/Settings";
+import PersonalRecords from "./pages/PersonalRecords";
 
 // Auth Page Components
-import LoginPage from './pages/LoginPage';
-import RegistrationPage from './pages/RegistrationPage';
-import PasswordRecoveryRequestPage from './pages/PasswordRecoveryRequestPage';
-import PasswordResetPage from './pages/PasswordResetPage';
+import LoginPage from "./pages/LoginPage";
+import RegistrationPage from "./pages/RegistrationPage";
+import PasswordRecoveryRequestPage from "./pages/PasswordRecoveryRequestPage";
+import PasswordResetPage from "./pages/PasswordResetPage";
 
 // Context Providers
-import { ThemeProvider, useTheme } from './context/ThemeContext'; // Added useTheme import
-import { FloatingCoachProvider } from './context/FloatingCoachContext'; // Import FloatingCoachProvider
-import { UserProvider, useUser } from './context/UserContext';
-import { SearchProvider } from './context/SearchContext';
-import { NotificationProvider } from './context/NotificationContext';
-import { PRProvider } from './context/PRContext';
+import { ThemeProvider, useTheme } from "./context/ThemeContext"; // Added useTheme import
+import { FloatingCoachProvider } from "./context/FloatingCoachContext"; // Import FloatingCoachProvider
+import { UserProvider, useUser } from "./context/UserContext";
+import { SearchProvider } from "./context/SearchContext";
+import { NotificationProvider } from "./context/NotificationContext";
+import { PRProvider } from "./context/PRContext";
 
 // Other Imports
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // This component wraps the main application layout and its specific context providers
 const MainAppLayoutContent: React.FC = () => {
@@ -39,7 +39,9 @@ const MainAppLayoutContent: React.FC = () => {
     <SearchProvider>
       <NotificationProvider>
         <PRProvider>
-          <Layout> {/* Layout should contain an <Outlet /> for the nested routes */}
+          <Layout>
+            {" "}
+            {/* Layout should contain an <Outlet /> for the nested routes */}
             <Outlet />
           </Layout>
           <ToastContainer
@@ -66,7 +68,16 @@ const AppRoutes: React.FC = () => {
   const location = useLocation();
 
   const loadingScreen = (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)', color: 'var(--foreground)' }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "var(--background)",
+        color: "var(--foreground)",
+      }}
+    >
       Loading application...
     </div>
   );
@@ -74,10 +85,54 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Authentication Routes: Redirect if already authenticated */}
-      <Route path="/login" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <RegistrationPage />} />
-      <Route path="/forgot-password" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <PasswordRecoveryRequestPage />} />
-      <Route path="/reset-password/:token" element={isLoading ? loadingScreen : isAuthenticated ? <Navigate to="/" replace /> : <PasswordResetPage />} />
+      <Route
+        path="/login"
+        element={
+          isLoading ? (
+            loadingScreen
+          ) : isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <LoginPage />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          isLoading ? (
+            loadingScreen
+          ) : isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <RegistrationPage />
+          )
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          isLoading ? (
+            loadingScreen
+          ) : isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PasswordRecoveryRequestPage />
+          )
+        }
+      />
+      <Route
+        path="/reset-password/:token"
+        element={
+          isLoading ? (
+            loadingScreen
+          ) : isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <PasswordResetPage />
+          )
+        }
+      />
 
       {/* Protected Application Routes */}
       <Route
@@ -88,12 +143,18 @@ const AppRoutes: React.FC = () => {
           ) : isAuthenticated ? (
             <MainAppLayoutContent />
           ) : (
-            <Navigate to={`/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`} replace />
+            <Navigate
+              to={`/login?redirect=${encodeURIComponent(
+                `${location.pathname}${location.search}${location.hash}`
+              )}`}
+              replace
+            />
           )
         }
       >
         {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
-        <Route index element={<Dashboard />} /> {/* Default route for "/" after login */}
+        <Route index element={<Dashboard />} />{" "}
+        {/* Default route for "/" after login */}
         <Route path="statistics" element={<Statistics />} />
         <Route path="coach" element={<Coach />} />
         <Route path="calendar" element={<Calendar />} />
@@ -113,8 +174,12 @@ const AppRoutes: React.FC = () => {
 // Main App component: Sets up UserProvider and renders the AppRoutes
 function App() {
   return (
-    <ThemeProvider> {/* Added ThemeProvider wrapper */}
-      <FloatingCoachProvider> {/* Add the new provider here */}
+    <ThemeProvider>
+      {" "}
+      {/* Added ThemeProvider wrapper */}
+      <FloatingCoachProvider>
+        {" "}
+        {/* Add the new provider here */}
         <UserProvider>
           <AppRoutes />
         </UserProvider>

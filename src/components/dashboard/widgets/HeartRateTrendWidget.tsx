@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   LineChart,
   Line,
@@ -7,7 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
 // Mock data for heart rate trend - this should ideally be passed as a prop or fetched
 const heartRateData = [
@@ -21,8 +21,29 @@ const heartRateData = [
 ];
 
 const HeartRateTrendWidget: React.FC = () => {
+  // const [isDark] = React.useState(() => {
+  //   // Initial value: check localStorage or fallback to system preference
+  //   const storedTheme = localStorage.getItem("theme");
+  //   if (storedTheme) return storedTheme === "dark";
+
+  //   const prefersDark = window.matchMedia(
+  //     "(prefers-color-scheme: dark)"
+  //   ).matches;
+  //   return prefersDark;
+  // });
+
+  // React.useEffect(() => {
+  //   // Synchronize localStorage whenever isDark changes
+  //   localStorage.setItem("theme", isDark ? "dark" : "light");
+
+  //   // Optionally, apply a class to <body> or <html> (useful for CSS theming)
+  //   document.documentElement.classList.toggle("dark", isDark);
+  // }, [isDark]);
+
   return (
-    <div className="chart-container mb-8"> {/* Ensured mb-8 for spacing */}
+    <div className="chart-container mb-8">
+      {" "}
+      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-semibold text-card-foreground mb-1">
@@ -34,7 +55,9 @@ const HeartRateTrendWidget: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Moy:</span>
-          <span className="font-medium text-red-500 dark:text-red-400">72 BPM</span>
+          <span className="font-medium text-red-500 dark:text-red-400">
+            72 BPM
+          </span>
           <span className="text-green-500 dark:text-green-400">↑</span>
         </div>
       </div>

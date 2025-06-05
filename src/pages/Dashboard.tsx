@@ -231,7 +231,7 @@ export default function Dashboard() {
       action={
         <Link
           to="/goals"
-          className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium"
+          className="text-primary hover:text-primary-600 duration-300 transition-colors dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
         >
           Voir tout
         </Link>
@@ -328,7 +328,7 @@ export default function Dashboard() {
         </h3>
         <Link
           to="/achievements"
-          className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
+          className="text-primary hover:text-primary-600 duration-300 transition-colors dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
         >
           Voir tout
           <Trophy size={14} />
@@ -343,11 +343,8 @@ export default function Dashboard() {
             transition={{ duration: 0.3, delay: index * 0.1 }}
             className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700"
           >
-            <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center">
-              <Trophy
-                className="text-primary dark:text-primary-400"
-                size={20}
-              />
+            <div className="h-10 w-10 bg-card-dark rounded-full flex items-center justify-center">
+              <Trophy className="text-primary" size={20} />
             </div>
             <div>
               <h4 className="font-medium text-card-foreground">
@@ -377,14 +374,14 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <Link
             to="/personal-records"
-            className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
+            className="text-primary hover:text-primary-600 duration-300 transition-colors dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
           >
             Voir tout
             <ArrowRight size={14} />
           </Link>
           <Link
             to="/personal-records"
-            className="bg-primary-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 flex items-center gap-1.5 transition-colors shadow-sm"
+            className="bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-200 flex items-center gap-1.5 transition-colors duration-300 shadow-sm"
           >
             <PlusCircle size={16} />
             Ajouter un Record
@@ -397,7 +394,10 @@ export default function Dashboard() {
           <p className="text-muted-foreground mb-3">
             Aucun record personnel pour le moment.
           </p>
-          <Link to="/personal-records" className="btn btn-outline btn-sm">
+          <Link
+            to="/personal-records"
+            className="btn btn-outline dark:hover:bg-gray-700 dark:border-gray-600 btn-sm"
+          >
             Ajouter un Record
           </Link>
         </div>
