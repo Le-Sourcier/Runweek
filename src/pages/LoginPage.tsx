@@ -10,6 +10,7 @@ import {
   EyeOff,
   CheckCircle2,
 } from "lucide-react"; // Added Eye, EyeOff, CheckCircle2
+import ModernAuthVector from '../../components/ui/ModernAuthVector';
 
 // Define an interface for form inputs - matches UserCredentials for simplicity here
 type LoginFormInputs = UserCredentials;
@@ -94,65 +95,29 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen font-sans flex flex-col md:flex-row w-full">
+    <div className="min-h-screen flex flex-col md:flex-row w-full font-sans">
       {/* Visual Side */}
-      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-blue-50 dark:bg-blue-900/20 transition-opacity duration-700 ease-in-out">
-        <svg
-          viewBox="0 0 100 100"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-2/3 max-w-xs h-auto mx-auto text-blue-600 dark:text-blue-400 transition-opacity duration-1000 ease-in-out opacity-100"
-        >
-          <defs>
-            <linearGradient
-              id="svg1LoginGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
-            >
-              <stop
-                offset="0%"
-                stop-color="currentColor"
-                className="text-blue-500 dark:text-blue-300"
-              />
-              <stop
-                offset="100%"
-                stop-color="currentColor"
-                className="text-blue-700 dark:text-blue-500"
-              />
-            </linearGradient>
-          </defs>
-          <path
-            fill="url(#svg1LoginGradient)"
-            d="M20,70 Q50,20 80,60 T90,30 L90,80 L10,80 Z"
-          />
-          <circle
-            cx="30"
-            cy="30"
-            r="10"
-            fill="currentColor"
-            className="text-blue-400 dark:text-blue-200"
-          />
-        </svg>
-        <p className="font-display text-xl md:text-2xl font-semibold text-center text-slate-700 dark:text-slate-300 mt-6">
-          Unlock Your Potential.
+      <div className="md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 order-1 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700">
+        <ModernAuthVector className="w-2/3 max-w-sm h-auto mx-auto text-sky-400 dark:text-sky-300 transition-opacity duration-1000 ease-in-out opacity-100" />
+        <p className="font-display text-2xl md:text-3xl font-semibold text-center text-slate-100 dark:text-slate-50 mt-8">
+          Welcome Back to Runweek.
         </p>
       </div>
 
       {/* Functional Side (Form Panel) */}
-      <div className="w-full md:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2 md:order-2">
+      <div className="md:w-1/2 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2">
         {/* The card that holds the form content */}
-        <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-lg shadow-xl w-full max-w-md space-y-6">
+        <div className="bg-card p-6 sm:p-8 md:p-10 lg:p-12 rounded-xl shadow-2xl w-full max-w-md space-y-8">
           {/* App Logo */}
           <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-3xl font-bold font-display text-blue-600 dark:text-blue-400">
+            <h1 className="text-4xl font-bold font-display text-slate-800 dark:text-slate-100">
               Runweek
             </h1>
           </div>
 
           {/* Page Title/Context (replaces old Activity icon and H2) */}
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-slate-50">
+            <h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-200">
               Login to your account
             </h2>
           </div>
@@ -166,10 +131,10 @@ const LoginPage: React.FC = () => {
                 className="absolute inset-0 flex items-center"
                 aria-hidden="true"
               >
-                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
+                <div className="w-full border-t border-slate-300 dark:border-slate-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">
+                <span className="px-2 bg-card text-slate-500 dark:text-slate-400">
                   Or continue with
                 </span>
               </div>
@@ -177,7 +142,7 @@ const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => console.log("Login with Google placeholder")}
-              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+              className="flex items-center justify-center w-full py-3 px-4 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-card transition-colors duration-150"
             >
               <Chrome className="h-5 w-5 mr-2" />
               Sign in with Google
@@ -185,7 +150,7 @@ const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => console.log("Login with Apple placeholder")}
-              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+              className="flex items-center justify-center w-full py-3 px-4 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-card transition-colors duration-150"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -250,13 +215,13 @@ const LoginPage: React.FC = () => {
                         message: "Invalid email address",
                       },
                     })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
+                    className={`relative block w-full rounded-lg px-4 py-3.5 text-base bg-input text-slate-900 dark:text-slate-50 placeholder:text-slate-400 dark:placeholder:text-slate-500 border ${
                       formErrors.email
                         ? "border-red-500"
                         : isEmailValidated
                         ? "border-green-500 dark:border-green-400"
-                        : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base`}
+                        : "border-slate-300 dark:border-slate-700"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-500 focus:border-blue-600 dark:focus:border-blue-500`}
                     placeholder="Email address"
                   />
                   {isEmailValidated && !formErrors.email && (
@@ -275,7 +240,7 @@ const LoginPage: React.FC = () => {
                     type="button"
                     onClick={handleNextStep}
                     disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+                    className="group relative w-full flex justify-center items-center py-3.5 px-6 border border-transparent text-base font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-70"
                   >
                     Next
                   </button>
@@ -319,11 +284,11 @@ const LoginPage: React.FC = () => {
                     {...register("password", {
                       required: "Password is required",
                     })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
+                    className={`relative block w-full rounded-lg px-4 py-3.5 text-base bg-input text-slate-900 dark:text-slate-50 placeholder:text-slate-400 dark:placeholder:text-slate-500 border ${
                       formErrors.password
                         ? "border-red-500"
-                        : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base pr-10`} // Added pr-10 for icon space
+                        : "border-slate-300 dark:border-slate-700"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-500 focus:border-blue-600 dark:focus:border-blue-500 pr-10`} // Added pr-10 for icon space
                     placeholder="Password"
                   />
                   <button
@@ -357,7 +322,7 @@ const LoginPage: React.FC = () => {
                           )}`
                         : ""
                     }`}
-                    className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
+                    className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
                   >
                     Forgot your password?
                   </Link>
@@ -366,7 +331,7 @@ const LoginPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+                    className="group relative w-full flex justify-center items-center py-3.5 px-6 border border-transparent text-base font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-70"
                   >
                     {isLoading && (
                       <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
@@ -390,7 +355,7 @@ const LoginPage: React.FC = () => {
                     ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
                     : ""
                 }`}
-                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
+                className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
               >
                 Sign up
               </Link>
