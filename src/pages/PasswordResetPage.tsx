@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom'; // Removed useParams for this mockup
-import { KeyRound, Loader2 } from 'lucide-react'; // Optional icon, Added Loader2
+import { Link, useNavigate } from 'react-router-dom';
+import { KeyRound, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react'; // Added new icons
 
 interface PasswordResetFormInputs {
   newPassword: string;
@@ -10,17 +10,56 @@ interface PasswordResetFormInputs {
 
 const PasswordResetPage: React.FC = () => {
   const navigate = useNavigate();
-  // const { token } = useParams<{ token: string }>(); // For actual implementation - ommitted for now
 
-  const [resetError, setResetError] = useState<string | null>(null); // For potential future use
+  const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { register, handleSubmit, watch, formState: { errors: formErrors }, reset } = useForm<PasswordResetFormInputs>({
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isNewPasswordValidated, setIsNewPasswordValidated] = useState(false);
+  const [isConfirmPasswordValidated, setIsConfirmPasswordValidated] = useState(false);
+
+  const { register, handleSubmit, watch, formState: { errors: formErrors, dirtyFields }, reset, trigger } = useForm<PasswordResetFormInputs>({
     mode: 'onBlur'
   });
 
-  const newPassword = watch('newPassword', '');
+  const newPasswordValue = watch('newPassword', '');
+  const confirmPasswordValue = watch('confirmNewPassword', '');
+
+  // Effects to reset validation status if values change
+  useEffect(() => { if (isNewPasswordValidated) setIsNewPasswordValidated(false); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newPasswordValue]);
+  useEffect(() => { if (isConfirmPasswordValidated) setIsConfirmPasswordValidated(false); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmPasswordValue]);
+
+  // Also reset confirm password validation if new password changes, as its validity depends on newPassword
+  useEffect(() => {
+    if (isConfirmPasswordValidated) setIsConfirmPasswordValidated(false);
+      // If newPassword changes, trigger revalidation of confirmPassword if it was touched
+      if (dirtyFields.confirmNewPassword) {
+        trigger('confirmNewPassword');
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newPasswordValue]);
+
+
+  const handleNewPasswordBlur = async () => {
+    const isValid = await trigger('newPassword');
+    setIsNewPasswordValidated(isValid && !formErrors.newPassword);
+    // Also re-validate confirm password if new password changes & confirm was touched
+    if (dirtyFields.confirmNewPassword) {
+        const isConfirmStillValid = await trigger('confirmNewPassword');
+        setIsConfirmPasswordValidated(isConfirmStillValid && !formErrors.confirmNewPassword);
+    }
+  };
+
+  const handleConfirmPasswordBlur = async () => {
+    const isValid = await trigger('confirmNewPassword');
+    // Confirm password validation depends on newPassword as well.
+    // The form schema validation `validate: value => value === newPasswordValue` handles this.
+    setIsConfirmPasswordValidated(isValid && !formErrors.confirmNewPassword && !formErrors.newPassword && !!newPasswordValue);
+  };
 
   // React.useEffect(() => {
   //   // In a real app, validate the token here.
@@ -51,94 +90,109 @@ const PasswordResetPage: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans flex flex-col md:flex-row w-full">
-      {/* Illustration Column */}
-      <div className="hidden md:flex md:w-1/2 bg-gray-50 items-center justify-center p-12 border-r border-gray-200 transition-opacity duration-700 ease-in-out">
-        {/* Placeholder SVG 2 - Security/Key Theme */}
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-3/4 max-w-lg h-auto transition-opacity duration-1000 ease-in-out opacity-100">  {/* Added transition & opacity */}
+      {/* Visual Side */}
+      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-blue-50 dark:bg-blue-900/20 transition-opacity duration-700 ease-in-out">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-2/3 max-w-xs h-auto mx-auto text-blue-600 dark:text-blue-400 transition-opacity duration-1000 ease-in-out opacity-100">
           <defs>
-            <linearGradient id="grad2PRes" x1="0%" y1="0%" x2="100%" y2="100%"> {/* Unique ID */}
-              <stop offset="0%" style={{ stopColor: 'rgb(96,165,250)', stopOpacity: 1 }} /> {/* blue-400 */}
-              <stop offset="100%" style={{ stopColor: 'rgb(37,99,235)', stopOpacity: 1 }} />  {/* blue-600 */}
+            <linearGradient id="svg2PResGradient" x1="0%" y1="0%" x2="100%" y2="100%"> {/* Unique ID */}
+              <stop offset="0%" stop-color="currentColor" className="text-blue-500 dark:text-blue-300" />
+              <stop offset="100%" stop-color="currentColor" className="text-blue-700 dark:text-blue-500" />
             </linearGradient>
           </defs>
-          <path fill="url(#grad2PRes)" d="M72.4,-13.1C80.7,10.5,64.6,43.4,39.9,59.9C15.2,76.4,-18.1,76.6,-41.1,59.5C-64.1,42.4,-76.8,8.1,-69.2,-16.9C-61.6,-41.9,-33.7,-57.6,-3.3,-56.7C27.2,-55.8,54.3,-36.7,72.4,-13.1Z" transform="translate(100 100)" />
-          <rect x="75" y="75" width="50" height="70" rx="5" fill="white" strokeWidth="3" opacity="0.9" stroke="rgb(29,78,216)" /> {/* blue-700 for stroke */}
-          <circle cx="100" cy="65" r="15" fill="white" strokeWidth="3" opacity="0.9" stroke="rgb(29,78,216)" /> {/* blue-700 for stroke */}
-          <rect x="95" y="90" width="10" height="20" fill="rgb(29,78,216)" opacity="0.9" /> {/* blue-700 for fill */}
+          <path fill="url(#svg2PResGradient)" d="M50,10 L15,30 L15,60 Q50,95 85,60 L85,30 Z" />
+          <polyline points="35,50 45,60 65,40" fill="none" stroke="white" stroke-width="5" opacity="0.9"/>
         </svg>
+        <p className="font-display text-xl md:text-2xl font-semibold text-center text-slate-700 dark:text-slate-300 mt-6">
+          Securely Back on Track.
+        </p>
       </div>
 
-      {/* Form Column */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8 lg:p-12">
-        <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-xl shadow-2xl"> {/* Adjusted space-y, shadow */}
+      {/* Functional Side (Form Panel) */}
+      <div className="w-full md:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2 md:order-2">
+        <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-lg shadow-xl w-full max-w-md space-y-6">
+          {/* App Logo Placeholder */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold font-display text-blue-600 dark:text-blue-400">
+              Runweek
+            </h1>
+          </div>
+
           <div className="text-center">
-            <div className="mb-8"> {/* Added margin-bottom for separation */}
-            <KeyRound className="mx-auto h-14 w-auto text-blue-600" /> {/* Changed indigo to blue */}
-            <h2 className="mt-8 text-4xl font-extrabold text-gray-900">Set New Password</h2> {/* Consistent title styling */}
+            {/* Page specific icon removed. Title remains. */}
+            <h2 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-slate-50">Set New Password</h2>
           </div>
-        </div>
 
-        {resetSuccess && (
-          <div className="p-4 text-base text-green-700 bg-green-100 rounded-md text-center"> {/* Increased text size */}
-            {resetSuccess}
+          {resetSuccess && (
+            <div className="p-4 text-base text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 rounded-md text-center">
+              {resetSuccess}
+            </div>
+          )}
+          {resetError && (
+            <div className="p-4 text-base text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-md text-center">
+              {resetError}
+            </div>
+          )}
+
+          {!resetSuccess && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="relative">
+                <label htmlFor="newPassword" className="sr-only">New Password</label>
+                <input id="newPassword" type={showNewPassword ? "text" : "password"} placeholder="New Password" autoComplete="new-password"
+                  {...register('newPassword', {
+                    required: 'New password is required',
+                    minLength: { value: 8, message: 'Password must be at least 8 characters' }
+                  })}
+                  onBlur={handleNewPasswordBlur}
+                  className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.newPassword ? 'border-red-500' : (isNewPasswordValidated ? 'border-green-500 dark:border-green-400' : 'border-gray-300 dark:border-slate-700')} placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base pr-10`} />
+                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
+                  aria-label={showNewPassword ? "Hide new password" : "Show new password"}>
+                  {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+                 {isNewPasswordValidated && !formErrors.newPassword && (
+                  <div className="absolute inset-y-0 right-10 pr-3 flex items-center pointer-events-none"> {/* Adjusted right padding for checkmark */}
+                    <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                  </div>
+                )}
+                {formErrors.newPassword && <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">{formErrors.newPassword.message}</p>}
+              </div>
+              <div className="relative">
+                <label htmlFor="confirmNewPassword" className="sr-only">Confirm New Password</label>
+                <input id="confirmNewPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm New Password" autoComplete="new-password"
+                  {...register('confirmNewPassword', {
+                    required: 'Please confirm your new password',
+                    validate: value => value === newPasswordValue || 'Passwords do not match'
+                  })}
+                  onBlur={handleConfirmPasswordBlur}
+                  className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.confirmNewPassword ? 'border-red-500' : (isConfirmPasswordValidated ? 'border-green-500 dark:border-green-400' : 'border-gray-300 dark:border-slate-700')} placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base pr-10`} />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}>
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+                {isConfirmPasswordValidated && !formErrors.confirmNewPassword && (
+                  <div className="absolute inset-y-0 right-10 pr-3 flex items-center pointer-events-none"> {/* Adjusted right padding for checkmark */}
+                    <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                  </div>
+                )}
+                {formErrors.confirmNewPassword && <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">{formErrors.confirmNewPassword.message}</p>}
+              </div>
+              <div className="pt-4">
+                <button type="submit" disabled={isLoading}
+                  className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95">
+                  {isLoading && <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />}
+                  {isLoading ? 'Resetting Password...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="mt-8 text-center">
+            <Link to="/login"
+              className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 text-base focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm">
+              Back to Login
+            </Link>
           </div>
-        )}
-        {resetError && (
-          <div className="p-4 text-base text-red-700 bg-red-100 rounded-md text-center"> {/* Increased text size */}
-            {resetError}
-          </div>
-        )}
-
-        {!resetSuccess && (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6"> {/* Consistent form spacing */}
-            <div>
-              <label htmlFor="newPassword" className="sr-only">New Password</label>
-              <input
-                id="newPassword"
-                type="password"
-                placeholder="New Password"
-                autoComplete="new-password"
-                {...register('newPassword', {
-                  required: 'New password is required',
-                  minLength: { value: 8, message: 'Password must be at least 8 characters' }
-                })}
-                className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.newPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-base`} // Ensure consistent focus
-              />
-              {formErrors.newPassword && <p className="mt-2 text-sm text-red-600 py-1">{formErrors.newPassword.message}</p>} {/* Changed text-xs to text-sm */}
-            </div>
-            <div>
-              <label htmlFor="confirmNewPassword" className="sr-only">Confirm New Password</label>
-              <input
-                id="confirmNewPassword"
-                type="password"
-                placeholder="Confirm New Password"
-                autoComplete="new-password"
-                {...register('confirmNewPassword', {
-                  required: 'Please confirm your new password',
-                  validate: value => value === newPassword || 'Passwords do not match'
-                })}
-                className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.confirmNewPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-base`} // Ensure consistent focus
-              />
-              {formErrors.confirmNewPassword && <p className="mt-2 text-sm text-red-600 py-1">{formErrors.confirmNewPassword.message}</p>} {/* Changed text-xs to text-sm */}
-            </div>
-            <div className="pt-4"> {/* Added pt-4 for spacing before button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95" // Added animations
-              >
-                {isLoading && <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />}
-                {isLoading ? 'Resetting Password...' : 'Reset Password'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        <div className="mt-8 text-center"> {/* Consistent margin top relative to card's space-y */}
-          <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500 text-base focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 rounded-sm"> {/* Added focus styling */}
-            Back to Login
-          </Link>
-        </div>
         </div>
       </div>
     </div>

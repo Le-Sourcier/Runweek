@@ -1,45 +1,50 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useUser, UserCredentials } from "../context/UserContext"; // UserCredentials imported
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Activity, Loader2, Facebook, Chrome, ArrowLeft } from "lucide-react"; // Added Facebook, Chrome, ArrowLeft
+import React, { useState, useEffect, useRef } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { useUser, UserCredentials } from '../context/UserContext'; // UserCredentials imported
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Activity, Loader2, Facebook, Chrome, ArrowLeft, Eye, EyeOff, CheckCircle2 } from 'lucide-react'; // Added Eye, EyeOff, CheckCircle2
 
 // Define an interface for form inputs - matches UserCredentials for simplicity here
-type LoginFormInputs = UserCredentials;
+interface LoginFormInputs extends UserCredentials {}
 
-type Step = "email" | "password";
+type Step = 'email' | 'password';
 
 const LoginPage: React.FC = () => {
   const { login, error: apiError, isAuthenticated, isLoading } = useUser(); // Renamed error to apiError for clarity
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectUrlFromQuery = searchParams.get("redirect");
-  const [currentStep, setCurrentStep] = useState<Step>("email");
+  const redirectUrlFromQuery = searchParams.get('redirect');
+  const [currentStep, setCurrentStep] = useState<Step>('email');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isEmailValidated, setIsEmailValidated] = useState(false);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const isValidRedirectPath = (path: string | null): boolean => {
     if (!path) return false;
-    if (!path.startsWith("/")) return false;
-    if (path.startsWith("//") || path.includes("://")) return false;
+    if (!path.startsWith('/')) return false;
+    if (path.startsWith('//') || path.includes('://')) return false;
     return true;
   };
 
-  let finalRedirectPath = "/";
+  let finalRedirectPath = '/';
   if (isValidRedirectPath(redirectUrlFromQuery)) {
     finalRedirectPath = redirectUrlFromQuery!;
   }
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors: formErrors },
-    trigger,
-    watch,
-  } = useForm<LoginFormInputs>({
-    mode: "onBlur", // Validate on blur
+  const { register, handleSubmit, formState: { errors: formErrors }, trigger, watch } = useForm<LoginFormInputs>({
+    mode: 'onBlur',
   });
 
-  const emailValue = watch("email"); // To display email on password step
+  const emailValue = watch('email');
+
+  // Effect to reset email validation status if email value changes and it was previously marked as validated.
+  // This ensures the checkmark disappears if the user modifies a validated email.
+  useEffect(() => {
+    if (isEmailValidated) {
+      setIsEmailValidated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailValue]); // Only re-run if emailValue changes, no need to include isEmailValidated in deps
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     await login(data);
@@ -53,278 +58,168 @@ const LoginPage: React.FC = () => {
   }, [isAuthenticated, navigate, finalRedirectPath]);
 
   useEffect(() => {
-    if (currentStep === "password" && passwordInputRef.current) {
+    if (currentStep === 'password' && passwordInputRef.current) {
       passwordInputRef.current.focus();
     }
   }, [currentStep]);
 
   const handleNextStep = async () => {
-    const emailIsValid = await trigger("email");
+    const emailIsValid = await trigger('email');
     if (emailIsValid) {
-      setCurrentStep("password");
+      setIsEmailValidated(true);
+      setCurrentStep('password');
+    } else {
+      setIsEmailValidated(false);
     }
   };
 
   const handleBackStep = () => {
-    setCurrentStep("email");
+    // When going back, user might want to change email.
+    // Validation status will be reset by the useEffect watching emailValue if they type.
+    // If they don't type and click Next, trigger('email') will re-validate.
+    setCurrentStep('email');
   };
 
   return (
     <div className="min-h-screen font-sans flex flex-col md:flex-row w-full">
-      {/* Illustration Column */}
-      <div className="hidden md:flex md:w-1/2 bg-gray-50 items-center justify-center p-12 border-r border-gray-200 transition-opacity duration-700 ease-in-out">
-        {/* Placeholder SVG 1 - User/Access Theme */}
-        <svg
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-3/4 max-w-lg h-auto transition-opacity duration-1000 ease-in-out opacity-100"
-        >
-          {" "}
-          {/* Added transition and opacity */}
+      {/* Visual Side */}
+      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-blue-50 dark:bg-blue-900/20 transition-opacity duration-700 ease-in-out">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-2/3 max-w-xs h-auto mx-auto text-blue-600 dark:text-blue-400 transition-opacity duration-1000 ease-in-out opacity-100">
           <defs>
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop
-                offset="0%"
-                style={{ stopColor: "rgb(96,165,250)", stopOpacity: 1 }}
-              />{" "}
-              {/* blue-400 */}
-              <stop
-                offset="100%"
-                style={{ stopColor: "rgb(37,99,235)", stopOpacity: 1 }}
-              />{" "}
-              {/* blue-600 */}
+            <linearGradient id="svg1LoginGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="currentColor" className="text-blue-500 dark:text-blue-300" />
+              <stop offset="100%" stop-color="currentColor" className="text-blue-700 dark:text-blue-500" />
             </linearGradient>
           </defs>
-          <path
-            fill="url(#grad1)"
-            d="M76.4,-71.3C96.4,-59.4,108.2,-36.9,110.1,-13.6C112,9.7,103.9,33.8,88.4,49.2C72.9,64.6,49.9,71.4,28.1,74.4C6.2,77.3,-14.5,76.5,-34.9,69.1C-55.3,61.7,-75.4,47.8,-85.6,29.7C-95.8,11.6,-96.1,-10.7,-87.8,-29.9C-79.5,-49.1,-62.6,-65.2,-43.7,-73.3C-24.8,-81.4,-3.9,-81.5,15.9,-79C35.7,-76.5,56.4,-83.3,76.4,-71.3Z"
-            transform="translate(100 100)"
-          />
-          <circle cx="100" cy="90" r="30" fill="white" opacity="0.9" />
-          <path
-            fill="white"
-            opacity="0.9"
-            d="M100 125 C 80 125, 70 140, 70 150 L 130 150 C 130 140, 120 125, 100 125 Z"
-          />
+          <path fill="url(#svg1LoginGradient)" d="M20,70 Q50,20 80,60 T90,30 L90,80 L10,80 Z" />
+          <circle cx="30" cy="30" r="10" fill="currentColor" className="text-blue-400 dark:text-blue-200"/>
         </svg>
+        <p className="font-display text-xl md:text-2xl font-semibold text-center text-slate-700 dark:text-slate-300 mt-6">
+          Unlock Your Potential.
+        </p>
       </div>
 
-      {/* Form Column */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8 lg:p-12">
-        <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-xl shadow-2xl">
-          {" "}
-          {/* Adjusted space-y, shadow */}
-          <div className="text-center">
-            <div className="mb-8">
-              <Activity className="mx-auto h-14 w-auto text-blue-600" />
-              <h2 className="mt-8 text-4xl font-extrabold text-gray-900">
-                Login to Runweek
-              </h2>
-            </div>
+      {/* Functional Side (Form Panel) */}
+      <div className="w-full md:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2 md:order-2">
+        {/* The card that holds the form content */}
+        <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-lg shadow-xl w-full max-w-md space-y-6">
+          {/* App Logo */}
+          <div className="text-center mb-6 md:mb-8">
+            <h1 className="text-3xl font-bold font-display text-blue-600 dark:text-blue-400">
+              Runweek
+            </h1>
           </div>
-          {/* Display API error if present */}
+
+          {/* Page Title/Context (replaces old Activity icon and H2) */}
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-slate-50">
+              Login to your account
+            </h2>
+          </div>
+
+          {/* Social Login Options */}
+          <div className="my-6 space-y-3"> {/* Adjusted spacing for social buttons */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">Or continue with</span>
+              </div>
+            </div>
+            <button type="button" onClick={() => console.log('Login with Google placeholder')}
+              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95">
+              <Chrome className="h-5 w-5 mr-2" />
+              Sign in with Google
+            </button>
+            <button type="button" onClick={() => console.log('Login with Apple placeholder')}
+              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 mr-2"> {/* Placeholder Apple Icon */}
+                <path d="M12.016 6.496c-.13.004-.303.004-.515.004-.213 0-.385 0-.516-.004C8.24 6.48 6.496 8.24 6.496 10.98c0 2.772 2.184 4.464 4.464 4.464.213 0 .385 0 .516.004.13-.004.303-.004.515-.004 2.74 0 4.484-2.184 4.484-4.92 0-2.752-2.184-4.484-4.944-4.484zm0-2.496c2.088 0 3.72.464 4.92 1.368.06.048.144.144.144.24 0 .12-.072.204-.168.264-1.032.648-1.728 1.704-1.728 2.988 0 1.2.528 2.016 1.368 2.712.108.084.168.18.168.312 0 .144-.084.264-.204.336-1.056.66-2.424 1.056-3.912 1.056s-2.856-.396-3.912-1.056c-.12-.072-.204-.192-.204-.336s.06-.228.168-.312c.84-.696 1.368-1.512 1.368-2.712 0-1.284-.696-2.34-1.728-2.988-.096-.06-.168-.144-.168-.264.012-.096.084-.192.144-.24C8.296 4.464 9.928 4 12.016 4z"/>
+              </svg>
+              Sign in with Apple
+            </button>
+          </div>
+
+          {/* API error display */}
           {apiError && (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-              role="alert"
-            >
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"> {/* Removed mb-4, space-y-6 on card handles it */}
               <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">
-                {typeof apiError === "string"
-                  ? apiError
-                  : "Login failed. Please try again."}
-              </span>
+              <span className="block sm:inline">{typeof apiError === 'string' ? apiError : 'Login failed. Please try again.'}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <input type="hidden" name="remember" defaultValue="true" />
-            {/* Container for steps with min-height to prevent layout jumps */}
-            <div className="relative" style={{ minHeight: "160px" }}>
-              {/* Increased min-height slightly */}
-              {/* Email Step */}
-              <div
-                className={`absolute w-full transform transition-all duration-300 ease-in-out ${
-                  currentStep === "email"
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-5 pointer-events-none h-0"
-                }`}
-              >
-                <div>
-                  <label htmlFor="email" className="sr-only">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^\S+@\S+\.\S+$/,
-                        message: "Invalid email address",
-                      },
-                    })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
-                      formErrors.email ? "border-red-500" : "border-gray-300"
-                    } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-base`}
-                    placeholder="Email address"
-                  />
-                </div>
-                {formErrors.email && (
-                  <p className="mt-2 text-sm text-red-600 py-1">
-                    {formErrors.email.message}
-                  </p>
-                )}
 
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6"> {/* This form's space-y might need adjustment if API error is also part of this flow */}
+            <input type="hidden" name="remember" defaultValue="true" />
+            <div className="relative" style={{ minHeight: '180px' }}> {/* Adjusted min-height for Step X/Y text and error messages */}
+              {/* Email Step */}
+              <div className={`absolute w-full transform transition-all duration-300 ease-in-out ${currentStep === 'email' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5 pointer-events-none h-0'}`}>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">Step 1/2</p>
+                <div className="relative">
+                  <label htmlFor="email" className="sr-only">Email address</label>
+                  <input id="email" type="email" autoComplete="email"
+                    {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email address' }})}
+                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.email ? 'border-red-500' : (isEmailValidated ? 'border-green-500 dark:border-green-400' : 'border-gray-300 dark:border-slate-700')} placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base`}
+                    placeholder="Email address" />
+                  {isEmailValidated && !formErrors.email && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                    </div>
+                  )}
+                </div>
+                {formErrors.email && <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">{formErrors.email.message}</p>}
                 <div className="pt-6">
-                  {" "}
-                  {/* Spacing for Next button */}
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-                  >
+                  <button type="button" onClick={handleNextStep} disabled={isLoading}
+                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95">
                     Next
                   </button>
                 </div>
               </div>
 
               {/* Password Step */}
-              <div
-                className={`absolute w-full transform transition-all duration-300 ease-in-out ${
-                  currentStep === "password"
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-5 pointer-events-none h-0"
-                }`}
-              >
-                <div className="mb-3">
-                  <button
-                    type="button"
-                    onClick={handleBackStep}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-500 font-medium focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 rounded-sm transform transition-opacity duration-150 ease-in-out hover:opacity-80 active:opacity-70"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-1" /> Back to email
+              <div className={`absolute w-full transform transition-all duration-300 ease-in-out ${currentStep === 'password' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5 pointer-events-none h-0'}`}>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">Step 2/2</p>
+                <div className="mb-2"> {/* Reduced mb for tighter layout */}
+                  <button type="button" onClick={handleBackStep} className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm transform transition-opacity duration-150 ease-in-out hover:opacity-80 active:opacity-70">
+                    <ArrowLeft className="h-4 w-4 mr-1" /> {isEmailValidated && emailValue ? emailValue : "Back to email"}
                   </button>
-                  {emailValue && (
-                    <p
-                      className="text-sm text-gray-600 mt-1 truncate"
-                      title={emailValue}
-                    >
-                      Logging in as: {emailValue}
-                    </p>
-                  )}
+                  {/* Removed the separate p tag for emailValue, integrated into back button text or implicitly known */}
                 </div>
-                <div>
-                  <label htmlFor="password" className="sr-only">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    ref={passwordInputRef}
-                    autoComplete="current-password"
-                    {...register("password", {
-                      required: "Password is required",
-                    })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
-                      formErrors.password ? "border-red-500" : "border-gray-300"
-                    } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-base`}
-                    placeholder="Password"
-                  />
+                <div className="relative">
+                  <label htmlFor="password" className="sr-only">Password</label>
+                  <input id="password" type={showPassword ? "text" : "password"} ref={passwordInputRef} autoComplete="current-password"
+                    {...register('password', { required: 'Password is required' })}
+                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${formErrors.password ? 'border-red-500' : 'border-gray-300 dark:border-slate-700'} placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base pr-10`} // Added pr-10 for icon space
+                    placeholder="Password" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
+                    aria-label={showPassword ? "Hide password" : "Show password"}>
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
-                {formErrors.password && (
-                  <p className="mt-2 text-sm text-red-600 py-1">
-                    {formErrors.password.message}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-end pt-3 text-sm">
-                  <Link
-                    to={`/forgot-password${
-                      redirectUrlFromQuery
-                        ? `?redirect=${encodeURIComponent(
-                            redirectUrlFromQuery
-                          )}`
-                        : ""
-                    }`}
-                    className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 rounded-sm"
-                  >
+                {formErrors.password && <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">{formErrors.password.message}</p>}
+                <div className="flex items-center justify-end pt-2 text-sm"> {/* Reduced top padding */}
+                  <Link to={`/forgot-password${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ''}`}
+                    className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm">
                     Forgot your password?
                   </Link>
                 </div>
-
                 <div className="pt-6">
-                  {" "}
-                  {/* Spacing for Login button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-                  >
-                    {isLoading && (
-                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    )}
-                    {isLoading ? "Logging in..." : "Login"}
-                  </button>
-                </div>
+                  <button type="submit" disabled={isLoading}
+                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95">
+                  {isLoading && <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />}
+                  {isLoading ? 'Logging in...' : 'Login'}
+                </button>
               </div>
             </div>
           </form>
-          {/* Social Login and Sign Up Link - visible regardless of step, but after form content */}
-          <div>
-            <div className="relative my-8">
-              <div
-                className="absolute inset-0 flex items-center"
-                aria-hidden="true"
-              >
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => console.log("Login with Google placeholder")} // Placeholder action
-                  className="inline-flex w-full justify-center items-center rounded-md bg-white px-4 py-2.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400 text-sm transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-                >
-                  <span className="sr-only">Sign in with Google</span>
-                  <Chrome className="h-5 w-5 mr-2" aria-hidden="true" />
-                  Google
-                </button>
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => console.log("Login with Facebook placeholder")} // Placeholder action
-                  className="inline-flex w-full justify-center items-center rounded-md bg-white px-4 py-2.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400 text-sm transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-                >
-                  <span className="sr-only">Sign in with Facebook</span>
-                  <Facebook className="h-5 w-5 mr-2" aria-hidden="true" />
-                  Facebook
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 text-center">
-            {" "}
-            {/* Ensure this still has appropriate spacing relative to card's space-y */}
-            <p className="text-base text-gray-600">
-              Don't have an account?{" "}
-              <Link
-                to={`/register${
-                  redirectUrlFromQuery
-                    ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
-                    : ""
-                }`}
-                className="font-semibold text-blue-600 hover:text-blue-500 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 rounded-sm"
-              >
+          {/* "Don't have an account?" Link - moved after form and social login */}
+          <div className="mt-8 text-center"> {/* This div might be redundant if card's space-y handles it */}
+            <p className="text-base text-gray-600 dark:text-slate-300">
+              Don't have an account?{' '}
+              <Link to={`/register${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ''}`}
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm">
                 Sign up
               </Link>
             </p>

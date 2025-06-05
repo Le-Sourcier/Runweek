@@ -1,6 +1,7 @@
 import { useUser } from "../context/UserContext";
 import { usePRs } from "../context/PRContext"; // Import usePRs
-// import { useNotifications } from "../context/NotificationContext"; // Import for notifications
+import { useNotifications } from "../context/NotificationContext"; // Import for notifications
+import { toast } from "react-toastify"; // Import for toasts
 import { isThisMonth, parseISO, format } from "date-fns"; // Import date-fns functions & format
 import { fr } from "date-fns/locale"; // Import French locale for date formatting
 import {
@@ -12,6 +13,8 @@ import {
   Trophy,
   ArrowRight,
   PlusCircle,
+  Sunrise,
+  MessageSquare,
   Target, // Added Target for Goal Summary
   LayoutGrid, // Added for Customize Dashboard button
 } from "lucide-react"; // Added PlusCircle, Sunrise, MessageSquare
@@ -30,7 +33,7 @@ import HeartRateTrendWidget from "../components/dashboard/widgets/HeartRateTrend
 export default function Dashboard() {
   const userContext = useUser();
   const { user, updateUserPreferences } = userContext; // Destructure updateUserPreferences
-  // const notificationContext = useNotifications();
+  const notificationContext = useNotifications();
   const { processedPRs: prs } = usePRs();
 
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
