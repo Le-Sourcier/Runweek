@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useUser, UserCredentials } from "../context/UserContext"; // UserCredentials imported
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader2,
@@ -9,15 +8,16 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-} from "lucide-react"; // Added Eye, EyeOff, CheckCircle2
+  Activity,
+} from "lucide-react";
+import { useUser, UserCredentials } from "../context/UserContext";
 
-// Define an interface for form inputs - matches UserCredentials for simplicity here
 type LoginFormInputs = UserCredentials;
 
 type Step = "email" | "password";
 
 const LoginPage: React.FC = () => {
-  const { login, error: apiError, isAuthenticated, isLoading } = useUser(); // Renamed error to apiError for clarity
+  const { login, error: apiError, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrlFromQuery = searchParams.get("redirect");
@@ -50,18 +50,14 @@ const LoginPage: React.FC = () => {
 
   const emailValue = watch("email");
 
-  // Effect to reset email validation status if email value changes and it was previously marked as validated.
-  // This ensures the checkmark disappears if the user modifies a validated email.
   useEffect(() => {
     if (isEmailValidated) {
       setIsEmailValidated(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [emailValue]); // Only re-run if emailValue changes, no need to include isEmailValidated in deps
+  }, [emailValue]);
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     await login(data);
-    // Navigation handled by useEffect
   };
 
   useEffect(() => {
@@ -87,143 +83,55 @@ const LoginPage: React.FC = () => {
   };
 
   const handleBackStep = () => {
-    // When going back, user might want to change email.
-    // Validation status will be reset by the useEffect watching emailValue if they type.
-    // If they don't type and click Next, trigger('email') will re-validate.
     setCurrentStep("email");
   };
 
   return (
     <div className="min-h-screen font-sans flex flex-col md:flex-row w-full">
       {/* Visual Side */}
-      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-blue-50 dark:bg-blue-900/20 transition-opacity duration-700 ease-in-out">
-        <svg
-          viewBox="0 0 100 100"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-2/3 max-w-xs h-auto mx-auto text-blue-600 dark:text-blue-400 transition-opacity duration-1000 ease-in-out opacity-100"
-        >
-          <defs>
-            <linearGradient
-              id="svg1LoginGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
-            >
-              <stop
-                offset="0%"
-                stop-color="currentColor"
-                className="text-blue-500 dark:text-blue-300"
-              />
-              <stop
-                offset="100%"
-                stop-color="currentColor"
-                className="text-blue-700 dark:text-blue-500"
-              />
-            </linearGradient>
-          </defs>
-          <path
-            fill="url(#svg1LoginGradient)"
-            d="M20,70 Q50,20 80,60 T90,30 L90,80 L10,80 Z"
-          />
-          <circle
-            cx="30"
-            cy="30"
-            r="10"
-            fill="currentColor"
-            className="text-blue-400 dark:text-blue-200"
-          />
-        </svg>
-        <p className="font-display text-xl md:text-2xl font-semibold text-center text-slate-700 dark:text-slate-300 mt-6">
-          Unlock Your Potential.
-        </p>
+      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent">
+        <div className="max-w-md text-center">
+          <div className="mb-8">
+            <Activity className="h-12 w-12 text-primary mx-auto" />
+            <h1 className="text-3xl font-bold font-display text-foreground mt-4">
+              Welcome to Runweek
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Track your progress, achieve your goals, and become a better runner with AI-powered coaching.
+            </p>
+          </div>
+          
+          <div className="relative mt-12">
+            <img
+              src="https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg"
+              alt="Runner at sunset"
+              className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl" />
+          </div>
+        </div>
       </div>
 
-      {/* Functional Side (Form Panel) */}
+      {/* Form Side */}
       <div className="w-full md:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2 md:order-2">
-        {/* The card that holds the form content */}
-        <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-lg shadow-xl w-full max-w-md space-y-6">
-          {/* App Logo */}
-          <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-3xl font-bold font-display text-blue-600 dark:text-blue-400">
-              Runweek
-            </h1>
-          </div>
-
-          {/* Page Title/Context (replaces old Activity icon and H2) */}
+        <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-slate-50">
-              Login to your account
+              Sign in to your account
             </h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
+              Welcome back! Please enter your details.
+            </p>
           </div>
 
-          {/* Social Login Options */}
-          <div className="my-6 space-y-3">
-            {" "}
-            {/* Adjusted spacing for social buttons */}
-            <div className="relative">
-              <div
-                className="absolute inset-0 flex items-center"
-                aria-hidden="true"
-              >
-                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => console.log("Login with Google placeholder")}
-              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-            >
-              <Chrome className="h-5 w-5 mr-2" />
-              Sign in with Google
-            </button>
-            <button
-              type="button"
-              onClick={() => console.log("Login with Apple placeholder")}
-              className="flex items-center justify-center w-full py-2.5 px-4 border border-gray-300 dark:border-slate-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-5 w-5 mr-2"
-              >
-                {" "}
-                {/* Placeholder Apple Icon */}
-                <path d="M12.016 6.496c-.13.004-.303.004-.515.004-.213 0-.385 0-.516-.004C8.24 6.48 6.496 8.24 6.496 10.98c0 2.772 2.184 4.464 4.464 4.464.213 0 .385 0 .516.004.13-.004.303-.004.515-.004 2.74 0 4.484-2.184 4.484-4.92 0-2.752-2.184-4.484-4.944-4.484zm0-2.496c2.088 0 3.72.464 4.92 1.368.06.048.144.144.144.24 0 .12-.072.204-.168.264-1.032.648-1.728 1.704-1.728 2.988 0 1.2.528 2.016 1.368 2.712.108.084.168.18.168.312 0 .144-.084.264-.204.336-1.056.66-2.424 1.056-3.912 1.056s-2.856-.396-3.912-1.056c-.12-.072-.204-.192-.204-.336s.06-.228.168-.312c.84-.696 1.368-1.512 1.368-2.712 0-1.284-.696-2.34-1.728-2.988-.096-.06-.168-.144-.168-.264.012-.096.084-.192.144-.24C8.296 4.464 9.928 4 12.016 4z" />
-              </svg>
-              Sign in with Apple
-            </button>
-          </div>
-
-          {/* API error display */}
           {apiError && (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-              role="alert"
-            >
-              {" "}
-              {/* Removed mb-4, space-y-6 on card handles it */}
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">
-                {typeof apiError === "string"
-                  ? apiError
-                  : "Login failed. Please try again."}
-              </span>
+            <div className="p-4 text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg text-center">
+              {typeof apiError === "string" ? apiError : "Login failed. Please try again."}
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {" "}
-            {/* This form's space-y might need adjustment if API error is also part of this flow */}
-            <input type="hidden" name="remember" defaultValue="true" />
-            <div className="relative" style={{ minHeight: "180px" }}>
-              {" "}
-              {/* Adjusted min-height for Step X/Y text and error messages */}
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+            <div className="relative" style={{ minHeight: "150px" }}>
               {/* Email Step */}
               <div
                 className={`absolute w-full transform transition-all duration-300 ease-in-out ${
@@ -250,13 +158,13 @@ const LoginPage: React.FC = () => {
                         message: "Invalid email address",
                       },
                     })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
+                    className={`appearance-none rounded-lg relative block w-full px-4 py-3 border ${
                       formErrors.email
                         ? "border-red-500"
                         : isEmailValidated
                         ? "border-green-500 dark:border-green-400"
                         : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base`}
+                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 sm:text-base`}
                     placeholder="Email address"
                   />
                   {isEmailValidated && !formErrors.email && (
@@ -270,17 +178,18 @@ const LoginPage: React.FC = () => {
                     {formErrors.email.message}
                   </p>
                 )}
-                <div className="pt-6">
+                <div className="mt-6">
                   <button
                     type="button"
                     onClick={handleNextStep}
                     disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 disabled:bg-primary-500 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    Next
+                    Continue
                   </button>
                 </div>
               </div>
+
               {/* Password Step */}
               <div
                 className={`absolute w-full transform transition-all duration-300 ease-in-out ${
@@ -289,24 +198,20 @@ const LoginPage: React.FC = () => {
                     : "opacity-0 translate-y-5 pointer-events-none h-0"
                 }`}
               >
-                <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
-                  Step 2/2
-                </p>
-                <div className="mb-2">
-                  {" "}
-                  {/* Reduced mb for tighter layout */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    Step 2/2
+                  </p>
                   <button
                     type="button"
                     onClick={handleBackStep}
-                    className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm transform transition-opacity duration-150 ease-in-out hover:opacity-80 active:opacity-70"
+                    className="text-sm text-primary hover:text-primary-600 dark:hover:text-primary-400 font-medium focus:outline-none focus:underline"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-1" />{" "}
-                    {isEmailValidated && emailValue
-                      ? emailValue
-                      : "Back to email"}
+                    <ArrowLeft className="h-4 w-4 inline mr-1" />
+                    Back to email
                   </button>
-                  {/* Removed the separate p tag for emailValue, integrated into back button text or implicitly known */}
                 </div>
+
                 <div className="relative">
                   <label htmlFor="password" className="sr-only">
                     Password
@@ -319,20 +224,18 @@ const LoginPage: React.FC = () => {
                     {...register("password", {
                       required: "Password is required",
                     })}
-                    className={`appearance-none rounded-md relative block w-full px-4 py-3 border ${
+                    className={`appearance-none rounded-lg relative block w-full px-4 py-3 border ${
                       formErrors.password
                         ? "border-red-500"
                         : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 sm:text-base pr-10`} // Added pr-10 for icon space
+                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 sm:text-base pr-10`}
                     placeholder="Password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -346,43 +249,77 @@ const LoginPage: React.FC = () => {
                     {formErrors.password.message}
                   </p>
                 )}
-                <div className="flex items-center justify-end pt-2 text-sm">
-                  {" "}
-                  {/* Reduced top padding */}
+
+                <div className="flex items-center justify-end mt-2">
                   <Link
                     to={`/forgot-password${
                       redirectUrlFromQuery
-                        ? `?redirect=${encodeURIComponent(
-                            redirectUrlFromQuery
-                          )}`
+                        ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
                         : ""
                     }`}
-                    className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
+                    className="text-sm text-primary hover:text-primary-600 dark:hover:text-primary-400 font-medium focus:outline-none focus:underline"
                   >
-                    Forgot your password?
+                    Forgot password?
                   </Link>
                 </div>
-                <div className="pt-6">
+
+                <div className="mt-6">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 disabled:bg-blue-500 transform transition-transform duration-150 ease-in-out hover:scale-105 active:scale-95"
+                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 disabled:bg-primary-500 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isLoading && (
                       <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                     )}
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading ? "Signing in..." : "Sign in"}
                   </button>
                 </div>
               </div>
             </div>
           </form>
 
-          {/* "Don't have an account?" Link - moved after form and social login */}
-          <div className="mt-8 text-center">
-            {" "}
-            {/* This div might be redundant if card's space-y handles it */}
-            <p className="text-base text-gray-600 dark:text-slate-300">
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => console.log("Sign in with Google")}
+                className="w-full inline-flex justify-center py-2.5 px-4 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Chrome className="h-5 w-5 mr-2" />
+                Google
+              </button>
+
+              <button
+                type="button"
+                onClick={() => console.log("Sign in with Apple")}
+                className="w-full inline-flex justify-center py-2.5 px-4 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <svg
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+                </svg>
+                Apple
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600 dark:text-slate-400">
               Don't have an account?{" "}
               <Link
                 to={`/register${
@@ -390,7 +327,7 @@ const LoginPage: React.FC = () => {
                     ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
                     : ""
                 }`}
-                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-slate-900 rounded-sm"
+                className="font-medium text-primary hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none focus:underline"
               >
                 Sign up
               </Link>
