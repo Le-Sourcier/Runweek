@@ -10,7 +10,7 @@ import {
   EyeOff,
   CheckCircle2,
 } from "lucide-react"; // Added Eye, EyeOff, CheckCircle2
-import ModernAuthVector from '../../components/ui/ModernAuthVector';
+import ModernAuthVector from "../components/ui/ModernAuthVector";
 
 // Define an interface for form inputs - matches UserCredentials for simplicity here
 type LoginFormInputs = UserCredentials;
