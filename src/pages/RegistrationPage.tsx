@@ -1,5 +1,5 @@
 // src/components/LoginPage.jsx
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   FaArrowLeft,
   FaArrowRight,
