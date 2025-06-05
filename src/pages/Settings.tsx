@@ -210,8 +210,9 @@ export default function Settings() {
 
   // Effect for scrolling content into view on tab change on small screens
   useEffect(() => {
-    if (contentRef.current && contentRef.current.offsetLeft < 50) { // Check for small screen (single column)
-      contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (contentRef.current && contentRef.current.offsetLeft < 50) {
+      // Check for small screen (single column)
+      contentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [activeTab]);
 
@@ -333,52 +334,61 @@ export default function Settings() {
         {/* Settings Navigation */}
         <Card className="lg:col-span-4 bg-white dark:bg-gray-800">
           <nav className="space-y-1">
-            {settingSections.map((section, index) => ( // Added index for delay
-              <motion.div // Wrapped button with motion.div
-                key={section.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05, duration: 0.2, ease: "easeOut" }}
-              >
-                <button
-                  onClick={() => setActiveTab(section.id)}
-                className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
-                  activeTab === section.id
-                    ? "bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`${
+            {settingSections.map(
+              (
+                section,
+                index // Added index for delay
+              ) => (
+                <motion.div // Wrapped button with motion.div
+                  key={section.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{
+                    delay: index * 0.05,
+                    duration: 0.2,
+                    ease: "easeOut",
+                  }}
+                >
+                  <button
+                    onClick={() => setActiveTab(section.id)}
+                    className={`w-full p-3 flex items-center justify-between rounded-lg transition-colors duration-200 ease-in-out ${
                       activeTab === section.id
-                        ? "text-primary dark:text-primary-300"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "bg-primary-50 text-primary dark:bg-primary-900 dark:text-primary-300"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                     }`}
                   >
-                    {section.icon}
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium">{section.title}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {section.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {section.badge && (
-                    <Badge variant={section.badge.variant}>
-                      {section.badge.text}
-                    </Badge>
-                  )}
-                  <ChevronRight
-                    size={16}
-                    className="text-gray-400 dark:text-gray-500"
-                  />
-                </div>
-                </button>
-              </motion.div>
-            ))}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`${
+                          activeTab === section.id
+                            ? "text-primary dark:text-primary-300"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        {section.icon}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-medium">{section.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {section.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {section.badge && (
+                        <Badge variant={section.badge.variant}>
+                          {section.badge.text}
+                        </Badge>
+                      )}
+                      <ChevronRight
+                        size={16}
+                        className="text-gray-400 dark:text-gray-500"
+                      />
+                    </div>
+                  </button>
+                </motion.div>
+              )
+            )}
           </nav>
 
           <div className="mt-6 pt-6 border-t dark:border-gray-700">
@@ -747,7 +757,7 @@ export default function Settings() {
                       className="flex items-center justify-between p-4 border rounded-lg hover:border-primary transition-all dark:border-gray-700 dark:hover:border-primary-600"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                        <div className="h-12 w-12 bg-gray-100 dark:bg-[#80808010] rounded-lg flex items-center justify-center">
                           <Activity size={24} className="text-primary" />
                         </div>
                         <div>
@@ -818,7 +828,7 @@ export default function Settings() {
 
               <Card
                 title="Synchronisation"
-                className="bg-white dark:bg-gray-800"
+                className="bg-white dark:bg-gray-800 mt-3"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
@@ -951,8 +961,8 @@ export default function Settings() {
                       </button>
                     </div>
 
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 ">
                         <Shield size={16} />
                         <span>Vos données de localisation sont cryptées</span>
                       </div>
@@ -1014,7 +1024,10 @@ export default function Settings() {
                 <div className="space-y-4">
                   {availableSocialIntegrations.map((integration) => {
                     // Ensure user.socialAccounts is treated as an array for the .find() operation
-                    const socialAccountsArray = (user && Array.isArray(user.socialAccounts)) ? user.socialAccounts : [];
+                    const socialAccountsArray =
+                      user && Array.isArray(user.socialAccounts)
+                        ? user.socialAccounts
+                        : [];
                     const contextAccount = socialAccountsArray.find(
                       (sa: SocialAccountConnection) => sa.id === integration.id
                     );

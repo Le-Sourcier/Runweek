@@ -59,7 +59,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       className={` dark:bg-gray-800 dark:border-gray-700 w-64 bg-white border-r border-gray-200 flex flex-col ${className}`}
     >
       {/* Top section with logo and close button for mobile */}
-      <div className="p-4 flex items-center justify-between border-b">
+      <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
         <div className="flex items-center gap-2">
           <Activity className="h-6 w-6 text-primary" />
           <span className="font-bold text-xl">Runweek</span>
@@ -76,7 +76,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
 
       {/* User profile summary */}
       {user && (
-        <div className="p-4 border-b">
+        <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center gap-3">
             <img
               src={user.profileImage}
@@ -115,7 +115,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
                   ${
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
                   }
                 `}
                 end={item.path === "/"}
@@ -129,10 +129,17 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       </nav>
 
       {/* Settings */}
-      <div className="p-3 border-t">
+      <div className="p-3 border-t dark:border-gray-700">
         <NavLink
           to="/settings"
-          className="dark:hover:bg-gray-600 flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all hover:translate-x-1"
+          className={({ isActive }) => `
+                  flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+                  }
+                `}
         >
           <span>Paramètres</span>
         </NavLink>

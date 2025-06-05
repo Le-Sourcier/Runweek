@@ -15,6 +15,8 @@ import {
   Trash2, // For Delete button
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Input from "../components/ui/Input";
+import Textarea from "../components/ui/Textarea";
 
 // Event type (can be moved to types.ts if shared)
 interface CalendarEventType {
@@ -501,12 +503,12 @@ export default function Calendar() {
             >
               Title
             </label>
-            <input
+            <Input
               type="text"
               id="workout-title"
               value={newWorkoutTitle}
               onChange={(e) => setNewWorkoutTitle(e.target.value)}
-              className="input w-full bg-background text-foreground border-border"
+              className="input w-full "
               required
             />
           </div>
@@ -518,7 +520,7 @@ export default function Calendar() {
               >
                 Date
               </label>
-              <input
+              <Input
                 type="date"
                 id="workout-date"
                 value={newWorkoutDate}
@@ -534,7 +536,7 @@ export default function Calendar() {
               >
                 Time (Optional)
               </label>
-              <input
+              <Input
                 type="time"
                 id="workout-time"
                 value={newWorkoutTime}
@@ -573,7 +575,7 @@ export default function Calendar() {
               >
                 Distance (km, optional)
               </label>
-              <input
+              <Input
                 type="number"
                 id="workout-distance"
                 value={newWorkoutDistance}
@@ -593,7 +595,7 @@ export default function Calendar() {
             >
               Duration (e.g., 45 min, 1:30:00, optional)
             </label>
-            <input
+            <Input
               type="text"
               id="workout-duration"
               value={newWorkoutDuration}
@@ -608,7 +610,7 @@ export default function Calendar() {
             >
               Location (Optional)
             </label>
-            <input
+            <Input
               type="text"
               id="workout-location"
               value={newWorkoutLocation}
@@ -623,13 +625,13 @@ export default function Calendar() {
             >
               Notes (Optional)
             </label>
-            <textarea
+            <Textarea
               id="workout-notes"
               value={newWorkoutNotes}
               onChange={(e) => setNewWorkoutNotes(e.target.value)}
               className="input w-full bg-background text-foreground border-border"
               rows={3}
-            ></textarea>
+            ></Textarea>
           </div>
           <div className="flex justify-end space-x-3 pt-2">
             <button

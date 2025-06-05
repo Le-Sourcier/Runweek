@@ -127,7 +127,7 @@ const AddEditGoalModal: React.FC<AddEditGoalModalProps> = ({
         <div>
           <label
             htmlFor="category"
-            className="block text-sm font-medium text-foreground mb-1"
+            className="block text-sm font-medium text-foreground mb-1 "
           >
             Category
           </label>

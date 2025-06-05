@@ -55,7 +55,7 @@ const ThemePreview: React.FC = () => {
   // The ColorSwatch component will read the CSS variables directly.
 
   return (
-    <div className="mt-6 p-4 border rounded-lg bg-card">
+    <div className="mt-6 p-4 border dark:border-gray-700 rounded-lg bg-card">
       <h3 className="text-lg font-semibold text-foreground mb-4">
         Color Palette Preview
       </h3>
