@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react"; // Added useEffect
+import React, { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
-import { Loader2, CheckCircle2 } from "lucide-react"; // Added CheckCircle2
+import { motion } from "framer-motion";
+import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react"; // Added ArrowLeft
 import ModernAuthVector from "../components/ui/ModernAuthVector";
+import AuthLayout from "../components/ui/AuthLayout";
+import AuthFormCard from "../components/ui/AuthFormCard";
 
 interface PasswordRecoveryRequestFormInputs {
   email: string;
@@ -14,7 +17,7 @@ const PasswordRecoveryRequestPage: React.FC = () => {
   const redirectQuery = queryParams.get("redirect");
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isEmailValidated, setIsEmailValidated] = useState(false);
+  const [isEmailValidated, setIsEmailValidated] = useState(false); // To show green checkmark
 
   const {
     register,
@@ -22,21 +25,21 @@ const PasswordRecoveryRequestPage: React.FC = () => {
     formState: { errors: formErrors, dirtyFields },
     reset,
     watch,
-    trigger,
+    trigger, // To manually trigger validation
   } = useForm<PasswordRecoveryRequestFormInputs>({
-    mode: "onBlur", // onBlur validation mode is good for this
+    mode: "onBlur",
   });
 
   const emailValue = watch("email");
 
   useEffect(() => {
-    // Reset validation icon if user changes the email after it was marked valid
     if (isEmailValidated && dirtyFields.email) {
       setIsEmailValidated(false);
     }
   }, [emailValue, isEmailValidated, dirtyFields.email]);
 
-  const handleEmailBlur = async () => {
+  const handleEmailValidationOnBlur = async () => {
+    // Manually trigger email validation and update state for visual feedback
     const isValid = await trigger("email");
     setIsEmailValidated(isValid && !formErrors.email);
   };
@@ -45,71 +48,63 @@ const PasswordRecoveryRequestPage: React.FC = () => {
     data
   ) => {
     setIsLoading(true);
-    setMessage(null); // Clear previous messages
-    console.log("Password recovery request for email:", data.email);
-
+    setMessage(null);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
-    // Display generic message to prevent user enumeration
     setMessage(
-      "If an account with this email exists, a password reset link has been sent. Please check your inbox."
+      "If an account with this email exists, a password reset link has been sent. Please check your inbox (and spam folder)."
     );
-    reset(); // Clear the form fields
+    reset(); // Clear form
+    setIsEmailValidated(false); // Reset validation state
   };
 
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row w-full font-sans">
-      {/* Visual Side */}
-      <div className="md:w-1/2 flex flex-col items-center justify-center p-8 md:p-12 order-1 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700">
-        <ModernAuthVector className="w-2/3 max-w-sm h-auto mx-auto text-sky-400 dark:text-sky-300 transition-opacity duration-1000 ease-in-out opacity-100" />
-        <p className="font-display text-2xl md:text-3xl font-semibold text-center text-slate-100 dark:text-slate-50 mt-8">
-          Regain Access to Runweek.
-        </p>
-      </div>
+  const leftPanelContent = (
+    <div className="flex flex-col items-center justify-center w-full md:h-full bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 p-8 py-12 sm:py-16 md:p-12">
+      <ModernAuthVector className="w-2/3 max-w-xs sm:max-w-sm h-auto mx-auto text-sky-400 dark:text-sky-300" />
+      <p className="font-display text-xl sm:text-2xl md:text-3xl font-semibold text-center text-slate-100 dark:text-slate-50 mt-6 sm:mt-8">
+        Regain Access to Runweek.
+      </p>
+    </div>
+  );
 
-      {/* Functional Side (Form Panel) */}
-      <div className="md:w-1/2 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2">
-        <div className="bg-card p-6 sm:p-8 md:p-10 lg:p-12 rounded-xl shadow-2xl w-full max-w-md space-y-8">
-          {/* App Logo */}
-          <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-4xl font-bold font-display text-slate-800 dark:text-slate-100">
-              Runweek
-            </h1>
+  const rightPanelContent = (
+    <div className="w-full h-full flex flex-col justify-center items-center">
+      <AuthFormCard className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold font-display text-slate-800 dark:text-slate-100">
+            Runweek
+          </h1>
+        </div>
+
+        <h2 className="text-xl sm:text-2xl font-semibold text-center text-slate-700 dark:text-slate-200 mb-3">
+          Forgot Your Password?
+        </h2>
+
+        {message ? (
+          <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-700/20 dark:text-green-300 text-center" role="alert">
+            {message}
           </div>
+        ) : (
+          <p className="text-sm text-center text-gray-600 dark:text-slate-300 mb-6">
+            No problem! Enter your email address below, and if it's
+            associated with an account, we'll send you a link to reset your
+            password.
+          </p>
+        )}
 
-          {/* Page Title/Context */}
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-200">
-              Forgot Your Password?
-            </h2>
-            {!message && (
-              <p className="mt-3 text-base text-gray-600 dark:text-slate-300">
-                No problem! Enter your email address below, and if it's
-                associated with an account, we'll send you a link to reset your
-                password.
-              </p>
-            )}
-          </div>
-
-          {message && (
-            <div className="p-4 text-base text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 rounded-md text-center">
-              {message}
-            </div>
-          )}
-
-          {!message && (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {!message && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email
+              </label>
               <div className="relative">
-                <label htmlFor="email" className="sr-only">
-                  Email Address
-                </label>
                 <input
                   id="email"
                   type="email"
-                  placeholder="Email address"
                   autoComplete="email"
+                  placeholder="email@example.com"
                   {...register("email", {
                     required: "Email is required",
                     pattern: {
@@ -117,56 +112,71 @@ const PasswordRecoveryRequestPage: React.FC = () => {
                       message: "Invalid email address",
                     },
                   })}
-                  onBlur={handleEmailBlur} // Add onBlur handler
-                  className={`relative block w-full rounded-lg px-4 py-3.5 text-base bg-input text-slate-900 dark:text-slate-50 placeholder:text-slate-400 dark:placeholder:text-slate-500 border ${
+                  onBlur={handleEmailValidationOnBlur} // Use the manual trigger on blur
+                  className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition ${
                     formErrors.email
-                      ? "border-red-500"
-                      : isEmailValidated
-                      ? "border-green-500 dark:border-green-400"
-                      : "border-slate-300 dark:border-slate-700"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-500 focus:border-blue-600 dark:focus:border-blue-500 pr-10`}
+                      ? "border-red-500 focus:ring-red-500"
+                      : isEmailValidated // Check this state for green border
+                      ? "border-green-500 focus:ring-green-500"
+                      : "border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 focus:ring-blue-500"
+                  } pr-10`} // Add pr-10 for the icon
                 />
                 {isEmailValidated && !formErrors.email && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
-                  </div>
-                )}
-                {formErrors.email && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">
-                    {formErrors.email.message}
-                  </p>
+                  <motion.div
+                    className="absolute inset-y-0 right-3 flex items-center pointer-events-none"
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15, duration: 0.2 }}
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  </motion.div>
                 )}
               </div>
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="group relative w-full flex justify-center items-center py-3.5 px-6 border border-transparent text-base font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-70"
-                >
-                  {isLoading && (
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  )}
-                  {isLoading ? "Sending..." : "Send Password Reset Link"}
-                </button>
-              </div>
-            </form>
-          )}
+              {formErrors.email && (
+                <p className="mt-1 text-xs text-red-500">
+                  {formErrors.email.message}
+                </p>
+              )}
+            </div>
 
-          <div className="mt-8 text-center">
-            <Link
-              to={`/login${
-                redirectQuery
-                  ? `?redirect=${encodeURIComponent(redirectQuery)}`
-                  : ""
-              }`}
-              className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500 text-base focus:outline-none focus:underline focus:ring-1 focus:ring-blue-500 dark:focus:ring-offset-gray-800 rounded-sm"
-            >
+            <div className="pt-2">
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition disabled:opacity-70 flex items-center justify-center"
+                whileHover={{ scale: isLoading ? 1 : 1.03 }}
+                whileTap={{ scale: isLoading ? 1 : 0.98 }}
+              >
+                {isLoading && (
+                  <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                )}
+                {isLoading ? "Sending Link..." : "Send Password Reset Link"}
+              </motion.button>
+            </div>
+          </form>
+        )}
+
+        <div className="mt-6 text-center">
+          <Link
+            to={`/login${redirectQuery ? `?redirect=${encodeURIComponent(redirectQuery)}` : ""}`}
+            className="text-sm text-red-500 hover:underline font-medium flex items-center justify-center"
+          >
+            <motion.span whileTap={{ scale: 0.95 }} className="flex items-center justify-center">
+              <ArrowLeft className="h-4 w-4 mr-1" />
               Back to Login
-            </Link>
-          </div>
+            </motion.span>
+          </Link>
         </div>
-      </div>
+      </AuthFormCard>
     </div>
+  );
+
+  return (
+    <AuthLayout
+      leftPanelContent={leftPanelContent}
+      rightPanelContent={rightPanelContent}
+      className="bg-slate-100 dark:bg-slate-900" // Overall page background
+    />
   );
 };
 
