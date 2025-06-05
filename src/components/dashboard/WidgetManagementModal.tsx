@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { defaultDashboardWidgetsConfig } from '../../context/UserContext'; // Import the default config
-import Button from '../ui/Button'; // Assuming a Button component exists
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { defaultDashboardWidgetsConfig } from "../../context/UserContext"; // Import the default config
+import Button from "../ui/Button"; // Assuming a Button component exists
+import { X } from "lucide-react";
 
 interface WidgetConfig {
   isVisible: boolean;
@@ -36,7 +36,6 @@ const sortedWidgetIds = Object.entries(defaultDashboardWidgetsConfig)
   .sort(([, a], [, b]) => a.order - b.order)
   .map(([id]) => id);
 
-
 const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
   isOpen,
   onClose,
@@ -49,14 +48,17 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
     // Initialize editedConfig with a deep copy of currentConfig,
     // ensuring all default widgets are present.
     const initialConfig: DashboardWidgetsConfig = {};
-    sortedWidgetIds.forEach(widgetId => {
+    sortedWidgetIds.forEach((widgetId) => {
       const defaultConfigForWidget = defaultDashboardWidgetsConfig[widgetId]; // Already contains isVisible, order, defaultSpan
       const userConfigForWidget = currentConfig[widgetId];
 
       initialConfig[widgetId] = {
-        isVisible: userConfigForWidget?.isVisible ?? defaultConfigForWidget.isVisible,
+        isVisible:
+          userConfigForWidget?.isVisible ?? defaultConfigForWidget.isVisible,
         order: userConfigForWidget?.order ?? defaultConfigForWidget.order,
-        defaultSpan: userConfigForWidget?.defaultSpan ?? defaultConfigForWidget.defaultSpan, // Preserve or set defaultSpan
+        defaultSpan:
+          userConfigForWidget?.defaultSpan ??
+          defaultConfigForWidget.defaultSpan, // Preserve or set defaultSpan
       };
     });
     setEditedConfig(initialConfig);
@@ -66,8 +68,12 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
     setEditedConfig((prevConfig) => {
       const newVisibility = !prevConfig[widgetId]?.isVisible;
       // Ensure order and defaultSpan are preserved or correctly defaulted
-      const currentOrder = prevConfig[widgetId]?.order || defaultDashboardWidgetsConfig[widgetId].order;
-      const currentSpan = prevConfig[widgetId]?.defaultSpan || defaultDashboardWidgetsConfig[widgetId].defaultSpan;
+      const currentOrder =
+        prevConfig[widgetId]?.order ||
+        defaultDashboardWidgetsConfig[widgetId].order;
+      const currentSpan =
+        prevConfig[widgetId]?.defaultSpan ||
+        defaultDashboardWidgetsConfig[widgetId].defaultSpan;
 
       return {
         ...prevConfig,
@@ -100,7 +106,12 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
       <div className="bg-card text-card-foreground rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Personnaliser les Widgets</h2>
-          <Button onClick={onClose} variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+          >
             <X size={20} />
           </Button>
         </div>
@@ -111,9 +122,15 @@ const WidgetManagementModal: React.FC<WidgetManagementModalProps> = ({
             const isVisible = editedConfig[widgetId]?.isVisible || false; // Default to false if not in config
 
             return (
-              <div key={widgetId} className="flex items-center justify-between p-3 bg-background rounded-md border border-border">
+              <div
+                key={widgetId}
+                className="flex items-center justify-between p-3 bg-background rounded-md border border-border"
+              >
                 <span className="text-sm font-medium">{displayName}</span>
-                <label htmlFor={`toggle-${widgetId}`} className="flex items-center cursor-pointer">
+                <label
+                  htmlFor={`toggle-${widgetId}`}
+                  className="flex items-center cursor-pointer"
+                >
                   <div className="relative">
                     <input
                       type="checkbox"
