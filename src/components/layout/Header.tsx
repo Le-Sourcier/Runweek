@@ -1,15 +1,15 @@
-import { Bell, Menu, Search, Sun, Moon } from 'lucide-react'; // Added Sun and Moon icons
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext'; // Added useTheme import
-import { motion } from 'framer-motion';
+import { Bell, Menu, Search, Sun, Moon } from "lucide-react"; // Added Sun and Moon icons
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext"; // Added useTheme import
+import { motion } from "framer-motion";
 
 type HeaderProps = {
   onMenuClick: () => void;
 };
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const { theme, setTheme } = useTheme(); // Added theme context
 
@@ -17,16 +17,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const getPageTitle = () => {
     const path = location.pathname;
     const titles: Record<string, string> = {
-      '/': 'Tableau de bord',
-      '/statistics': 'Statistiques',
-      '/coach': 'Coach IA',
-      '/calendar': 'Calendrier',
-      '/goals': 'Objectifs',
-      '/achievements': 'Réalisations',
-      '/profile': 'Profil',
-      '/support': 'Aide & Support'
+      "/": "Tableau de bord",
+      "/statistics": "Statistiques",
+      "/coach": "Coach IA",
+      "/calendar": "Calendrier",
+      "/goals": "Objectifs",
+      "/achievements": "Réalisations",
+      "/profile": "Profil",
+      "/support": "Aide & Support",
     };
-    return titles[path] || 'Tableau de bord';
+    return titles[path] || "Tableau de bord";
   };
 
   return (
@@ -48,7 +48,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {getPageTitle()}
           </motion.h1>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative hidden md:block">
@@ -59,23 +59,32 @@ export default function Header({ onMenuClick }: HeaderProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search
+              className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground"
+              size={18}
+            />
           </div>
 
           {/* Notifications */}
-          <button className="p-2 rounded-full hover:bg-muted relative transition-all duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]"> {/* Softened scale */}
+          <button className="p-2 rounded-full hover:bg-muted relative transition-all duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]">
+            {" "}
+            {/* Softened scale */}
             <Bell size={20} className="text-muted-foreground" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
           </button>
 
           {/* Theme Toggle Button */}
           <button
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             className="p-2 rounded-full hover:bg-muted transition-all duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]" /* Softened scale */
             aria-label="Toggle theme"
             data-testid="theme-toggle-button" // Added data-testid
           >
-            {theme === 'light' ? <Moon size={20} className="text-muted-foreground" /> : <Sun size={20} className="text-muted-foreground" />}
+            {theme === "light" ? (
+              <Moon size={20} className="text-muted-foreground" />
+            ) : (
+              <Sun size={20} className="text-muted-foreground" />
+            )}
           </button>
         </div>
       </div>
