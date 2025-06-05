@@ -1,112 +1,145 @@
 // src/pages/RegistrationPage.spec.tsx
 
-// Mock dependencies as needed (e.g., react-router-dom)
+// Mock dependencies (react-router-dom) as in previous outlines.
 
 describe('RegistrationPage', () => {
   beforeEach(() => {
-    // Mock hooks and providers
-    // jest.mock('react-router-dom', () => ({
-    //   ...jest.requireActual('react-router-dom'),
-    //   useNavigate: () => jest.fn(),
-    //   useLocation: () => ({ search: '' }),
-    //   Link: ({ children, to }) => <a href={to}>{children}</a>,
-    // }));
+    // Mock setup
   });
 
-  it('should render the registration page with all key elements', () => {
-    // 1. Render the RegistrationPage component (within MemoryRouter).
-    //    render(<MemoryRouter><RegistrationPage /></MemoryRouter>);
+  describe('Layout', () => {
+    it('should render a two-column layout on medium screens and up', () => {
+      // 1. Render RegistrationPage.
+      // 2. Assert main container for two columns exists.
+      // 3. Assert illustration column is present.
+    });
 
-    // 2. Assert that the main title "Create your Runweek Account" is visible.
-    //    expect(screen.getByRole('heading', { name: /Create your Runweek Account/i })).toBeInTheDocument();
+    it('should display the illustration in the first column', () => {
+      // 1. Render RegistrationPage.
+      // 2. Assert an SVG image is present within the illustration column.
+    });
 
-    // 3. Assert that the "Full Name" input field is present.
-    //    expect(screen.getByPlaceholderText(/Full Name/i)).toBeInTheDocument();
-
-    // 4. Assert that the "Email address" input field is present.
-    //    expect(screen.getByPlaceholderText(/Email address/i)).toBeInTheDocument();
-
-    // 5. Assert that the "Password" input field is present.
-    //    expect(screen.getByPlaceholderText(/^Password$/i)).toBeInTheDocument();
-    //    // Note: Using regex for exact match if "New Password" etc. might also exist.
-
-    // 6. Assert that the "Confirm Password" input field is present.
-    //    expect(screen.getByPlaceholderText(/Confirm Password/i)).toBeInTheDocument();
-
-    // 7. Assert that a placeholder comment for password strength indicator exists (optional, good for documentation).
-    //    // This might involve checking the raw HTML or a data-testid if specifically added for this.
-    //    // For a comment, it's more of a code review item unless it renders something.
-
-    // 8. Assert that the "Create Account" button is present.
-    //    expect(screen.getByRole('button', { name: /Create Account/i })).toBeInTheDocument();
-
-    // 9. Assert that the "Or sign up with" separator text is present.
-    //    expect(screen.getByText(/Or sign up with/i)).toBeInTheDocument();
-
-    // 10. Assert that the "Google" social login button is present.
-    //    expect(screen.getByRole('button', { name: /Sign up with Google/i })).toBeInTheDocument();
-    //    expect(screen.getByText(/^Google$/i)).toBeInTheDocument();
-
-
-    // 11. Assert that the "Facebook" social login button is present.
-    //    expect(screen.getByRole('button', { name: /Sign up with Facebook/i })).toBeInTheDocument();
-    //    expect(screen.getByText(/^Facebook$/i)).toBeInTheDocument();
-
-    // 12. Assert that the "Already have an account? Log in" link is present.
-    //    expect(screen.getByRole('link', { name: /Log in/i })).toBeInTheDocument();
+    it('should stack columns on small screens', () => {
+      // 1. Set viewport to small.
+      // 2. Render RegistrationPage.
+      // 3. Assert illustration column is hidden.
+      // 4. Assert form column takes full width.
+    });
   });
 
-  it('should display error messages for invalid input', async () => {
-    // 1. Render the page.
-    // 2. Simulate submitting the form with empty fields.
-    //    fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
-    // 3. Assert that error messages are displayed for required fields.
-    //    expect(await screen.findByText(/Full name is required/i)).toBeInTheDocument();
-    //    expect(await screen.findByText(/Email is required/i)).toBeInTheDocument();
-    //    expect(await screen.findByText(/^Password is required/i)).toBeInTheDocument();
-    //    expect(await screen.findByText(/Please confirm your password/i)).toBeInTheDocument();
+  describe('Multi-Step Form Functionality', () => {
+    const fields = ['Full Name', 'Email address', 'Password', 'Confirm Password'];
+    const fieldNames: (keyof RegistrationFormInputs)[] = ['fullName', 'email', 'password', 'confirmPassword'];
 
-    // 4. Simulate typing an invalid email.
-    //    fireEvent.change(screen.getByPlaceholderText(/Email address/i), { target: { value: 'invalidemail' } });
-    //    fireEvent.blur(screen.getByPlaceholderText(/Email address/i));
-    // 5. Assert email format error.
-    //    expect(await screen.findByText(/Invalid email address/i)).toBeInTheDocument();
+    // Test initial state (Step 1: Full Name)
+    it('Step 1 (Full Name): should initially display full name input and Next button', () => {
+      // 1. Render RegistrationPage.
+      // 2. Assert "Full Name" input is visible.
+      //    expect(screen.getByPlaceholderText(/Full Name/i)).toBeVisible();
+      // 3. Assert "Next" button is visible and full width.
+      //    expect(screen.getByRole('button', { name: /Next/i })).toBeVisible();
+      //    // Check for w-full class or similar if applicable for first step.
+      // 4. Assert "Back" button is not visible.
+      //    expect(screen.queryByRole('button', { name: /Back/i })).not.toBeVisible();
+      // 5. Assert other form inputs (Email, Password, Confirm Password) are not visible.
+      //    expect(screen.queryByPlaceholderText(/Email address/i)).not.toBeVisible();
+      //    expect(screen.queryByPlaceholderText(/^Password$/i)).not.toBeVisible();
+      //    expect(screen.queryByPlaceholderText(/Confirm Password/i)).not.toBeVisible();
+      // 6. Assert "Create Account" button is not visible.
+      //    expect(screen.queryByRole('button', { name: /Create Account/i })).not.toBeVisible();
+    });
 
-    // 6. Simulate typing mismatched passwords.
-    //    fireEvent.change(screen.getByPlaceholderText(/^Password$/i), { target: { value: 'ValidPass123!' } });
-    //    fireEvent.change(screen.getByPlaceholderText(/Confirm Password/i), { target: { value: 'DifferentPass123!' } });
-    //    fireEvent.blur(screen.getByPlaceholderText(/Confirm Password/i));
-    // 7. Assert password mismatch error.
-    //    expect(await screen.findByText(/Passwords do not match/i)).toBeInTheDocument();
+    // Dynamically create tests for steps 1 to 3 (Next button behavior)
+    for (let i = 0; i < 3; i++) {
+      const currentStepNumber = i + 1;
+      const nextStepNumber = i + 2;
+      const currentFieldPlaceholder = fields[i];
+      const currentFieldName = fieldNames[i];
+      const nextFieldPlaceholder = fields[i+1];
+
+      it(`Step ${currentStepNumber} (${currentFieldPlaceholder}): should show error if ${currentFieldName} is invalid on Next click`, async () => {
+        // 1. Render RegistrationPage and navigate to current step.
+        //    (Simulate previous valid inputs and Next clicks if currentStepNumber > 1)
+        // 2. Type invalid data into current field.
+        //    fireEvent.change(screen.getByPlaceholderText(currentFieldPlaceholder), { target: { value: 'invalid_data_for_this_field' } });
+        // 3. Click "Next" button.
+        //    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        // 4. Assert relevant error message is displayed.
+        //    expect(await screen.findByText(/error message for invalid/i)).toBeVisible(); // Use specific error
+        // 5. Assert still on current step.
+        //    expect(screen.getByPlaceholderText(currentFieldPlaceholder)).toBeVisible();
+      });
+
+      it(`Step ${currentStepNumber} (${currentFieldPlaceholder}): should transition to Step ${nextStepNumber} (${nextFieldPlaceholder}) if ${currentFieldName} is valid on Next click`, async () => {
+        // 1. Render RegistrationPage and navigate to current step.
+        // 2. Type valid data into current field.
+        //    fireEvent.change(screen.getByPlaceholderText(currentFieldPlaceholder), { target: { value: 'valid_data' } });
+        // 3. Click "Next" button.
+        //    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        // 4. Assert next field (e.g., Email for Full Name step) is now visible.
+        //    expect(await screen.findByPlaceholderText(nextFieldPlaceholder)).toBeVisible();
+        // 5. Assert "Back" button is visible.
+        //    expect(screen.getByRole('button', { name: /Back/i })).toBeVisible();
+        // 6. If not the last "Next" step (i.e., not step 3 leading to confirm password), assert "Next" button is still there.
+        //    if (currentStepNumber < 3) expect(screen.getByRole('button', { name: /Next/i })).toBeVisible();
+      });
+    }
+
+    // Test "Back" button functionality for steps 2, 3, 4
+    for (let i = 1; i < 4; i++) {
+      const currentStepNumber = i + 1;
+      const prevStepNumber = i;
+      const currentFieldPlaceholder = fields[i];
+      const prevFieldPlaceholder = fields[i-1];
+
+      it(`Step ${currentStepNumber} (${currentFieldPlaceholder}): should transition back to Step ${prevStepNumber} (${prevFieldPlaceholder}) on Back click`, async () => {
+        // 1. Render and navigate to current step (e.g., Step 2 - Email).
+        // 2. Click "Back" button.
+        //    fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+        // 3. Assert previous field (e.g., Full Name) is visible.
+        //    expect(await screen.findByPlaceholderText(prevFieldPlaceholder)).toBeVisible();
+        // 4. Assert "Next" button is visible.
+        // 5. If prevStepNumber === 1, assert "Back" button is not visible.
+      });
+    }
+
+    it('Step 4 (Confirm Password): should show error if passwords do not match on Create Account attempt', async () => {
+      // 1. Render and navigate to Step 4. Fill previous fields validly.
+      //    Enter 'password123' for Password, 'passwordmismatch' for Confirm Password.
+      // 2. Click "Create Account" button.
+      //    fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
+      // 3. Assert "Passwords do not match" error.
+      //    expect(await screen.findByText(/Passwords do not match/i)).toBeVisible();
+    });
+
+    it('Step 4 (Confirm Password): should show loading spinner on Create Account button during submission', async () => {
+      // 1. Render, navigate to Step 4, fill all fields validly.
+      // 2. Click "Create Account".
+      // 3. Assert button shows "Creating account..." and spinner.
+    });
+
+    it('should display success message and hide form/socials on successful registration', async () => {
+      // 1. Render, navigate to Step 4, fill all fields validly.
+      // 2. Click "Create Account". (Assume mock API returns success)
+      // 3. Assert success message: /Registration successful! Redirecting to login.../
+      // 4. Assert form inputs are no longer visible.
+      // 5. Assert social login buttons are no longer visible.
+    });
   });
 
-  it('should show loading spinner in button when form is submitting', async () => {
-    // 1. Render the page.
-    // 2. Fill in the form with valid data.
-    //    fireEvent.change(screen.getByPlaceholderText(/Full Name/i), { target: { value: 'Test User' } });
-    //    fireEvent.change(screen.getByPlaceholderText(/Email address/i), { target: { value: 'test@example.com' } });
-    //    fireEvent.change(screen.getByPlaceholderText(/^Password$/i), { target: { value: 'ValidPass123!' } });
-    //    fireEvent.change(screen.getByPlaceholderText(/Confirm Password/i), { target: { value: 'ValidPass123!' } });
-    // 3. Simulate form submission.
-    //    fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
-    // 4. Assert that the button shows "Creating account..." and contains the spinner.
-    //    const button = screen.getByRole('button', { name: /Creating account.../i });
-    //    expect(button).toBeDisabled();
-    //    expect(button.querySelector('svg.animate-spin')).toBeInTheDocument();
-    // 5. (Optional) Wait for simulated API call and redirection.
+  describe('Social Logins', () => {
+    it('should display social login buttons when form is visible', () => {
+      // 1. Render RegistrationPage.
+      // 2. Assert "Or sign up with" separator is present.
+      // 3. Assert Google and Facebook buttons are present.
+    });
   });
 
-  it('should display success message and hide form/social buttons on successful registration', async () => {
-    // 1. Render the page.
-    // 2. Fill in valid data.
-    //    // ... (similar to above test)
-    // 3. Click create account.
-    //    // ...
-    // 4. Assert success message.
-    //    expect(await screen.findByText(/Registration successful! Redirecting to login.../i, {}, {timeout: 2000})).toBeInTheDocument();
-    // 5. Assert form fields are gone.
-    //    expect(screen.queryByPlaceholderText(/Full Name/i)).not.toBeInTheDocument();
-    // 6. Assert social login buttons are gone.
-    //    expect(screen.queryByRole('button', { name: /Sign up with Google/i })).not.toBeInTheDocument();
+  describe('General Elements', () => {
+    it('should display the main title and login link', () => {
+      // 1. Render.
+      // 2. Assert title "Create your Runweek Account".
+      // 3. Assert "Already have an account? Log in" link.
+    });
   });
 });
