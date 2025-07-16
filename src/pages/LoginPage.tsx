@@ -4,7 +4,6 @@ import { useUser, UserCredentials } from "../context/UserContext"; // UserCreden
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader2,
-  Chrome,
   ArrowLeft,
   Eye,
   EyeOff,
@@ -142,7 +141,10 @@ const LoginPage: React.FC = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <FaApple className="text-black dark:text-white mr-2" size={18} />
+                <FaApple
+                  className="text-black dark:text-white mr-2"
+                  size={18}
+                />
                 <span className="font-medium">Login with Apple</span>
               </motion.button>
             </div>
@@ -150,10 +152,11 @@ const LoginPage: React.FC = () => {
             {/* Separator “or” */}
             <div className="flex items-center my-6">
               <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700"></div>
-              <span className="px-3 text-gray-400 dark:text-slate-500 text-sm">or</span>
+              <span className="px-3 text-gray-400 dark:text-slate-500 text-sm">
+                or
+              </span>
               <div className="flex-1 h-px bg-gray-200 dark:bg-slate-700"></div>
             </div>
-
 
             {apiError && (
               <div
@@ -185,7 +188,9 @@ const LoginPage: React.FC = () => {
                     Step 1/2
                   </p>
                   <div>
-                    <label htmlFor="email" className="sr-only">Email</label>
+                    <label htmlFor="email" className="sr-only">
+                      Email
+                    </label>
                     <div className="relative">
                       <input
                         id="email"
@@ -212,7 +217,12 @@ const LoginPage: React.FC = () => {
                           className="absolute inset-y-0 right-3 flex items-center pointer-events-none"
                           initial={{ scale: 0.7, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 15, duration: 0.2 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 15,
+                            duration: 0.2,
+                          }}
                         >
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
                         </motion.div>
@@ -256,11 +266,15 @@ const LoginPage: React.FC = () => {
                       className="flex items-center text-xs text-red-500 hover:underline"
                     >
                       <ArrowLeft className="h-3 w-3 mr-1" />
-                      {isEmailValidated && emailValue ? emailValue : "Back to email"}
+                      {isEmailValidated && emailValue
+                        ? emailValue
+                        : "Back to email"}
                     </button>
                   </div>
                   <div>
-                    <label htmlFor="password" className="sr-only">Password</label>
+                    <label htmlFor="password" className="sr-only">
+                      Password
+                    </label>
                     <div className="relative">
                       <input
                         id="password"
@@ -271,7 +285,9 @@ const LoginPage: React.FC = () => {
                           required: "Password is required",
                         })}
                         className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition pr-10 ${
-                            formErrors.password ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 focus:ring-blue-500"
+                          formErrors.password
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 focus:ring-blue-500"
                         }`}
                         placeholder="••••••••"
                       />
@@ -280,7 +296,11 @@ const LoginPage: React.FC = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition dark:text-slate-500 dark:hover:text-slate-300"
                       >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
                       </button>
                     </div>
                     {formErrors.password && (
@@ -291,7 +311,13 @@ const LoginPage: React.FC = () => {
                   </div>
                   <div className="text-right mt-1">
                     <Link
-                      to={`/forgot-password${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ""}`}
+                      to={`/forgot-password${
+                        redirectUrlFromQuery
+                          ? `?redirect=${encodeURIComponent(
+                              redirectUrlFromQuery
+                            )}`
+                          : ""
+                      }`}
                       className="text-sm text-red-500 hover:underline"
                     >
                       Forgot password?
@@ -318,9 +344,13 @@ const LoginPage: React.FC = () => {
             <p className="mt-8 text-center text-sm text-gray-500 dark:text-slate-400">
               Don’t have an account?{" "}
               <Link
-                to={`/register${redirectUrlFromQuery ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}` : ""}`}
+                to={`/register${
+                  redirectUrlFromQuery
+                    ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
+                    : ""
+                }`}
                 className="text-red-500 hover:underline font-medium"
-                 /* For Link components, if we want motion, we'd wrap the interactive child or use motion(Link) if library supports it */
+                /* For Link components, if we want motion, we'd wrap the interactive child or use motion(Link) if library supports it */
               >
                 Sign up
               </Link>
