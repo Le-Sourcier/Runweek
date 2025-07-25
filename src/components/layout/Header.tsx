@@ -1,7 +1,7 @@
 import { Bell, Menu, Search, Sun, Moon } from "lucide-react"; // Added Sun and Moon icons
-import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext"; // Added useTheme import
+import { useSearch } from "../../context/SearchContext"; // Added useSearch import
 import { motion } from "framer-motion";
 
 type HeaderProps = {
@@ -9,9 +9,9 @@ type HeaderProps = {
 };
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const { theme, setTheme } = useTheme(); // Added theme context
+  const { query, setQuery, clearSearch } = useSearch(); // Added search context
 
   // Get page title based on current route
   const getPageTitle = () => {
@@ -56,8 +56,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
               type="text"
               placeholder="Rechercher..."
               className="w-64 pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  clearSearch();
+                }
+              }}
             />
             <Search
               className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground"
