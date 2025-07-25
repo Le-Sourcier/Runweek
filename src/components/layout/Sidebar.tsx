@@ -75,7 +75,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       </div>
 
       {/* User profile summary */}
-      {user && (
+      {user && user.stats && (
         <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center gap-3">
             <img
