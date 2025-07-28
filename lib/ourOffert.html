@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nos Offres ProspectPro</title>
+  <style>
+    body,html {
+      margin:0; padding:0; background:#1c1c1e; color:#eee;
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height:1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container {
+      max-width: 680px;
+      margin: 40px auto 60px;
+      padding: 0 24px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 42px;
+    }
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: #a020f0;
+      text-shadow: 0 0 10px #a020f0;
+    }
+    header p {
+      font-size: 1.3rem;
+      color: #bbb;
+      margin: 0;
+      letter-spacing: 0.04em;
+    }
+    section.offers {
+      background: linear-gradient(135deg, #302b63, #24243e);
+      border-radius: 18px;
+      padding: 36px 28px;
+      box-shadow: 0 8px 26px rgba(160,32,240,0.6);
+    }
+    section.offers h2 {
+      font-size: 2rem;
+      color: #ff69b4;
+      font-weight: 900;
+      margin-bottom: 18px;
+      text-align: center;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 8px #ff69b4aa;
+    }
+    ul.benefits {
+      list-style: none;
+      padding-left: 0;
+      margin: 0 auto 32px auto;
+      max-width: 520px;
+      color: #d3baffcc;
+      font-weight: 600;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    ul.benefits li {
+      position: relative;
+      padding-left: 30px;
+      margin-bottom: 14px;
+    }
+    ul.benefits li::before {
+      content: "✔";
+      position: absolute;
+      left: 0;
+      top: 1px;
+      color: #ff69b4;
+      font-weight: 900;
+      font-size: 1.3rem;
+      text-shadow: 0 0 5px #ff69b4aa;
+    }
+    .btn-action {
+      display: block;
+      max-width: 240px;
+      margin: 0 auto;
+      padding: 16px 0;
+      background: linear-gradient(90deg, #ff00cc, #a020f0);
+      border-radius: 40px;
+      font-weight: 900;
+      font-size: 1.2rem;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0 5px 18px rgba(255, 0, 204, 0.8);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+    .btn-action:hover,
+    .btn-action:focus {
+      background: linear-gradient(90deg, #a020f0, #ff00cc);
+      box-shadow: 0 8px 30px rgba(160, 32, 240, 0.9);
+      outline: none;
+    }
+    footer {
+      margin-top: 48px;
+      font-size: 13px;
+      text-align: center;
+      color: #999;
+      letter-spacing: 0.04em;
+    }
+    footer a {
+      color: #a020f0;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="Présentation des offres ProspectPro">
+    <header>
+      <h1>Boostez votre prospection avec nos offres sur-mesure</h1>
+      <p>Choisissez la formule adaptée à vos besoins et développez votre business</p>
+    </header>
+
+    <section class="offers" aria-labelledby="offers-title">
+      <h2 id="offers-title">Pourquoi choisir ProspectPro ?</h2>
+      <ul class="benefits">
+        <li>Accès à une base exclusive de plus de <strong>50 millions d’entreprises B2B</strong></li>
+        <li>Outils intelligents basés sur l’IA pour cibler efficacement vos prospects</li>
+        <li>Exports flexibles et intégrations simplifiées avec vos outils habituels</li>
+        <li>Support dédié pour vous accompagner à chaque étape</li>
+        <li>Tarifs adaptés aux indépendants, PME et grandes équipes</li>
+      </ul>
+      <a href="https://votre-site.com/pricing" class="btn-action" role="button" aria-label="Voir les offres et tarifs">
+        Découvrez nos offres
+      </a>
+    </section>
+
+    <footer>
+      <p>Besoin d’aide ? Contactez notre équipe : <a href="mailto:support@votre-site.com">support@votre-site.com</a></p>
+      <p>© 2025 ProspectPro - Votre allié pour une prospection efficace</p>
+    </footer>
+  </div>
+</body>
+</html>

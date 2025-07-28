@@ -1,0 +1,322 @@
+{
+    "ACCOUNT_CREATED": {
+        "en": "Your account was created successfully.",
+        "fr": "Votre compte a été créé avec succès."
+    },
+    "ACCOUNT_ALREADY_EXISTS": {
+        "en": "An account with this email already exists.",
+        "fr": "Un compte avec cet e-mail existe déjà."
+    },
+    "INVALID_CREDENTIALS": {
+        "en": "Incorrect email or password.",
+        "fr": "E-mail ou mot de passe incorrect."
+    },
+    "UNAUTHORIZED_ACCESS": {
+        "en": "Access denied. Unauthorized request.",
+        "fr": "Accès refusé. Requête non autorisée."
+    },
+    "ACCOUNT_NOT_FOUND": {
+        "en": "No account was found with the provided details.",
+        "fr": "Aucun compte correspondant trouvé."
+    },
+    "PASSWORD_TOO_WEAK": {
+        "en": "Your password is too weak. Please use a stronger one.",
+        "fr": "Votre mot de passe est trop faible. Choisissez-en un plus robuste."
+    },
+    "LOGIN_SUCCESS": {
+        "en": "You’ve logged in successfully.",
+        "fr": "Connexion réussie."
+    },
+    "LOGOUT_SUCCESS": {
+        "en": "You’ve been logged out successfully.",
+        "fr": "Déconnexion réussie."
+    },
+    "TOKEN_EXPIRED": {
+        "en": "Session expired. Please log in again.",
+        "fr": "Session expirée. Veuillez vous reconnecter."
+    },
+    "TOKEN_INVALID": {
+        "en": "Invalid or missing token. Please log in again.",
+        "fr": "Jeton invalide ou manquant. Veuillez vous reconnecter."
+    },
+    "VALIDATION_ERROR": {
+        "en": "Some inputs are invalid. Please review and try again.",
+        "fr": "Certains champs sont invalides. Veuillez vérifier et réessayer."
+    },
+    "REQUIRED_FIELDS_MISSING": {
+        "en": "Please fill in all required fields.",
+        "fr": "Merci de remplir tous les champs obligatoires."
+    },
+    "INVALID_EMAIL_FORMAT": {
+        "en": "Invalid email format.",
+        "fr": "Format d’e-mail invalide."
+    },
+    "PASSWORDS_DO_NOT_MATCH": {
+        "en": "Passwords do not match.",
+        "fr": "Les mots de passe ne correspondent pas."
+    },
+    "OLD_PASSWORD_INVALID":{
+      "en": "Old password is invalid or does not match.",
+      "fr": "L’ancien mot de passe est invalide ou ne correspond pas."
+    },
+    "INVALID_PHONE_NUMBER": {
+        "en": "The phone number format is invalid.",
+        "fr": "Format du numéro de téléphone invalide."
+    },
+    "USER_CREATED": {
+        "en": "User account created successfully.",
+        "fr": "Compte utilisateur créé avec succès."
+    },
+    "JOB_CREATED": {
+        "en": "Task created successfully.",
+        "fr": "Tâche créée avec succès."
+    },
+    "JOB_FETCHED":{
+      "en":"Task fetched successfully.",
+      "fr":"Tâche récupérée avec succès."
+    },
+    "ENRICH_CREATED":{
+        "en":"Enrichment task successfully created",
+        "fr":"Tâche d'enrichissement créée avec succès"
+    },
+    "USER_UPDATED": {
+        "en": "User information updated successfully.",
+        "fr": "Informations utilisateur mises à jour avec succès."
+    },
+    "JOB_UPDATED":{
+        "en":"Task updated successfully.",
+        "fr":"Tâche mise à jour avec succès."
+    },
+    "USER_DELETED": {
+        "en": "User account deleted successfully.",
+        "fr": "Compte utilisateur supprimé avec succès."
+    },
+    "JOB_DELETED":{
+      "en":"Task deleted successfully.",
+      "fr":"Tâche supprimée avec succès."
+    },
+    "USER_NOT_FOUND": {
+        "en": "User not found.",
+        "fr": "Utilisateur introuvable."
+    },
+    "JOB_NOT_FOUND":{
+      "en":"Task not found.",
+      "fr":"Tâche introuvable."
+    },
+    "ENRICH_SOURCE_IS_EMPTY":{
+        "en":"The enrichment source cannot be empty. Select at least one source.",
+        "fr":"La source d'enrichissement ne peut pas être vide. Sélectionnez au moins une source."
+    },
+    "NO_DATA_FOUND": {
+        "en": "No data found for the given criteria.",
+        "fr": "Aucune donnée trouvée pour les critères donnés."
+    },
+    "PHONE_ALREADY_EXISTS": {
+        "en": "This phone number is already linked to another account.",
+        "fr": "Ce numéro est déjà associé à un autre compte."
+    },
+    "PROFILE_CREATED": {
+        "en": "Profile created successfully.",
+        "fr": "Profil créé avec succès."
+    },
+    "PROFILE_UPDATED": {
+        "en": "Profile updated successfully.",
+        "fr": "Profil mis à jour avec succès."
+    },
+    "PROFILE_NOT_FOUND": {
+      "en": "Profile not found for this user.",
+      "fr": "Profil introuvable pour cet utilisateur."
+  
+    },
+    "SERVER_ERROR": {
+        "en": "An unexpected error occurred. Please try again later.",
+        "fr": "Une erreur inattendue est survenue. Veuillez réessayer plus tard."
+    },
+    "ACCESS_DENIED": {
+        "en": "You are not authorized to access this resource.",
+        "fr": "Vous n’êtes pas autorisé à accéder à cette ressource."
+    },
+    "FORBIDDEN_RESOURCE":{
+      "en":"Forbidden: Authorization header is missing or malformed",
+      "fr": "Interdit : L’en-tête d’autorisation est manquant ou mal formé"
+    },
+    "RESOURCE_NOT_FOUND": {
+        "en": "Requested resource was not found.",
+        "fr": "Ressource demandée introuvable."
+    },
+    "NO_JOBS_FOUND":{
+        "en":"No jobs found, please create a new one.",
+        "fr": "Aucune tâche trouvé, veuillez en créer un nouveau."
+    },
+    "FAILED_TO_GET_JOB":{
+        "en":"Failed to get job details.",
+        "fr": "Échec de la récupération des détails de la tâche."
+    },
+    "ENRICHMENT_FAILED":{      
+       "en":"Failed to enrich file data.",
+       "fr":"Échec de l’enrichissement des données du fichier."
+
+    },
+    "ACTION_NOT_ALLOWED": {
+        "en": "This action is not permitted.",
+        "fr": "Cette action n’est pas autorisée."
+    },
+    "BAD_REQUEST": {
+        "en": "Invalid request. Please check your input.",
+        "fr": "Requête invalide. Veuillez vérifier vos données."
+    },
+    "SESSION_CREATED": {
+        "en": "Session started successfully.",
+        "fr": "Session démarrée avec succès."
+    },
+    "SESSION_EXPIRED": {
+        "en": "Your session has expired.",
+        "fr": "Votre session a expiré."
+    },
+    "SESSION_INVALID": {
+        "en": "Invalid session.",
+        "fr": "Session invalide."
+    },
+    "SESSION_TERMINATED": {
+        "en": "Session ended successfully.",
+        "fr": "Session terminée avec succès."
+    },
+    "EMAIL_VERIFICATION_SENT": {
+        "en": "A verification email has been sent.",
+        "fr": "Un e-mail de vérification a été envoyé."
+    },
+    "EMAIL_ALREADY_VERIFIED": {
+        "en": "Email has already been verified.",
+        "fr": "L’e-mail a déjà été vérifié."
+    },
+    "EMAIL_VERIFIED_SUCCESS": {
+        "en": "Email successfully verified.",
+        "fr": "E-mail vérifié avec succès."
+    },
+    "EMAIL_VERIFICATION_FAILED": {
+        "en": "Email verification failed. Please try again.",
+        "fr": "Échec de la vérification de l’e-mail. Veuillez réessayer."
+    },
+    "PASSWORD_RESET_REQUESTED": {
+        "en": "A reset link has been sent to your email.",
+        "fr": "Un lien de réinitialisation a été envoyé à votre adresse e-mail."
+    },
+    "PASSWORD_RESET_SUCCESS": {
+        "en": "Password has been reset successfully.",
+        "fr": "Mot de passe réinitialisé avec succès."
+    },
+    "PASSWORD_RESET_FAILED": {
+        "en": "Failed to reset password. Please try again.",
+        "fr": "Échec de la réinitialisation du mot de passe. Veuillez réessayer."
+    },
+    "ACCOUNT_UNVERIFIED":{
+      "en":"Your account is not verified. Please verify your email address.",
+      "fr":  "Votre compte n’est pas vérifié. Veuillez vérifier votre adresse e-mail."
+    },
+  
+    "ACCOUNT_LOCKED": {
+        "en": "Your account has been locked for security reasons.",
+        "fr": "Votre compte a été verrouillé pour des raisons de sécurité."
+    },
+    "ACCOUNT_BLOKED":{
+      "en": "Your account has been blocked. Please contact support for assistance.",
+      "fr": "Votre compte a été bloqué. Veuillez contacter le support pour obtenir de l’aide."
+    },
+    "ACCOUNT_ARCHIVED":{
+      "en": "Your account has been archived. Please contact support for assistance.",
+      "fr": "Votre compte a été archivé. Veuillez contacter le support pour obtenir de l’aide."
+    }, 
+    "TOO_MANY_ATTEMPTS": {
+        "en": "Too many attempts. Please wait and try again later.",
+        "fr": "Trop de tentatives. Veuillez patienter avant de réessayer."
+    },
+    "OTP_SENT": {
+        "en": "One-time password sent to your device.",
+        "fr": "Code OTP envoyé à votre appareil."
+    },
+    "OTP_INVALID": {
+        "en": "Invalid OTP. Please check and try again.",
+        "fr": "OTP invalide. Veuillez vérifier et réessayer."
+    },
+    "OTP_EXPIRED": {
+        "en": "OTP has expired. Request a new one.",
+        "fr": "Le code OTP a expiré. Demandez-en un nouveau."
+    },
+    "OTP_VERIFIED": {
+        "en": "OTP verified successfully.",
+        "fr": "OTP vérifié avec succès."
+    },
+    "ACCOUNT_DEACTIVATED": {
+        "en": "Account has been deactivated.",
+        "fr": "Le compte a été désactivé."
+    },
+    "ACCOUNT_REACTIVATED": {
+        "en": "Account successfully reactivated.",
+        "fr": "Compte réactivé avec succès."
+    },
+    "DATA_FETCH_SUCCESS": {
+        "en": "Data retrieved successfully.",
+        "fr": "Données récupérées avec succès."
+    },
+    "DATA_UPDATE_FAILED": {
+        "en": "Could not update the data.",
+        "fr": "Impossible de mettre à jour les données."
+    },
+    "INSUFFICIENT_PERMISSIONS": {
+        "en": "You don’t have enough permissions.",
+        "fr": "Vous n’avez pas les permissions nécessaires."
+    },
+    "RATE_LIMIT_EXCEEDED": {
+        "en": "Too many requests. Please slow down.",
+        "fr": "Trop de requêtes. Veuillez ralentir."
+    },
+    "DATABASE_ERROR": {
+        "en": "A database error occurred. Please try again.",
+        "fr": "Une erreur de base de données s’est produite. Veuillez réessayer."
+    },
+    "SERVICE_UNAVAILABLE": {
+        "en": "The service is currently unavailable.",
+        "fr": "Le service est momentanément indisponible."
+    },
+    "FILE_UPLOAD_SUCCESS": {
+        "en": "File uploaded successfully.",
+        "fr": "Fichier téléversé avec succès."
+    },
+    "FILE_TOO_LARGE": {
+        "en": "The uploaded file is too large.",
+        "fr": "Le fichier téléversé est trop volumineux."
+    },
+    "UNSUPPORTED_FILE_TYPE": {
+        "en": "Unsupported file type. Please use a valid format.",
+        "fr": "Type de fichier non supporté. Veuillez utiliser un format valide."
+    },
+    "FILE_UPLOAD_FAILED": {
+        "en": "File upload failed. Please try again.",
+        "fr": "Échec du téléversement du fichier. Veuillez réessayer."
+    },
+    "FILE_NOT_FOUND": {
+        "en": "Requested file was not found.",
+        "fr": "Fichier demandé introuvable."
+    },
+    "FILE_DELETED": {
+        "en": "File deleted successfully.",
+        "fr": "Fichier supprimé avec succès."
+    },
+    "FILE_DOWNLOAD_SUCCESS": {
+        "en": "File downloaded successfully.",
+        "fr": "Fichier téléchargé avec succès."
+    },
+  
+    "FILE_DOWNLOAD_FAILED": {
+        "en": "File download failed. Please try again.",
+        "fr": "Échec du téléchargement du fichier. Veuillez réessayer."
+    },
+    "PASSWORD_CHANGED": {
+        "en": "Password changed successfully.",
+        "fr": "Mot de passe changé avec succès."
+    },
+    "PASSWORD_CHANGE_FAILED": {
+        "en": "Failed to change password. Please try again.",
+        "fr": "Échec du changement de mot de passe. Veuillez réessayer."
+    }
+  }
