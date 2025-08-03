@@ -4,7 +4,13 @@ const { authorize } = require("../middlewares/authMiddleware");
 
 router.use("/user", authorize, require("./components/userRouter"));
 
-router.use("/notif", require("./components/activitiesRouter"));
-router.use("/sponsor", require("./components/sponsorRouter"));
+router.use("/notif", authorize, require("./components/notificationsRouter"));
+router.use("/sponsor", authorize, require("./components/sponsorRouter"));
 router.use("/stripe", authorize, require("./components/stripeProductRouter"));
+
+router.use("/auth/google", require("./components/googleAuthRouter"));
+router.use("/google/fit", authorize, require("./components/googleFitRouter"));
+
+router.use("/aicoach", authorize, require("./components/aiCoachRouter"));
+
 module.exports = router;

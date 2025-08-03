@@ -82,18 +82,18 @@ module.exports = {
     }
   },
 
-  // POST /api/notif/activities
-  getRecentActivities: async (req, res) => {
+  // POST /api/notif/recent
+  getRecentNotifications: async (req, res) => {
     const userId = req.user.id;
 
     try {
-      const activities = await Notifications.findAll({
+      const notifications = await Notifications.findAll({
         where: { user_id: userId },
         order: [["createdAt", "DESC"]],
         limit: 50, // ou + selon tes besoins
       });
 
-      const data = activities.map((notif) => ({
+      const data = notifications.map((notif) => ({
         id: notif.id,
         type: notif.type,
         label: notif.content,
@@ -104,7 +104,7 @@ module.exports = {
 
       return serverMessage(res, "SUCCESS", data);
     } catch (err) {
-      console.error("getRecentActivities error", err);
+      console.error("getRecentNotifications error", err);
       return serverMessage(res);
     }
   },

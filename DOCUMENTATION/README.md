@@ -1,29 +1,27 @@
-# Prospect Pro - Documentation Hub
+# Runweek - Documentation Hub
 
 ## Overview
 
-Prospect Pro is a Node.js application designed for web scraping, data enrichment, and prospecting. It provides an API to manage users, initiate scraping jobs (e.g., from Google Maps, Pappers), enrich uploaded CSV data with company information, and track job progress. The system uses a PostgreSQL database and leverages Puppeteer for scraping tasks.
+Runweek is a comprehensive Node.js application designed to manage sports activities, particularly for running. It provides a robust API to handle user management, activity tracking, subscriptions, payments via Stripe, and a sponsorship system. The application uses a PostgreSQL database and is built to be deployed on Vercel.
 
 ## Project Structure
 
 The project is organized into several key directories:
 
-* `index.js`: Main application entry point for local execution.
-* `api/index.js`: Entry point for Vercel serverless deployment.
-* `db.js`: Handles database initialization and Sequelize model synchronization.
-* `src/`: Contains the core application logic.
-  * `config/`: Environment-based application configuration.
-  * `controllers/`: HTTP request handlers that orchestrate business logic.
-  * `functions/`: Core scraping logic and interactions with external APIs (Google, Pappers, etc.).
-  * `events/`: Scheduled tasks (cron jobs for cleanup, backups) and event emitters.
-  * `middlewares/`: Authentication (JWT) and other Express middleware.
-  * `models/`: Sequelize database model definitions and associations.
-  * `routers/`: API route definitions using Express Router.
-  * `utils/`: Helper utilities like logging, standardized API responses, and file parsing.
-  * `uploads/`: Default directory for storing uploaded and processed files.
-  * `backups/`: Stores database backups.
-* `logs/` (or `logsDir/` in production): Stores application logs.
-* `DOCUMENTATION/`: Contains all project documentation files.
+*   `index.js`: Main application entry point for local execution.
+*   `api/index.js`: Entry point for Vercel serverless deployment.
+*   `db.js`: Handles database initialization and Sequelize model synchronization.
+*   `src/`: Contains the core application logic.
+    *   `config/`: Environment-based application configuration.
+    *   `controllers/`: HTTP request handlers that orchestrate business logic (e.g., `userController`, `activitiesController`).
+    *   `models/`: Sequelize database model definitions (e.g., `Users`, `Plans`, `Subscriptions`).
+    *   `routers/`: API route definitions using Express Router.
+    *   `middlewares/`: Authentication (JWT) and other Express middleware.
+    *   `events/`: Scheduled tasks (cron jobs for subscription checks).
+    *   `functions/`: Specific utility functions (e.g., `sendMail`).
+    *   `lib/`: Contains templates (HTML for emails) and various scripts.
+*   `logs/`: Stores application logs.
+*   `DOCUMENTATION/`: Contains all project documentation files.
 
 For a more detailed explanation of the project structure, please see [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md).
 
@@ -31,64 +29,56 @@ For a more detailed explanation of the project structure, please see [PROJECT_ST
 
 ### Prerequisites
 
-* Node.js (version 16.x or higher recommended)
-* npm (Node Package Manager)
-* PostgreSQL database server
+*   Node.js (version 16.x or higher recommended)
+*   npm (Node Package Manager)
+*   PostgreSQL database server
 
 ### Steps
 
-1. **Clone the Repository:**
+1.  **Clone the Repository:**
 
     ```bash
     git clone <repository-url>
-    cd prospect_pro
+    cd Runweek
     ```
 
-2. **Install Dependencies:**
+2.  **Install Dependencies:**
 
     ```bash
     npm install
     ```
 
-3. **Environment Variables:**
-    * Create a `.env.local` file in the root directory by copying `.env.example`.
-    * Update the placeholder values in `.env.local` with your actual configuration (database credentials, API keys, JWT secrets, etc.).
-    * Refer to [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for details on each variable.
+3.  **Environment Variables:**
+    *   Create a `.env.local` file in the root directory. You can copy `.env.example` if it exists.
+    *   Update the placeholder values in `.env.local` with your actual configuration (database credentials, API keys, JWT secrets, etc.).
+    *   Refer to [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for details on each variable.
 
-4. **Database Setup:**
-    * Ensure your PostgreSQL server is running.
-    * The application will attempt to create the database specified in your environment variables if it doesn't exist, upon the first run.
+4.  **Database Setup:**
+    *   Ensure your PostgreSQL server is running.
+    *   The application will attempt to synchronize the database schema on the first run.
 
-5. **Running the Application:**
-    * **Development Mode:**
+5.  **Running the Application:**
+    *   **Development Mode:**
 
         ```bash
         npm start
         ```
 
-        This typically uses settings from the `development` block in `src/config/index.js` and loads variables from `.env.local`.
-    * **Production Mode:**
-        Set `NODE_ENV=production` in your environment and ensure all production-specific environment variables are correctly set.
-
-        ```bash
-        NODE_ENV=production npm start
-        ```
-
 ## Core Technologies
 
-* **Backend:** Node.js, Express.js
-* **Database:** PostgreSQL, Sequelize (ORM)
-* **Web Scraping:** Puppeteer (for Google Maps, PagesJaunes), Cheerio, node-fetch
-* **External APIs:** Pappers API, INSEE Sirene API
-* **Authentication:** JSON Web Tokens (JWT)
-* **Real-time Communication:** Socket.IO (for job status updates), Server-Sent Events (SSE)
-* **File Handling:** Multer (for uploads), csv-parser, xlsx
-* **Scheduling:** node-cron
-* **Logging:** Winston
+*   **Backend:** Node.js, Express.js
+*   **Database:** PostgreSQL, Sequelize (ORM)
+*   **Authentication:** JSON Web Tokens (JWT)
+*   **Payments:** Stripe
+*   **Emailing:** Nodemailer
+*   **Scheduling:** node-cron
+*   **File Handling:** Multer
+*   **Real-time Communication:** Socket.IO
+*   **API Documentation:** Swagger
 
 ## API Documentation
 
-For detailed information about API endpoints, request/response formats, and authentication, please refer to the [API_REFERENCE.md](./API_REFERENCE.md).
+For detailed information about API endpoints, request/response formats, and authentication, please refer to the [API_REFERENCE.md](./API_REFERENCE.md). The project uses `swagger-jsdoc` and `swagger-ui-express` to provide interactive API documentation.
 
 ## Database Schema
 
@@ -97,16 +87,3 @@ The database structure, models, and their relationships are documented in [DATAB
 ## Deployment
 
 This application is configured for deployment on Vercel. See [DEPLOYMENT.md](./DEPLOYMENT.md) for more details.
-
-## Developer Utilities/Testing
-
-The project includes manual utility scripts for testing specific functionalities:
-
-* `scrapTest.js`: For testing website contact information scraping.
-* `test.js`: For testing data enrichment logic and CSV utilities.
-These are not part of an automated test suite but can be run directly with Node.js.
-
-## Contributing
-
-(Optional: Add a link to `CONTRIBUTING.md` if created)
-For guidelines on contributing to the project, please see [CONTRIBUTING.md](./CONTRIBUTING.md).

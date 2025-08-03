@@ -34,6 +34,24 @@ app.use(cors(config.cors));
 app.set("trust proxy", 1);
 
 // Routes HTTP
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Returns a simple message to indicate the API is healthy.
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: API is healthy!
+ */
 app.get("/", (req, res) => res.json({ message: "API is healthy!" }));
 app.use("/api", require("./src/routers"));
 

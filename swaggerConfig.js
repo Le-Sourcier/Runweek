@@ -653,6 +653,224 @@ const options = {
             },
           },
         },
+
+        // Google Fit Schemas
+        GoogleFitStepDataPointValue: {
+          type: "object",
+          properties: {
+            intVal: {
+              type: "integer",
+              description: "Nombre de pas pour l'intervalle.",
+              example: 150,
+            },
+          },
+        },
+        GoogleFitStepDataPoint: {
+          type: "object",
+          properties: {
+            startTimeNanos: {
+              type: "string",
+              description: "Début de l'intervalle en nanosecondes.",
+              example: "1678886400000000000",
+            },
+            endTimeNanos: {
+              type: "string",
+              description: "Fin de l'intervalle en nanosecondes.",
+              example: "1678887000000000000",
+            },
+            dataTypeName: {
+              type: "string",
+              description: "Type de données.",
+              example: "com.google.step_count.delta",
+            },
+            originDataSourceId: {
+              type: "string",
+              description: "Source des données.",
+              example: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
+            },
+            value: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitStepDataPointValue",
+              },
+            },
+          },
+        },
+        GoogleFitStepBucket: {
+          type: "object",
+          properties: {
+            startTimeMillis: {
+              type: "string",
+              description: "Début du bucket en millisecondes.",
+              example: "1678836000000",
+            },
+            endTimeMillis: {
+              type: "string",
+              description: "Fin du bucket en millisecondes.",
+              example: "1678922400000",
+            },
+            dataset: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  dataSourceId: {
+                    type: "string",
+                    example: "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
+                  },
+                  point: {
+                    type: "array",
+                    items: {
+                      $ref: "#/components/schemas/GoogleFitStepDataPoint",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        GoogleFitStepResponse: {
+          type: "object",
+          properties: {
+            bucket: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitStepBucket",
+              },
+            },
+          },
+        },
+        GoogleFitMetricDataPointValue: {
+          type: "object",
+          properties: {
+            fpVal: {
+              type: "number",
+              description: "Valeur de la métrique (calories, distance).",
+              example: 50.25,
+            },
+            intVal: {
+              type: "integer",
+              description: "Valeur de la métrique (pas, minutes d'activité).",
+              example: 120,
+            },
+          },
+        },
+        GoogleFitMetricDataPoint: {
+          type: "object",
+          properties: {
+            startTimeNanos: {
+              type: "string",
+              description: "Début de l'intervalle en nanosecondes.",
+            },
+            endTimeNanos: {
+              type: "string",
+              description: "Fin de l'intervalle en nanosecondes.",
+            },
+            dataTypeName: {
+              type: "string",
+              description: "Type de données (ex: com.google.calories.expended).",
+            },
+            originDataSourceId: {
+              type: "string",
+              description: "Source des données.",
+            },
+            value: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitMetricDataPointValue",
+              },
+            },
+          },
+        },
+        GoogleFitMetricBucket: {
+          type: "object",
+          properties: {
+            startTimeMillis: {
+              type: "string",
+              description: "Début du bucket en millisecondes.",
+            },
+            endTimeMillis: {
+              type: "string",
+              description: "Fin du bucket en millisecondes.",
+            },
+            dataset: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  dataSourceId: {
+                    type: "string",
+                    description: "ID de la source de données.",
+                  },
+                  point: {
+                    type: "array",
+                    items: {
+                      $ref: "#/components/schemas/GoogleFitMetricDataPoint",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        GoogleFitMetricResponse: {
+          type: "object",
+          properties: {
+            bucket: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitMetricBucket",
+              },
+            },
+          },
+        },
+        GoogleFitSleepDataPointValue: {
+          type: "object",
+          properties: {
+            intVal: {
+              type: "integer",
+              description: "Stade du sommeil (1: léger, 2: profond, 4: REM).",
+              example: 2,
+            },
+          },
+        },
+        GoogleFitSleepDataPoint: {
+          type: "object",
+          properties: {
+            startTimeNanos: {
+              type: "string",
+              description: "Début du segment de sommeil en nanosecondes.",
+            },
+            endTimeNanos: {
+              type: "string",
+              description: "Fin du segment de sommeil en nanosecondes.",
+            },
+            dataTypeName: {
+              type: "string",
+              example: "com.google.sleep.segment",
+            },
+            originDataSourceId: {
+              type: "string",
+            },
+            value: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitSleepDataPointValue",
+              },
+            },
+          },
+        },
+        GoogleFitSleepResponse: {
+          type: "object",
+          properties: {
+            point: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/GoogleFitSleepDataPoint",
+              },
+            },
+          },
+        },
       },
     },
     security: [

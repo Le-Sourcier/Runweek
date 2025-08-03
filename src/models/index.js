@@ -1,9 +1,8 @@
-const fs = require("fs");
-const path = require("path");
-const Sequelize = require("sequelize");
-const config = require("../config");
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const config = require('../config');
 
-const basename = path.basename(__filename);
 const db = {};
 
 const sequelize = new Sequelize(
@@ -13,33 +12,23 @@ const sequelize = new Sequelize(
     config
 );
 
-// Fonction récursive pour charger les modèles
-const loadModels = (dir) => {
-    fs.readdirSync(dir).forEach((file) => {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
+const modelsDir = path.join(__dirname, 'components');
 
-        if (stat.isDirectory()) {
-            loadModels(fullPath); // Appel récursif
-        } else if (
-            file.endsWith(".js") &&
-            file !== basename &&
-            !file.startsWith(".")
-        ) {
-            const model = require(fullPath)(sequelize, Sequelize.DataTypes);
-            db[model.name] = model;
-        }
-    });
-};
+// Charger tous les fichiers de modèle du dossier 'components'
+fs.readdirSync(modelsDir)
+  .filter(file => {
+    return (file.indexOf('.') !== 0) && (file.slice(-3) === '.js');
+  })
+  .forEach(file => {
+    const model = require(path.join(modelsDir, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
 
-// Lancer la lecture depuis le dossier courant
-loadModels(__dirname);
-
-// Appliquer les associations
-Object.keys(db).forEach((modelName) => {
-    if (typeof db[modelName].associate === "function") {
-        db[modelName].associate(db);
-    }
+// Appliquer les associations si elles existent
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
 });
 
 db.sequelize = sequelize;

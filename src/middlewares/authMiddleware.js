@@ -18,6 +18,9 @@ const unprotectedRoutes = [
     "/api/stripe/products",
     // "/api/stripe/product/:id",
     "/api/stripe/checkout/get-session/:session_id",
+    "/api/auth/google/callback",
+    "/api/auth/google/fit/steps",
+    "/api/google/fit/metrics",
 ];
 
 // Function to convert a route with parameters into regex
@@ -39,6 +42,7 @@ const USER_STATUSES = {
     ARCHIVED: "ARCHIVED",
     BLOCKED: "BLOCKED",
 };
+
 const authorize = async (req, res, next) => {
     const path = req.originalUrl.split("?")[0];
     // if (unprotectedRoutes.includes(path)) {
@@ -111,6 +115,7 @@ const loginLimiter = rateLimit({
     standardHeaders: true, // returns the standard rate limit headers
     legacyHeaders: false, // disables X-RateLimit-* headers
 });
+
 if (process.env.NODE_ENV === "production") {
     // Apply the rate limiter to all login routes
     unprotectedRoutes.push("/api/user/login");

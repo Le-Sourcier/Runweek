@@ -1,0 +1,196 @@
+const express = require("express");
+const axios = require("axios");
+const router = express.Router();
+
+const getValidAccessToken = require("../../utils/getValidAccessToken");
+const authorizeGoogleFit = require("../../middlewares/googleFitAuth");
+
+/**
+ * @swagger
+ * /google-fit/steps:
+ *   get:
+ *     summary: Récupère le nombre de pas des dernières 24 heures.
+ *     description: >
+ *       Ce point de terminaison interroge l'API Google Fit pour agréger le nombre total de pas effectués par l'utilisateur au cours des dernières 24 heures.
+ *       Il nécessite une autorisation OAuth2 valide pour accéder aux données de fitness de l'utilisateur.
+ *     tags: [Google Fit]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données des pas récupérées avec succès.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GoogleFitStepResponse'
+ *       401:
+ *         description: Non autorisé, token manquant ou invalide.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error401'
+ *       500:
+ *         description: Erreur interne du serveur lors de la récupération des données.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
+router.get("/steps", authorizeGoogleFit, async (req, res) => {
+  const accessToken = await getValidAccessToken(req.user.id);
+  const now = Date.now();
+  const yesterday = now - 86400000;
+
+  try {
+    const fitResponse = await axios.post(
+      "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
+      {
+        aggregateBy: [{ dataTypeName: "com.google.step_count.delta" }],
+        bucketByTime: { durationMillis: 86400000 },
+        startTimeMillis: yesterday,
+        endTimeMillis: now,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.status(200).json(fitResponse.data);
+  } catch (error) {
+    console.error("Google Fit Error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur récupération données Google Fit." });
+  }
+});
+
+/**
+ * @swagger
+ * /google-fit/metrics:
+ *   get:
+ *     summary: Récupère un ensemble de métriques de fitness des dernières 24 heures.
+ *     description: >
+ *       Ce point de terminaison agrège plusieurs types de données de Google Fit sur les dernières 24 heures, incluant :
+ *       - Le nombre de pas (com.google.step_count.delta)
+ *       - Les calories dépensées (com.google.calories.expended)
+ *       - La distance parcourue (com.google.distance.delta)
+ *       - Les minutes d'activité (com.google.active_minutes)
+ *     tags: [Google Fit]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Métriques de fitness agrégées récupérées avec succès.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GoogleFitMetricResponse'
+ *       401:
+ *         description: Non autorisé, token manquant ou invalide.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error401'
+ *       500:
+ *         description: Erreur interne du serveur lors de la récupération des données.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
+router.get("/metrics", authorizeGoogleFit, async (req, res) => {
+  const accessToken = await getValidAccessToken(req.user.id);
+  const now = Date.now();
+  const yesterday = now - 86400000;
+
+  const aggregateBody = {
+    aggregateBy: [
+      { dataTypeName: "com.google.step_count.delta" },
+      { dataTypeName: "com.google.calories.expended" },
+      { dataTypeName: "com.google.distance.delta" },
+      { dataTypeName: "com.google.active_minutes" },
+    ],
+    bucketByTime: { durationMillis: 86400000 },
+    startTimeMillis: yesterday,
+    endTimeMillis: now,
+  };
+
+  try {
+    const response = await axios.post(
+      "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
+      aggregateBody,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error("Erreur Google Fit:", error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur récupération métriques." });
+  }
+});
+
+/**
+ * @swagger
+ * /google-fit/sleep:
+ *   get:
+ *     summary: Récupère les données de sommeil des dernières 24 heures.
+ *     description: >
+ *       Ce point de terminaison récupère les segments de sommeil (par exemple, sommeil léger, profond, paradoxal) enregistrés par Google Fit au cours des dernières 24 heures.
+ *       Il interroge la source de données `derived:com.google.sleep.segment:com.google.android.gms:merged`.
+ *     tags: [Google Fit]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données de sommeil récupérées avec succès.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GoogleFitSleepResponse'
+ *       401:
+ *         description: Non autorisé, token manquant ou invalide.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error401'
+ *       500:
+ *         description: Erreur interne du serveur lors de la récupération des données.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
+router.get("/sleep", authorizeGoogleFit, async (req, res) => {
+  const accessToken = await getValidAccessToken(req.user.id);
+  const now = Date.now();
+  const yesterday = now - 86400000;
+
+  const dataSourceId =
+    "derived:com.google.sleep.segment:com.google.android.gms:merged";
+
+  const dataset = `${yesterday * 1000}-${now * 1000}`;
+
+  try {
+    const response = await axios.get(
+      `https://www.googleapis.com/fitness/v1/users/me/dataSources/${dataSourceId}/datasets/${dataset}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error("Erreur sommeil Google Fit:", error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur récupération sommeil." });
+  }
+});
+
+module.exports = router;
