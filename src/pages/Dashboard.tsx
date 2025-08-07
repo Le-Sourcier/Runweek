@@ -1,4 +1,4 @@
-import { useUser } from "../context/UserContext";
+import { useUser } from "../hooks/useUser";
 import { usePRs } from "../context/PRContext"; // Import usePRs
 import { useNotifications } from "../context/NotificationContext"; // Import for notifications
 import { toast } from "react-toastify"; // Import for toasts
@@ -13,15 +13,13 @@ import {
   Trophy,
   ArrowRight,
   PlusCircle,
-  Sunrise,
-  MessageSquare,
   Target, // Added Target for Goal Summary
   LayoutGrid, // Added for Customize Dashboard button
 } from "lucide-react"; // Added PlusCircle, Sunrise, MessageSquare
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react"; // Added useState for modal
-import { defaultDashboardWidgetsConfig } from "../context/UserContext"; // Added default config
+import { defaultDashboardWidgetsConfig } from "../providers/UserProvider"; // Added default config
 import WidgetManagementModal from "../components/dashboard/WidgetManagementModal"; // Added modal component
 import ProgressBar from "../components/ui/ProgressBar"; // Added ProgressBar for Goal Summary
 // Removed recharts imports, they are now in HeartRateTrendWidget

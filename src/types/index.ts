@@ -1,6 +1,6 @@
 export type SearchResult = {
   id: string;
-  type: 'activity' | 'achievement' | 'goal' | 'route';
+  type: "activity" | "achievement" | "goal" | "route";
   title: string;
   description?: string;
   url: string;
@@ -14,7 +14,12 @@ export type SearchHistory = {
   timestamp: number;
 };
 
-export type NotificationType = 'achievement' | 'goal' | 'system' | 'social' | 'reminder';
+export type NotificationType =
+  | "achievement"
+  | "goal"
+  | "system"
+  | "social"
+  | "reminder";
 
 export type Notification = {
   id: string;
@@ -46,16 +51,16 @@ export type PersonalRecord = {
 };
 
 // Goal Management Types
-export type GoalCategory = 'distance' | 'speed' | 'consistency' | 'event' | 'other';
+export type GoalCategory =
+  | "distance"
+  | "speed"
+  | "consistency"
+  | "event"
+  | "other";
 
-export type UserGoal = {
-  id: string;
-  title: string;
-  category: GoalCategory;
-  description?: string;
-  target: number;
-  current: number;
-  unit: string; // e.g., 'km', 'miles', 'hours', 'minutes', 'runs', 'workouts'
-  deadline: string; // ISO date string or simple YYYY-MM-DD
-  completed: boolean;
+export type ApiResponse<T> = {
+  error: boolean;
+  status: number;
+  message: string | null;
+  data?: T;
 };

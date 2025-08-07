@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react"; // Added useEffect, useRef
 import { useLocation } from "react-router-dom"; // Added useLocation
-import { useUser, SocialAccountConnection } from "../context/UserContext"; // Added SocialAccountConnection
+import { useUser } from "../hooks/useUser"; // Added SocialAccountConnection
 import { useTheme } from "../context/ThemeContext";
 import { useFloatingCoach } from "../context/FloatingCoachContext"; // Import useFloatingCoach
 import Card from "../components/ui/Card";
@@ -28,6 +28,7 @@ import {
   Download, // Added Download icon for billing history
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { SocialAccountConnection } from "../types/user";
 
 type SettingSection = {
   id: string;

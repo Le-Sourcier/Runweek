@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
-import Card from '../ui/Card';
-import { ArrowLeft, ShieldCheck, LockKeyhole, Loader2 } from 'lucide-react'; // Added Loader2
-import { useUser } from '../../context/UserContext'; // Import useUser
-import { toast } from 'react-toastify';
+import React, { useState } from "react";
+import Card from "../ui/Card";
+import { ArrowLeft, ShieldCheck, LockKeyhole, Loader2 } from "lucide-react"; // Added Loader2
+import { useUser } from "../../hooks/useUser"; // Import useUser
+import { toast } from "react-toastify";
 
 interface PasswordSecuritySettingsProps {
   onBack: () => void;
 }
 
-const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onBack }) => {
+const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({
+  onBack,
+}) => {
   const { user, changePassword, updateUserPreferences } = useUser(); // Add user and updateUserPreferences
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   // const [passwordError, setPasswordError] = useState<string | null>(null); // Replaced by toast
   // const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null); // Replaced by toast
   const [isChangingPassword, setIsChangingPassword] = useState(false); // Loading state
 
   const isTwoFactorEnabled = user?.preferences?.isTwoFactorEnabled || false;
 
-  const handleChangePassword = async (e: React.FormEvent) => { // Made async
+  const handleChangePassword = async (e: React.FormEvent) => {
+    // Made async
     e.preventDefault();
     // setPasswordError(null); // Replaced by toast
     // setPasswordSuccess(null); // Replaced by toast
     setIsChangingPassword(true);
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      toast.error('All password fields are required.');
+      toast.error("All password fields are required.");
       setIsChangingPassword(false);
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      toast.error('New password and confirmation do not match.');
+      toast.error("New password and confirmation do not match.");
       setIsChangingPassword(false);
       return;
     }
     if (newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters long.');
+      toast.error("New password must be at least 8 characters long.");
       setIsChangingPassword(false);
       return;
     }
@@ -45,14 +48,16 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
       const result = await changePassword(currentPassword, newPassword);
       if (result.success) {
         toast.success(result.message);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmNewPassword('');
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
       } else {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      toast.error(
+        error instanceof Error ? error.message : "An unexpected error occurred."
+      );
     } finally {
       setIsChangingPassword(false);
     }
@@ -67,7 +72,7 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
       });
       // Optionally, add a console.log or a success message for feedback,
       // though the UI will update based on the context change.
-      console.log('2FA preference Toggled to:', new2FAStatus);
+      console.log("2FA preference Toggled to:", new2FAStatus);
     }
   };
 
@@ -81,10 +86,16 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
         Back to Account Settings
       </button>
 
-      <Card title="Change Password" className="bg-card text-card-foreground border-border">
+      <Card
+        title="Change Password"
+        className="bg-card text-card-foreground border-border"
+      >
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="currentPassword"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Current Password
             </label>
             <input
@@ -97,7 +108,10 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
             />
           </div>
           <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="newPassword"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               New Password
             </label>
             <input
@@ -110,7 +124,10 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
             />
           </div>
           <div>
-            <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="confirmNewPassword"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Confirm New Password
             </label>
             <input
@@ -136,26 +153,39 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
               ) : (
                 <LockKeyhole size={16} className="mr-2" />
               )}
-              {isChangingPassword ? 'Changing...' : 'Change Password'}
+              {isChangingPassword ? "Changing..." : "Change Password"}
             </button>
           </div>
         </form>
       </Card>
 
-      <Card title="Two-Factor Authentication (2FA)" className="bg-card text-card-foreground border-border">
+      <Card
+        title="Two-Factor Authentication (2FA)"
+        className="bg-card text-card-foreground border-border"
+      >
         <div className="flex items-center justify-between">
           <div>
             <h4 className="font-medium text-foreground">Status</h4>
-            <p className={`text-sm ${isTwoFactorEnabled ? 'text-green-500 dark:text-green-400' : 'text-muted-foreground'}`}>
-              {isTwoFactorEnabled ? 'Enabled' : 'Not Enabled'}
+            <p
+              className={`text-sm ${
+                isTwoFactorEnabled
+                  ? "text-green-500 dark:text-green-400"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {isTwoFactorEnabled ? "Enabled" : "Not Enabled"}
             </p>
           </div>
           <button
             onClick={handleToggleTwoFactor}
-            className={`btn ${isTwoFactorEnabled ? 'btn-outline border-destructive text-destructive hover:bg-destructive/10' : 'btn-primary'}`} /* Inherits hover/active scale from .btn */
+            className={`btn ${
+              isTwoFactorEnabled
+                ? "btn-outline border-destructive text-destructive hover:bg-destructive/10"
+                : "btn-primary"
+            }`} /* Inherits hover/active scale from .btn */
           >
             <ShieldCheck size={16} className="mr-2" />
-            {isTwoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+            {isTwoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
           </button>
         </div>
         {isTwoFactorEnabled && (
@@ -163,20 +193,25 @@ const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({ onB
             Two-factor authentication is currently active on your account.
           </p>
         )}
-         {!isTwoFactorEnabled && (
+        {!isTwoFactorEnabled && (
           <p className="mt-3 text-sm text-muted-foreground">
-            Add an extra layer of security to your account by enabling two-factor authentication.
+            Add an extra layer of security to your account by enabling
+            two-factor authentication.
           </p>
         )}
       </Card>
 
-      <Card title="Active Sessions" className="bg-card text-card-foreground border-border">
+      <Card
+        title="Active Sessions"
+        className="bg-card text-card-foreground border-border"
+      >
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
             Management of active sessions is not available at the moment.
           </p>
           <p className="text-sm text-muted-foreground">
-            For security, always make sure to log out from devices you no longer use.
+            For security, always make sure to log out from devices you no longer
+            use.
           </p>
           {/* Optional: Add a button that links to a hypothetical help page or just a disabled button */}
           {/*

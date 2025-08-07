@@ -3,7 +3,7 @@
 // import { MemoryRouter } from 'react-router-dom';
 // import Settings from './Settings';
 // import { ThemeProvider, ThemeContextType } from '../context/ThemeContext';
-// import { UserProvider, UserContextType } from '../context/UserContext'; // Assuming UserContextType is exported or can be defined
+// import { UserProvider, UserContextType } from '../hooks/useUser'; // Assuming UserContextType is exported or can be defined
 // import '@testing-library/jest-dom';
 // import { vi } from 'vitest';
 

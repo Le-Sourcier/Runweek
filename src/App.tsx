@@ -22,7 +22,7 @@ import PasswordResetPage from "./pages/PasswordResetPage";
 // Context Providers
 import { ThemeProvider, useTheme } from "./context/ThemeContext"; // Added useTheme import
 import { FloatingCoachProvider } from "./context/FloatingCoachContext"; // Import FloatingCoachProvider
-import { UserProvider, useUser } from "./context/UserContext";
+import { useUser } from "./hooks/useUser";
 import { SearchProvider } from "./context/SearchContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { PRProvider } from "./context/PRContext";
@@ -30,6 +30,7 @@ import { PRProvider } from "./context/PRContext";
 // Other Imports
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { UserProvider } from "./providers/UserProvider";
 
 // This component wraps the main application layout and its specific context providers
 const MainAppLayoutContent: React.FC = () => {

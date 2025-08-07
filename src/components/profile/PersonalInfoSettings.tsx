@@ -1,19 +1,23 @@
-import { useState, useEffect, ChangeEvent } from 'react';
-import { useUser } from '../../context/UserContext';
-import Card from '../ui/Card';
-import { Edit } from 'lucide-react';
+import { useState, useEffect, ChangeEvent } from "react";
+import { useUser } from "../../hooks/useUser";
+import Card from "../ui/Card";
+import { Edit } from "lucide-react";
 
 interface PersonalInfoSettingsProps {
   onBack: () => void;
 }
 
-export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsProps) {
+export default function PersonalInfoSettings({
+  onBack,
+}: PersonalInfoSettingsProps) {
   const { user, updateUserProfile } = useUser();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(user?.name || '');
-  const [editedEmail, setEditedEmail] = useState(user?.email || '');
-  const [editedProfileImage, setEditedProfileImage] = useState(user?.profileImage || '');
+  const [editedName, setEditedName] = useState(user?.name || "");
+  const [editedEmail, setEditedEmail] = useState(user?.email || "");
+  const [editedProfileImage, setEditedProfileImage] = useState(
+    user?.profileImage || ""
+  );
 
   useEffect(() => {
     if (user) {
@@ -36,7 +40,11 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
 
   const handleSaveChanges = () => {
     if (user) {
-      updateUserProfile({ name: editedName, email: editedEmail, profileImage: editedProfileImage });
+      updateUserProfile({
+        name: editedName,
+        email: editedEmail,
+        profileImage: editedProfileImage,
+      });
     }
     setIsEditing(false);
   };
@@ -52,7 +60,7 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
     if (e.target.files && e.target.files[0]) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
+        if (event.target && typeof event.target.result === "string") {
           setEditedProfileImage(event.target.result);
         }
       };
@@ -61,7 +69,10 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
   };
 
   return (
-    <Card title="Personal Information" className="bg-card text-card-foreground border-border">
+    <Card
+      title="Personal Information"
+      className="bg-card text-card-foreground border-border"
+    >
       <button onClick={onBack} className="btn btn-ghost mb-4 text-sm">
         &larr; Back to Account Settings
       </button>
@@ -83,18 +94,21 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
                 aria-label="Change profile picture"
                 id="profile-image-upload"
               />
-              <label htmlFor="profile-image-upload" className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:bg-primary/90">
+              <label
+                htmlFor="profile-image-upload"
+                className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:bg-primary/90"
+              >
                 <Edit size={14} />
               </label>
             </>
           ) : (
-             <button
-                onClick={handleEditToggle}
-                className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm hover:bg-primary-600"
-                aria-label="Edit profile image"
-              >
-                <Edit size={14} />
-              </button>
+            <button
+              onClick={handleEditToggle}
+              className="absolute bottom-0 right-0 h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm hover:bg-primary-600"
+              aria-label="Edit profile image"
+            >
+              <Edit size={14} />
+            </button>
           )}
         </div>
 
@@ -107,7 +121,9 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
             aria-label="User name"
           />
         ) : (
-          <h2 className="text-xl font-bold mt-4 text-foreground">{user.name}</h2>
+          <h2 className="text-xl font-bold mt-4 text-foreground">
+            {user.name}
+          </h2>
         )}
 
         {isEditing ? (
@@ -126,11 +142,23 @@ export default function PersonalInfoSettings({ onBack }: PersonalInfoSettingsPro
       <div className="mt-6 pt-6 border-t border-border">
         {isEditing ? (
           <div className="space-y-3">
-            <button onClick={handleSaveChanges} className="btn btn-primary w-full">Save Changes</button>
-            <button onClick={handleCancelEdit} className="btn btn-outline w-full dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20">Cancel</button>
+            <button
+              onClick={handleSaveChanges}
+              className="btn btn-primary w-full"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              className="btn btn-outline w-full dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+            >
+              Cancel
+            </button>
           </div>
         ) : (
-          <button onClick={handleEditToggle} className="btn btn-primary w-full">Edit Profile</button>
+          <button onClick={handleEditToggle} className="btn btn-primary w-full">
+            Edit Profile
+          </button>
         )}
       </div>
     </Card>

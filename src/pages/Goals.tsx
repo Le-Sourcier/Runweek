@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUser } from "../context/UserContext";
+import { useUser } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 import Badge from "../components/ui/Badge";

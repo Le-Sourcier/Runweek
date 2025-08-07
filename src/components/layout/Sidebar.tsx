@@ -11,7 +11,7 @@ import {
   X,
   Activity,
 } from "lucide-react";
-import { useUser } from "../../context/UserContext";
+import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 
 type SidebarProps = {

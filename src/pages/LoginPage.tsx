@@ -10,14 +10,15 @@ import {
   CheckCircle2,
   Activity,
 } from "lucide-react";
-import { useUser, UserCredentials } from "../context/UserContext";
+import { useUser } from "../hooks/useUser";
+import { UserCredentials } from "../types/user";
 
 type LoginFormInputs = UserCredentials;
 
 type Step = "email" | "password";
 
 const LoginPage: React.FC = () => {
-  const { login, error: apiError, isAuthenticated, isLoading } = useUser();
+  const { login, message: apiError, isAuthenticated, isLoading } = useUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrlFromQuery = searchParams.get("redirect");
@@ -57,7 +58,9 @@ const LoginPage: React.FC = () => {
   }, [emailValue]);
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    await login(data);
+    const _ = await login(data);
+
+    console.log("TOKEN: ", _.accessToken);
   };
 
   useEffect(() => {
@@ -97,10 +100,11 @@ const LoginPage: React.FC = () => {
               Welcome to Runweek
             </h1>
             <p className="text-muted-foreground mt-2">
-              Track your progress, achieve your goals, and become a better runner with AI-powered coaching.
+              Track your progress, achieve your goals, and become a better
+              runner with AI-powered coaching.
             </p>
           </div>
-          
+
           <div className="relative mt-12">
             <img
               src="https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg"
@@ -126,7 +130,9 @@ const LoginPage: React.FC = () => {
 
           {apiError && (
             <div className="p-4 text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg text-center">
-              {typeof apiError === "string" ? apiError : "Login failed. Please try again."}
+              {typeof apiError === "string"
+                ? apiError
+                : "Login failed. Please try again."}
             </div>
           )}
 
@@ -235,7 +241,9 @@ const LoginPage: React.FC = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -254,7 +262,9 @@ const LoginPage: React.FC = () => {
                   <Link
                     to={`/forgot-password${
                       redirectUrlFromQuery
-                        ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
+                        ? `?redirect=${encodeURIComponent(
+                            redirectUrlFromQuery
+                          )}`
                         : ""
                     }`}
                     className="text-sm text-primary hover:text-primary-600 dark:hover:text-primary-400 font-medium focus:outline-none focus:underline"

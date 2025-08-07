@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { defaultDashboardWidgetsConfig } from "../../context/UserContext"; // Import the default config
 import Button from "../ui/Button"; // Assuming a Button component exists
 import { X } from "lucide-react";
+import { defaultDashboardWidgetsConfig } from "../../providers/UserProvider";
 
 interface WidgetConfig {
   isVisible: boolean;

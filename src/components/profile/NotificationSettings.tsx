@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useUser } from '../../context/UserContext';
-import Card from '../ui/Card';
-import { Bell } from 'lucide-react'; // Assuming Bell icon is suitable
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { useUser } from "../../hooks/useUser";
+import Card from "../ui/Card";
+import { Bell } from "lucide-react"; // Assuming Bell icon is suitable
+import { motion } from "framer-motion";
 
 interface NotificationSettingsProps {
   onBack: () => void;
@@ -24,11 +24,14 @@ const defaultNotificationSettings: NotificationPreferences = {
   updates: true,
 };
 
-export default function NotificationSettings({ onBack }: NotificationSettingsProps) {
+export default function NotificationSettings({
+  onBack,
+}: NotificationSettingsProps) {
   const { user, updateUserPreferences } = useUser();
-  const [currentNotificationSettings, setCurrentNotificationSettings] = useState<NotificationPreferences>(
-    user?.preferences?.notificationSettings || defaultNotificationSettings
-  );
+  const [currentNotificationSettings, setCurrentNotificationSettings] =
+    useState<NotificationPreferences>(
+      user?.preferences?.notificationSettings || defaultNotificationSettings
+    );
 
   useEffect(() => {
     if (user?.preferences?.notificationSettings) {
@@ -39,7 +42,7 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
   }, [user?.preferences?.notificationSettings]);
 
   const handleNotificationToggle = (key: keyof NotificationPreferences) => {
-    setCurrentNotificationSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    setCurrentNotificationSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSaveNotificationSettings = () => {
@@ -49,32 +52,66 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
       notificationSettings: currentNotificationSettings, // Apply updated notification settings
     };
     // Remove undefined fields that might have come from user.preferences if it was initially null/undefined
-    if (preferencesToSave.distanceUnit === undefined) preferencesToSave.distanceUnit = 'kilometers';
-    if (preferencesToSave.preferredRunDays === undefined) preferencesToSave.preferredRunDays = ['Mon', 'Wed', 'Fri'];
-    if (preferencesToSave.preferredRunTime === undefined) preferencesToSave.preferredRunTime = 'morning';
-    if (preferencesToSave.trainingFocus === undefined) preferencesToSave.trainingFocus = 'endurance';
-    if (preferencesToSave.activityVisibility === undefined) preferencesToSave.activityVisibility = 'friends';
-    if (preferencesToSave.profileVisibility === undefined) preferencesToSave.profileVisibility = 'friends';
-    if (preferencesToSave.dataSharing === undefined) preferencesToSave.dataSharing = false;
-    if (preferencesToSave.locationSharing === undefined) preferencesToSave.locationSharing = true;
-
+    if (preferencesToSave.distanceUnit === undefined)
+      preferencesToSave.distanceUnit = "kilometers";
+    if (preferencesToSave.preferredRunDays === undefined)
+      preferencesToSave.preferredRunDays = ["Mon", "Wed", "Fri"];
+    if (preferencesToSave.preferredRunTime === undefined)
+      preferencesToSave.preferredRunTime = "morning";
+    if (preferencesToSave.trainingFocus === undefined)
+      preferencesToSave.trainingFocus = "endurance";
+    if (preferencesToSave.activityVisibility === undefined)
+      preferencesToSave.activityVisibility = "friends";
+    if (preferencesToSave.profileVisibility === undefined)
+      preferencesToSave.profileVisibility = "friends";
+    if (preferencesToSave.dataSharing === undefined)
+      preferencesToSave.dataSharing = false;
+    if (preferencesToSave.locationSharing === undefined)
+      preferencesToSave.locationSharing = true;
 
     updateUserPreferences(preferencesToSave);
     // Optionally: show a success notification/toast
-    console.log('Notification settings saved:', preferencesToSave);
+    console.log("Notification settings saved:", preferencesToSave);
     // onBack(); // Optionally navigate back after saving
   };
 
-  const notificationOptions: Array<{ key: keyof NotificationPreferences; label: string; description: string }> = [
-    { key: 'email', label: 'Email Notifications', description: 'Receive important updates and summaries via email.' },
-    { key: 'push', label: 'Push Notifications', description: 'Get real-time alerts on your mobile device.' },
-    { key: 'achievements', label: 'Achievement Alerts', description: 'Notify me when I unlock new achievements.' },
-    { key: 'reminders', label: 'Training Reminders', description: 'Get reminders for scheduled runs and activities.' },
-    { key: 'updates', label: 'Product Updates', description: 'Receive news about new features and improvements.' },
+  const notificationOptions: Array<{
+    key: keyof NotificationPreferences;
+    label: string;
+    description: string;
+  }> = [
+    {
+      key: "email",
+      label: "Email Notifications",
+      description: "Receive important updates and summaries via email.",
+    },
+    {
+      key: "push",
+      label: "Push Notifications",
+      description: "Get real-time alerts on your mobile device.",
+    },
+    {
+      key: "achievements",
+      label: "Achievement Alerts",
+      description: "Notify me when I unlock new achievements.",
+    },
+    {
+      key: "reminders",
+      label: "Training Reminders",
+      description: "Get reminders for scheduled runs and activities.",
+    },
+    {
+      key: "updates",
+      label: "Product Updates",
+      description: "Receive news about new features and improvements.",
+    },
   ];
 
   return (
-    <Card title="Notification Preferences" className="bg-card text-card-foreground border-border">
+    <Card
+      title="Notification Preferences"
+      className="bg-card text-card-foreground border-border"
+    >
       <button onClick={onBack} className="btn btn-ghost mb-6 text-sm">
         &larr; Back to Account Settings
       </button>
@@ -85,12 +122,18 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
             key={option.key}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.075, duration: 0.25, ease: "easeOut" }}
+            transition={{
+              delay: index * 0.075,
+              duration: 0.25,
+              ease: "easeOut",
+            }}
             className="flex items-center justify-between p-4 border border-border rounded-lg"
           >
             <div>
               <h4 className="font-medium text-foreground">{option.label}</h4>
-              <p className="text-sm text-muted-foreground">{option.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {option.description}
+              </p>
             </div>
             <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
               <input
@@ -103,12 +146,18 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
               <label
                 htmlFor={`toggle-${option.key}`}
                 className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                  currentNotificationSettings[option.key] ? 'bg-primary' : 'bg-muted'
+                  currentNotificationSettings[option.key]
+                    ? "bg-primary"
+                    : "bg-muted"
                 }`}
               >
-                <span className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                  currentNotificationSettings[option.key] ? 'translate-x-6' : ''
-                }`}></span>
+                <span
+                  className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
+                    currentNotificationSettings[option.key]
+                      ? "translate-x-6"
+                      : ""
+                  }`}
+                ></span>
               </label>
             </div>
           </motion.div>
@@ -116,7 +165,10 @@ export default function NotificationSettings({ onBack }: NotificationSettingsPro
       </div>
 
       <div className="mt-8 pt-6 border-t border-border flex justify-end">
-        <button onClick={handleSaveNotificationSettings} className="btn btn-primary">
+        <button
+          onClick={handleSaveNotificationSettings}
+          className="btn btn-primary"
+        >
           Save Changes
         </button>
       </div>
