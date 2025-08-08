@@ -6,15 +6,26 @@ const openai = new OpenAI({
 });
 
 async function askAI(userMessage, userContext) {
+    // Handle cases where there might not be a user context (like for generic plans)
+    const activities = userContext.activities || [];
+    const profile = userContext.profile || {};
+
     // Formater le contexte utilisateur en une chaîne de caractères lisible
+    const activityLines = activities.map(act => {
+        let line = `- ${new Date(act.date).toISOString().split('T')[0]} : ${act.title} (${act.type})`;
+        if (act.duration) line += `, Durée: ${act.duration} min`;
+        if (act.distance) line += `, Distance: ${act.distance} km`;
+        return line;
+    }).join("\n");
+
     const contextString = `
         Voici les informations sur l'utilisateur que tu coaches :
-        - Nom : ${userContext.profile.firstName} ${userContext.profile.lastName}
-        - Biographie/Objectifs : ${userContext.profile.bio || 'Non spécifié'}
-        - Forfait actuel : ${userContext.profile.plan}
+        - Nom : ${profile.firstName || ''} ${profile.lastName || ''}
+        - Biographie/Objectifs : ${profile.bio || 'Non spécifié'}
+        - Forfait actuel : ${profile.plan || 'Non spécifié'}
         
         Voici ses 5 activités les plus récentes :
-        ${userContext.activities.map((act) => `- ${act.date.toISOString().split('T')[0]}: ${act.content}`).join("\n") || "Aucune activité récente."}
+        ${activityLines || "Aucune activité récente."}
     `;
 
     const chatCompletion = await openai.chat.completions.create({
@@ -27,7 +38,7 @@ async function askAI(userMessage, userContext) {
             },
             {
                 role: "user",
-                content: `${contextString}\n\nQuestion de l'utilisateur : "${userMessage}"`,
+                content: `${contextString}\n\nQuestion de l'utilisateur : \"${userMessage}\"`,
             },
         ],
     });

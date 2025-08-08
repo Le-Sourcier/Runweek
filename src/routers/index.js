@@ -7,6 +7,7 @@ router.use("/user", authorize, require("./components/userRouter"));
 router.use("/notif", authorize, require("./components/notificationsRouter"));
 router.use("/sponsor", authorize, require("./components/sponsorRouter"));
 router.use("/stripe", authorize, require("./components/stripeProductRouter"));
+router.use("/activities", authorize, require("./components/activityRouter"));
 
 router.use("/auth/google", require("./components/googleAuthRouter"));
 router.use("/google/fit", authorize, require("./components/googleFitRouter"));

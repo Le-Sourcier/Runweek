@@ -22,7 +22,19 @@ const authorizeGoogleFit = require("../../middlewares/googleFitAuth");
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/GoogleFitStepResponse'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Données de pas Google Fit récupérées avec succès."
+ *                 data:
+ *                   $ref: '#/components/schemas/GoogleFitStepResponse'
  *       401:
  *         description: Non autorisé, token manquant ou invalide.
  *         content:
@@ -34,7 +46,23 @@ const authorizeGoogleFit = require("../../middlewares/googleFitAuth");
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error500'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur lors de la récupération des données Google Fit."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Erreur récupération données Google Fit."
  */
 router.get("/steps", authorizeGoogleFit, async (req, res) => {
   const accessToken = await getValidAccessToken(req.user.id);
@@ -58,10 +86,20 @@ router.get("/steps", authorizeGoogleFit, async (req, res) => {
       }
     );
 
-    res.status(200).json(fitResponse.data);
+    res.status(200).json({
+      error: false,
+      status: 200,
+      message: "Données de pas Google Fit récupérées avec succès.",
+      data: fitResponse.data,
+    });
   } catch (error) {
     console.error("Google Fit Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Erreur récupération données Google Fit." });
+    res.status(500).json({
+      error: true,
+      status: 500,
+      message: "Erreur lors de la récupération des données Google Fit.",
+      data: { error: error.response?.data || error.message },
+    });
   }
 });
 
@@ -85,7 +123,19 @@ router.get("/steps", authorizeGoogleFit, async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/GoogleFitMetricResponse'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Métriques Google Fit récupérées avec succès."
+ *                 data:
+ *                   $ref: '#/components/schemas/GoogleFitMetricResponse'
  *       401:
  *         description: Non autorisé, token manquant ou invalide.
  *         content:
@@ -97,7 +147,23 @@ router.get("/steps", authorizeGoogleFit, async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error500'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur lors de la récupération des métriques Google Fit."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Erreur récupération métriques."
  */
 router.get("/metrics", authorizeGoogleFit, async (req, res) => {
   const accessToken = await getValidAccessToken(req.user.id);
@@ -128,10 +194,20 @@ router.get("/metrics", authorizeGoogleFit, async (req, res) => {
       }
     );
 
-    res.status(200).json(response.data);
+    res.status(200).json({
+      error: false,
+      status: 200,
+      message: "Métriques Google Fit récupérées avec succès.",
+      data: response.data,
+    });
   } catch (error) {
     console.error("Erreur Google Fit:", error.response?.data || error.message);
-    res.status(500).json({ error: "Erreur récupération métriques." });
+    res.status(500).json({
+      error: true,
+      status: 500,
+      message: "Erreur lors de la récupération des métriques Google Fit.",
+      data: { error: error.response?.data || error.message },
+    });
   }
 });
 
@@ -152,7 +228,19 @@ router.get("/metrics", authorizeGoogleFit, async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/GoogleFitSleepResponse'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Données de sommeil Google Fit récupérées avec succès."
+ *                 data:
+ *                   $ref: '#/components/schemas/GoogleFitSleepResponse'
  *       401:
  *         description: Non autorisé, token manquant ou invalide.
  *         content:
@@ -164,7 +252,23 @@ router.get("/metrics", authorizeGoogleFit, async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error500'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur lors de la récupération des données de sommeil Google Fit."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Erreur récupération sommeil."
  */
 router.get("/sleep", authorizeGoogleFit, async (req, res) => {
   const accessToken = await getValidAccessToken(req.user.id);
@@ -186,10 +290,20 @@ router.get("/sleep", authorizeGoogleFit, async (req, res) => {
       }
     );
 
-    res.status(200).json(response.data);
+    res.status(200).json({
+      error: false,
+      status: 200,
+      message: "Données de sommeil Google Fit récupérées avec succès.",
+      data: response.data,
+    });
   } catch (error) {
     console.error("Erreur sommeil Google Fit:", error.response?.data || error.message);
-    res.status(500).json({ error: "Erreur récupération sommeil." });
+    res.status(500).json({
+      error: true,
+      status: 500,
+      message: "Erreur lors de la récupération des données de sommeil Google Fit.",
+      data: { error: error.response?.data || error.message },
+    });
   }
 });
 
