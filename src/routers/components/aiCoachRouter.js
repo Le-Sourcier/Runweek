@@ -5,22 +5,50 @@ const db = require("../../models");
 
 /**
  * @openapi
- * tags:
- *   - name: AI Coach
- *     description: Endpoints for interacting with the personalized AI coach.
+ * components:
+ *   schemas:
+ *     MessageCoachIA:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Identifiant unique du message
+ *         type:
+ *           type: string
+ *           enum: [text, recommandation, conseil]
+ *           description: |
+ *             Type de message :
+ *             - text : Échange texte simple
+ *             - recommandation : Recommandation personnalisée
+ *             - conseil : Conseil d'entraînement
+ *         message:
+ *           type: string
+ *           description: Contenu du message
+ *         sender:
+ *           type: string
+ *           enum: [bot, user]
+ *           description: Expéditeur du message
+ *       required:
+ *         - type
+ *         - message
+ *         - sender
  */
+
+// Fonction utilitaire pour générer des IDs uniques
+function genererId() {
+  return Math.random().toString(36).substring(2, 15) + 
+         Math.random().toString(36).substring(2, 15);
+}
 
 /**
  * @openapi
  * /api/aicoach:
  *   post:
  *     tags:
- *       - AI Coach
- *     summary: Get advice from the AI coach
+ *       - Coach IA
+ *     summary: Obtenir des conseils du coach IA
  *     description: >
- *       Sends a message to the AI coach. The service uses the user's profile,
- *       recent activities, and current subscription plan as context to provide
- *       a personalized and relevant response. Requires user authentication.
+ *       Envoie un message au coach IA et reçoit une réponse standardisée.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -34,11 +62,11 @@ const db = require("../../models");
  *             properties:
  *               message:
  *                 type: string
- *                 description: The user's question or message for the coach.
- *                 example: "How can I improve my running pace for a 10k?"
+ *                 description: Question ou message de l'utilisateur pour le coach.
+ *                 example: "Comment améliorer mon rythme de course pour un 10 km ?"
  *     responses:
  *       200:
- *         description: The AI coach's reply.
+ *         description: Réponse du coach IA au format standardisé.
  *         content:
  *           application/json:
  *             schema:
@@ -52,84 +80,10 @@ const db = require("../../models");
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "SUCCESS"
+ *                   example: "SUCCÈS"
  *                 data:
- *                   type: object
- *                   properties:
- *                     reply:
- *                       type: string
- *                       example: "To improve your 10k pace, let's focus on interval training. Based on your recent activity, I suggest..."
- *       400:
- *         description: Bad Request - The 'message' field is missing.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: "BAD_REQUEST"
- *                 data:
- *                   type: object
- *                   properties:
- *                     error:
- *                       type: string
- *                       example: "Le champ 'message' est requis."
- *       401:
- *         description: Unauthorized - User is not authenticated.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error401'
- *       404:
- *         description: User profile not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "PROFILE_NOT_FOUND"
- *                 data:
- *                   type: object
- *                   example: {}
- *       500:
- *         description: Internal server error while communicating with the AI service.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "INTERNAL_SERVER_ERROR"
- *                 data:
- *                   type: object
- *                   properties:
- *                     error:
- *                       type: string
- *                       example: "Erreur interne du coach IA."
+ *                   $ref: '#/components/schemas/MessageCoachIA'
  */
-
 router.post("/", async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
@@ -144,7 +98,6 @@ router.post("/", async (req, res) => {
     }
 
     try {
-        // 1. Récupérer les données de l'utilisateur
         const user = await db.Users.findByPk(userId, {
             include: [
                 {
@@ -177,14 +130,12 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // 2. Récupérer les activités récentes
         const recentActivities = await db.Activities.findAll({
             where: { user_id: userId },
             order: [["date", "DESC"]],
             limit: 5,
         });
 
-        // 3. Construire le contexte pour l'IA
         const userContext = {
             profile: {
                 firstName: user.profile?.fname,
@@ -201,14 +152,18 @@ router.post("/", async (req, res) => {
             })),
         };
 
-        // 4. Appeler le service AI avec le contexte
         const aiReply = await askAI(message, userContext);
 
         return res.status(200).json({
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: { reply: aiReply }
+            data: {
+                id: generateId(),
+                type: "text",
+                message: aiReply,
+                sender: "bot"
+            }
         });
 
     } catch (err) {
@@ -222,30 +177,20 @@ router.post("/", async (req, res) => {
     }
 });
 
-
-/**
- * @openapi
- * tags:
- *   - name: AI Coach
- *     description: Endpoints for interacting with the personalized AI coach.
- */
-
 /**
  * @openapi
  * /api/aicoach/workouts:
  *   post:
  *     tags:
- *       - AI Coach
- *     summary: Get personalized workout suggestions
+ *       - Coach IA
+ *     summary: Obtenir des suggestions d'entraînement personnalisées
  *     description: >
- *       Generates 3-5 personalized workout suggestions based on the user's
- *       profile, recent activities, and subscription plan.  
- *       Each suggestion contains a title, short description, and an icon keyword.
+ *       Retourne des suggestions d'entraînement au format message standardisé.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of workout suggestions
+ *         description: Liste de suggestions d'entraînement sous forme de messages standardisés.
  *         content:
  *           application/json:
  *             schema:
@@ -263,71 +208,12 @@ router.post("/", async (req, res) => {
  *                 data:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       title:
- *                         type: string
- *                         example: "Course facile"
- *                       description:
- *                         type: string
- *                         example: "5-6 km à un rythme de conversation"
- *                       icon:
- *                         type: string
- *                         example: "footsteps"
- *       401:
- *         description: Unauthorized - User not authenticated.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error401'
- *       404:
- *         description: User profile not found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "PROFILE_NOT_FOUND"
- *                 data:
- *                   type: object
- *                   example: {}
- *       500:
- *         description: Internal server error while communicating with AI service.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "INTERNAL_SERVER_ERROR"
- *                 data:
- *                   type: object
- *                   properties:
- *                     error:
- *                       type: string
- *                       example: "Erreur interne du coach IA."
+ *                     $ref: '#/components/schemas/MessageCoachIA'
  */
-
 router.post("/workouts", async (req, res) => {
     const userId = req.user.id;
 
     try {
-        // 1. Récupérer les infos utilisateur
         const user = await db.Users.findByPk(userId, {
             include: [
                 {
@@ -360,14 +246,12 @@ router.post("/workouts", async (req, res) => {
             });
         }
 
-        // 2. Activités récentes
         const recentActivities = await db.Activities.findAll({
             where: { user_id: userId },
             order: [["date", "DESC"]],
             limit: 5,
         });
 
-        // 3. Contexte IA
         const userContext = {
             profile: {
                 firstName: user.profile?.fname,
@@ -384,7 +268,6 @@ router.post("/workouts", async (req, res) => {
             })),
         };
 
-        // 4. Prompt IA pour forcer format JSON
         const aiPrompt = `
 Tu es un coach de course et fitness.  
 En te basant sur ces données utilisateur :  
@@ -393,7 +276,7 @@ ${JSON.stringify(userContext, null, 2)}
 Suggère **3 à 5 workouts personnalisés** au format JSON suivant :  
 - title : nom court en français
 - description : distance/intensité brève
-- icon : mot-clé pour l’icône ("footsteps", "heart", "dumbbell", etc.)
+- icon : mot-clé pour l'icône ("footsteps", "heart", "dumbbell", etc.)
 Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
         `;
 
@@ -412,11 +295,22 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
             });
         }
 
+        const standardizedWorkouts = Array.isArray(workouts) ? workouts : [workouts];
+        
         return res.status(200).json({
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: workouts
+            data: standardizedWorkouts.map(workout => ({
+                id: generateId(),
+                type: "recommandation",
+                message: `${workout.title}: ${workout.description}`,
+                sender: "bot",
+                metadata: {
+                    icon: workout.icon,
+                    originalData: workout
+                }
+            }))
         });
 
     } catch (err) {
@@ -429,18 +323,15 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
         });
     }
 });
-
-
 /**
  * @openapi
  * /api/aicoach/running-plan:
  *   post:
  *     tags:
- *       - AI Coach
- *     summary: Generate a weekly running plan
+ *       - Coach IA
+ *     summary: Générer un plan de course hebdomadaire
  *     description: >
- *       Generates a personalized 7-day running plan based on the user's
- *       goal and level. Requires user authentication.
+ *       Retourne un plan de course sous forme de messages conseils standardisés.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -455,16 +346,14 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
  *             properties:
  *               goal:
  *                 type: string
- *                 description: The user's primary goal (e.g., "10k race", "improve endurance").
  *                 example: "Préparer un 10km"
  *               level:
  *                 type: string
- *                 description: The user's current fitness level.
- *                 enum: [beginner, intermediate, advanced]
- *                 example: "intermediate"
+ *                 enum: [débutant, intermédiaire, avancé]
+ *                 example: "intermédiaire"
  *     responses:
  *       200:
- *         description: The generated 7-day running plan.
+ *         description: Plan de course généré sous forme de messages standardisés.
  *         content:
  *           application/json:
  *             schema:
@@ -478,77 +367,11 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "Plan de course généré avec succès."
+ *                   example: "SUCCESS"
  *                 data:
- *                   type: object
- *                   properties:
- *                     weekly_plan:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           day:
- *                             type: string
- *                             example: "Lundi"
- *                           title:
- *                             type: string
- *                             example: "Course de récupération"
- *                           description:
- *                             type: string
- *                             example: "30 min à allure lente"
- *                           icon:
- *                             type: string
- *                             example: "footsteps"
- *       400:
- *         description: Bad Request - Missing 'goal' or 'level'.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: "Le but et le niveau sont requis."
- *                 data:
- *                   type: object
- *                   properties:
- *                     error:
- *                       type: string
- *                       example: "Le but et le niveau sont requis."
- *       401:
- *         description: Unauthorized.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error401'
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "Erreur interne du coach IA."
- *                 data:
- *                   type: object
- *                   properties:
- *                     error:
- *                       type: string
- *                       example: "Erreur interne du coach IA."
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/MessageCoachIA'
  */
 router.post("/running-plan", async (req, res) => {
     const { goal, level } = req.body;
@@ -586,7 +409,7 @@ router.post("/running-plan", async (req, res) => {
         - icon: (e.g., "footsteps", "heart", "dumbbell", "rest")
         `;
 
-        const aiResponse = await askAI(aiPrompt, {}); // Pas de contexte utilisateur ici
+        const aiResponse = await askAI(aiPrompt, {});
 
         let plan;
         try {
@@ -601,11 +424,22 @@ router.post("/running-plan", async (req, res) => {
             });
         }
 
+        const weeklyPlan = Array.isArray(plan.weekly_plan) ? plan.weekly_plan : [];
+
         return res.status(200).json({
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: plan,
+            data: weeklyPlan.map(dayPlan => ({
+                id: generateId(),
+                type: "advices",
+                message: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
+                sender: "bot",
+                metadata: {
+                    icon: dayPlan.icon,
+                    day: dayPlan.day
+                }
+            }))
         });
 
     } catch (err) {
@@ -619,21 +453,21 @@ router.post("/running-plan", async (req, res) => {
     }
 });
 
+
 /**
  * @openapi
  * /api/aicoach/recommendations:
  *   post:
  *     tags:
- *       - AI Coach
- *     summary: Get personalized recommendations
+ *       - Coach IA
+ *     summary: Obtenir des recommandations personnalisées
  *     description: >
- *       Generates 3-5 personalized recommendations for the user on topics like
- *       nutrition, recovery, gear, etc., based on their profile and recent activities.
+ *       Retourne des recommandations au format message standardisé.
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: A list of personalized recommendations.
+ *         description: Liste de recommandations sous forme de messages standardisés.
  *         content:
  *           application/json:
  *             schema:
@@ -647,46 +481,11 @@ router.post("/running-plan", async (req, res) => {
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "Recommandations personnalisées générées avec succès."
+ *                   example: "SUCCESS"
  *                 data:
- *                   type: object
- *                   properties:
- *                     recommendations:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           title:
- *                             type: string
- *                             example: "Hydratation optimale"
- *                           description:
- *                             type: string
- *                             example: "Buvez au moins 2 litres d'eau par jour, surtout avant et après l'exercice."
- *                           category:
- *                             type: string
- *                             example: "Nutrition"
- *       401:
- *         description: Unauthorized.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error401'
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "Erreur interne du coach IA."
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/MessageCoachIA'
  */
 router.post("/recommendations", async (req, res) => {
     const userId = req.user.id;
@@ -712,7 +511,13 @@ router.post("/recommendations", async (req, res) => {
                 bio: user.profile?.bio,
                 plan: user.subscriptions?.[0]?.plan?.name || "FREE",
             },
-            activities: recentActivities.map(act => ({ title: act.title, type: act.type, distance: act.distance, duration: act.duration, date: act.date })),
+            activities: recentActivities.map(act => ({
+                title: act.title,
+                type: act.type,
+                distance: act.distance,
+                duration: act.duration,
+                date: act.date,
+            })),
         };
 
         const aiPrompt = `
@@ -745,11 +550,21 @@ router.post("/recommendations", async (req, res) => {
             });
         }
 
+        const recs = Array.isArray(recommendations.recommendations) ? recommendations.recommendations : [];
+
         return res.status(200).json({
             error: false,
             status: 200,
-            message: "Recommandations personnalisées générées avec succès.",
-            data: recommendations,
+            message: "SUCCESS",
+            data: recs.map(rec => ({
+                id: generateId(),
+                type: "recommandation",
+                message: `${rec.title} (${rec.category}): ${rec.description}`,
+                sender: "bot",
+                metadata: {
+                    category: rec.category
+                }
+            }))
         });
 
     } catch (err) {
@@ -757,7 +572,8 @@ router.post("/recommendations", async (req, res) => {
         return res.status(500).json({
             error: true,
             status: 500,
-            message: "Erreur interne du coach IA.",
+            message: "INTERNAL_SERVER_ERROR",
+            data: { error: "Erreur interne du coach IA." }
         });
     }
 });

@@ -19,6 +19,7 @@ const unprotectedRoutes = [
     // "/api/stripe/product/:id",
     "/api/stripe/checkout/get-session/:session_id",
     "/api/auth/google/callback",
+    "/api/auth/google/login",
     "/api/auth/google/fit/steps",
     "/api/google/fit/metrics",
 ];

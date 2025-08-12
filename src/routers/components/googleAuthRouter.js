@@ -1,15 +1,24 @@
 const express = require("express");
-const axios = require("axios");
 const router = express.Router();
-const db = require("../../models");
-
-const CLIENT_ID = process.env.GOOGLE_FIT_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_FIT_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_FIT_REDIRECT_URI;
+const authController = require("../../controllers/components/authController");
 
 /**
  * @openapi
- * /api/google/callback:
+ * /api/auth/google/login:
+ *   get:
+ *     tags: [Authentification Google]
+ *     summary: Rediriger vers la page de connexion Google
+ *     description: >
+ *       Ce endpoint construit l'URL d'autorisation Google et redirige l'utilisateur vers cette URL pour démarrer le flux OAuth2.
+ *     responses:
+ *       302:
+ *         description: Redirection vers l'URL d'authentification Google.
+ */
+router.get("/login", authController.googleLogin);
+
+/**
+ * @openapi
+ * /api/auth/google/callback:
  *   post:
  *     tags: [Authentification Google]
  *     summary: Gérer le callback OAuth de Google
@@ -96,102 +105,7 @@ const REDIRECT_URI = process.env.GOOGLE_FIT_REDIRECT_URI;
  *                       type: string
  *                       example: "invalid_grant"
  */
-router.post("/google/callback", async (req, res) => {
-  const { code, userId } = req.body;
-
-  // Valider les paramètres requis
-  if (!code || !userId) {
-    return res.status(400).json({
-      error: true,
-      status: 400,
-      message: "Paramètres requis manquants : code et userId",
-      data: {
-        champsManquants: {
-          code: !code ? "manquant" : "fourni",
-          userId: !userId ? "manquant" : "fourni"
-        }
-      }
-    });
-  }
-
-  // Valider le format UUID si nécessaire
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(userId)) {
-    return res.status(400).json({
-      error: true,
-      status: 400,
-      message: "Format userId invalide, doit être un UUID valide",
-      data: {
-        champInvalide: "userId",
-        formatAttendu: "UUIDv4"
-      }
-    });
-  }
-
-  try {
-    // Échanger le code d'autorisation contre des jetons
-    const tokenResponse = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      {
-        code,
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        redirect_uri: REDIRECT_URI,
-        grant_type: "authorization_code",
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: 10000, // Timeout de 10 secondes
-      }
-    );
-
-    const { access_token, refresh_token, expires_in } = tokenResponse.data;
-
-    // Calculer la date d'expiration
-    const expiresAt = new Date(Date.now() + expires_in * 1000);
-
-    // Stocker les jetons en base de données
-    await db.UserTokens.upsert({
-      userId,
-      provider: "google_fit",
-      accessToken: access_token,
-      refreshToken: refresh_token,
-      expiresAt,
-    });
-
-    // Retourner une réponse de succès
-    return res.status(200).json({
-      error: false,
-      status: 200,
-      message: "Authentification Google réussie",
-      data: { success: true },
-    });
-
-  } catch (error) {
-    console.error("Erreur OAuth Google:", error.response?.data || error.message);
-
-    // Gérer spécifiquement les erreurs 400 de Google
-    if (error.response?.status === 400) {
-      return res.status(400).json({
-        error: true,
-        status: 400,
-        message: "Code d'autorisation invalide",
-        data: { error: error.response.data }
-      });
-    }
-
-    // Déterminer si l'erreur vient de Google ou de notre système
-    const errorData = error.response?.data || { error: error.message };
-    const statusCode = error.response?.status || 500;
-
-    return res.status(statusCode).json({
-      error: true,
-      status: statusCode,
-      message: "Échec de l'authentification Google",
-      data: { error: errorData },
-    });
-  }
-});
+router.post("/callback", authController.googleCallback);
 
 /**
  * @openapi
@@ -206,6 +120,8 @@ router.post("/google/callback", async (req, res) => {
  *           scopes:
  *             https://www.googleapis.com/auth/fitness.activity.read: "Lire les données d'activité"
  *             https://www.googleapis.com/auth/fitness.body.read: "Lire les mesures corporelles"
+ *             https://www.googleapis.com/auth/fitness.location.read: "Lire les données de localisation"
+ *             https://www.googleapis.com/auth/fitness.sleep.read: "Lire les données de sommeil"
  */
 
 module.exports = router;
