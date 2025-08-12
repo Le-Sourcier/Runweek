@@ -31,10 +31,11 @@ export type UserAchievement = {
 
 export type User = {
   id: string;
-  name: string;
+  fname?: string;
+  lname?: string;
   email: string;
   profileImage: string;
-  joinedDate: string;
+  updatedAt: string;
   stats: UserStats;
   goals: UserGoal[];
   achievements: UserAchievement[];
@@ -106,10 +107,34 @@ export type UserCredentials = {
   password?: string; // Password might be optional if using OAuth or magic links later
   rememberMe?: boolean;
 };
+export type UserRegistration = {
+  fname: string;
+  lname: string;
+  email: string;
+  password: string;
+};
 
 export type UserWithToken = {
   accessToken: string;
   refreshToken?: string; // Password might be optional if using OAuth or magic links later
+};
+export type RegisterRes = {
+  error: boolean;
+  message: string | null;
+  // data: Record<string, string> | undefined;
+};
+
+export type MailVerificationStatus =
+  | "loading"
+  | "already-validated"
+  | "success"
+  | "error"
+  | "expired"
+  | "invalid";
+
+export type MailVerification = {
+  status: MailVerificationStatus;
+  email?: string;
 };
 
 export type UserContextType = {
@@ -118,6 +143,11 @@ export type UserContextType = {
   isAuthenticated: boolean; // Added for easier auth checks
   message: string | null; // For login/auth errors
   login: (scredentials: UserCredentials) => Promise<UserWithToken>; // Made async to mimic API call
+  register: (auth: UserRegistration) => Promise<RegisterRes>; // Made async to mimic API call
+  verifyMail: (token: string) => Promise<MailVerification>;
+  resendVerificationMail: (
+    email: string
+  ) => Promise<{ message: string | null; resent: boolean }>;
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => void;
   updateUserPreferences: (preferences: UserPreferences) => void;

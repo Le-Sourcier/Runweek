@@ -24,7 +24,6 @@ import { useUser } from "../hooks/useUser";
 
 export default function Profile() {
   const { user, updateUserProfile, updateUserPreferences, logout } = useUser(); // Added logout
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
   const [accountSubView, setAccountSubView] = useState<
     | "overview"
@@ -36,7 +35,9 @@ export default function Profile() {
   >("overview");
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(user?.name || "");
+  const [editedName, setEditedName] = useState(
+    user?.fname + "" + user?.lname || ""
+  );
   const [editedEmail, setEditedEmail] = useState(user?.email || "");
   const [editedProfileImage, setEditedProfileImage] = useState(
     user?.profileImage || ""
@@ -73,7 +74,7 @@ export default function Profile() {
   // Effect to update edited fields AND preferences if user object changes
   useEffect(() => {
     if (user) {
-      setEditedName(user.name);
+      setEditedName(user?.fname + " " + user?.lname);
       setEditedEmail(user.email);
       setEditedProfileImage(user.profileImage); // Add this line
       if (user.preferences) {
@@ -305,11 +306,11 @@ export default function Profile() {
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Calendar size={18} />
                   <span>
-                    Joined{" "}
-                    {new Date(user.joinedDate).toLocaleDateString("en-US", {
+                    Joined {user.updatedAt}
+                    {/* {new Date(user.updatedAt).toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
-                    })}
+                    })} */}
                   </span>
                 </div>
               </div>
@@ -426,10 +427,7 @@ export default function Profile() {
 
                   <div className="mt-6 pt-4 border-t border-border flex justify-end">
                     <button
-                      onClick={() => {
-                        logout();
-                        navigate("/login");
-                      }}
+                      onClick={logout}
                       className="btn btn-ghost text-destructive hover:bg-destructive/10 flex items-center gap-2"
                     >
                       <LogOut size={16} />

@@ -1,7 +1,6 @@
 import { useUser } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import {
-  BarChart as BarChartIcon,
   Calendar,
   Filter,
   TrendingUp,
@@ -11,7 +10,6 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronDown,
-  BarChart2, // Using a more generic chart icon for stats
   TrendingDown, // For negative changes
 } from "lucide-react";
 import { useState, useEffect } from "react"; // Added useEffect
@@ -157,7 +155,7 @@ export default function Statistics() {
   };
 
   useEffect(() => {
-    let activitiesToSort = [...initialActivities]; // Use a copy of the original unsorted data
+    const activitiesToSort = [...initialActivities]; // Use a copy of the original unsorted data
     if (sortConfig !== null) {
       activitiesToSort.sort((a, b) => {
         // Helper to convert time string "HH:MM:SS" or "MM:SS" to seconds
@@ -238,7 +236,7 @@ export default function Statistics() {
               <p className="text-sm text-muted-foreground">Total Distance</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats.weeklyDistance} km
+                  {user.stats?.weeklyDistance ?? 0} km
                 </p>
                 <span className="text-xs text-success flex items-center">
                   {" "}
@@ -262,7 +260,7 @@ export default function Statistics() {
               <p className="text-sm text-muted-foreground">Avg. Pace</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats.averagePace}
+                  {user.stats?.averagePace ?? 0}
                 </p>
                 <span className="text-xs text-success flex items-center">
                   {" "}
@@ -285,7 +283,7 @@ export default function Statistics() {
               <p className="text-sm text-muted-foreground">Total Activities</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats.totalRuns}
+                  {user.stats?.totalRuns ?? 0}
                 </p>
                 <span className="text-xs text-success flex items-center">
                   <ArrowUp size={12} />

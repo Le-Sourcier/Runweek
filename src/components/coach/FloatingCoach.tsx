@@ -7,7 +7,8 @@ import {
   ChevronsLeftRight as PositionIcon,
   EyeOff,
 } from "lucide-react"; // Added EyeOff
-import ChatInterface, { ChatMessage, Suggestion } from "../chat/ChatInterface"; // Import ChatInterface and types
+import ChatInterface, { Suggestion } from "../chat/ChatInterface"; // Import ChatInterface and types
+import { Message } from "../../types/AiCoach";
 
 const FloatingCoach: React.FC = () => {
   const {
@@ -20,7 +21,7 @@ const FloatingCoach: React.FC = () => {
     deactivateFloatingCoach,
   } = useFloatingCoach();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
 
   useEffect(() => {
@@ -28,34 +29,37 @@ const FloatingCoach: React.FC = () => {
       setMessages([
         {
           id: "ai-greeting-" + Date.now(),
-          text: "Hello! I'm your AI Coach. How can I help you today?",
-          sender: "ai",
-          timestamp: new Date(),
+          type: "text",
+          message: "Hello! I'm your AI Coach. How can I help you today?",
+          sender: "bot",
+          createdAt: new Date().toLocaleString(),
         },
       ]);
     }
     // Do not clear messages when panel closes, so history is preserved for the session
     // If panel closes and coach is deactivated, messages will clear when FloatingCoach unmounts (if state is local)
     // or if explicitly cleared by context. For now, local state means they persist while FloatingCoach is mounted.
-  }, [isCoachPanelOpen]); // Removed messages from dependency array to prevent re-triggering on new messages
+  }, [isCoachPanelOpen, messages.length]); // Removed messages from dependency array to prevent re-triggering on new messages
 
   const handleSendMessage = async (messageText: string) => {
-    const userMessage: ChatMessage = {
+    const userMessage: Message = {
       id: "user-" + Date.now(),
-      text: messageText,
+      type: "text",
+      message: messageText,
       sender: "user",
-      timestamp: new Date(),
+      createdAt: new Date().toLocaleString(),
     };
     setMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
     // Simulate AI response
     setTimeout(() => {
-      const aiResponse: ChatMessage = {
+      const aiResponse: Message = {
         id: "ai-" + Date.now(),
-        text: `I'm just a demo AI, but I received: "${messageText}"`,
-        sender: "ai",
-        timestamp: new Date(),
+        type: "text",
+        message: `I'm just a demo AI, but I received: "${messageText}"`,
+        sender: "bot",
+        createdAt: new Date().toLocaleString(),
       };
       setMessages((prev) => [...prev, aiResponse]);
       setIsAiTyping(false);
@@ -63,22 +67,24 @@ const FloatingCoach: React.FC = () => {
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
-    const userMessage: ChatMessage = {
+    const userMessage: Message = {
       id: "user-suggestion-" + Date.now(),
-      text: suggestion.text,
+      type: "text",
+      message: suggestion.text,
       sender: "user",
-      timestamp: new Date(),
+      createdAt: new Date().toLocaleString(),
     };
     setMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
     // Simulate AI response to suggestion
     setTimeout(() => {
-      const aiResponse: ChatMessage = {
+      const aiResponse: Message = {
         id: "ai-suggestion-response-" + Date.now(),
-        text: `Okay, let's talk about "${suggestion.text}". (This is a demo response)`,
-        sender: "ai",
-        timestamp: new Date(),
+        type: "text",
+        message: `Okay, let's talk about "${suggestion.text}". (This is a demo response)`,
+        sender: "bot",
+        createdAt: new Date().toLocaleString(),
       };
       setMessages((prev) => [...prev, aiResponse]);
       setIsAiTyping(false);
@@ -86,11 +92,13 @@ const FloatingCoach: React.FC = () => {
   };
 
   const handleTalkToHumanClick = () => {
-    const systemMessage: ChatMessage = {
+    const systemMessage: Message = {
       id: "system-" + Date.now(),
-      text: "Talk to human requested. Someone will be with you shortly (this is a demo).",
+      type: "text",
+      message:
+        "Talk to human requested. Someone will be with you shortly (this is a demo).",
       sender: "system",
-      timestamp: new Date(),
+      createdAt: new Date().toLocaleString(),
     };
     setMessages((prev) => [...prev, systemMessage]);
     console.log("Talk to human requested from floating coach.");

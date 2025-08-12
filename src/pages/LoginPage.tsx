@@ -1,351 +1,154 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Loader2,
-  Chrome,
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-  Activity,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import AuthLayout from "../components/layout/AuthLayout";
+import { Input2 as Input } from "../components/ui/Input";
+import { Button2 as Button } from "../components/ui/Button";
 import { useUser } from "../hooks/useUser";
-import { UserCredentials } from "../types/user";
-
-type LoginFormInputs = UserCredentials;
-
-type Step = "email" | "password";
 
 const LoginPage: React.FC = () => {
-  const { login, message: apiError, isAuthenticated, isLoading } = useUser();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirectUrlFromQuery = searchParams.get("redirect");
-  const [currentStep, setCurrentStep] = useState<Step>("email");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isEmailValidated, setIsEmailValidated] = useState(false);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-
-  const isValidRedirectPath = (path: string | null): boolean => {
-    if (!path) return false;
-    if (!path.startsWith("/")) return false;
-    if (path.startsWith("//") || path.includes("://")) return false;
-    return true;
-  };
-
-  let finalRedirectPath = "/";
-  if (isValidRedirectPath(redirectUrlFromQuery)) {
-    finalRedirectPath = redirectUrlFromQuery!;
-  }
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors: formErrors },
-    trigger,
-    watch,
-  } = useForm<LoginFormInputs>({
-    mode: "onBlur",
+  const { isLoading: loading, login } = useUser();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  // const [loading, setLoading] = useState(false);
 
-  const emailValue = watch("email");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-  useEffect(() => {
-    if (isEmailValidated) {
-      setIsEmailValidated(false);
-    }
-  }, [emailValue]);
-
-  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    const _ = await login(data);
-
-    console.log("TOKEN: ", _.accessToken);
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate(finalRedirectPath, { replace: true });
-    }
-  }, [isAuthenticated, navigate, finalRedirectPath]);
-
-  useEffect(() => {
-    if (currentStep === "password" && passwordInputRef.current) {
-      passwordInputRef.current.focus();
-    }
-  }, [currentStep]);
-
-  const handleNextStep = async () => {
-    const emailIsValid = await trigger("email");
-    if (emailIsValid) {
-      setIsEmailValidated(true);
-      setCurrentStep("password");
-    } else {
-      setIsEmailValidated(false);
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  const handleBackStep = () => {
-    setCurrentStep("email");
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    const auth = await login(formData);
   };
 
   return (
-    <div className="min-h-screen font-sans flex flex-col md:flex-row w-full">
-      {/* Visual Side */}
-      <div className="w-full md:w-1/2 h-80 md:min-h-screen flex flex-col items-center justify-center p-8 order-1 md:order-1 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent">
-        <div className="max-w-md text-center">
-          <div className="mb-8">
-            <Activity className="h-12 w-12 text-primary mx-auto" />
-            <h1 className="text-3xl font-bold font-display text-foreground mt-4">
-              Welcome to Runweek
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Track your progress, achieve your goals, and become a better
-              runner with AI-powered coaching.
-            </p>
-          </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to continue your running journey"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Input
+          label="Email"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          error={errors.email}
+          placeholder="runner@example.com"
+          autoComplete="email"
+        />
 
-          <div className="relative mt-12">
-            <img
-              src="https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg"
-              alt="Runner at sunset"
-              className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl" />
-          </div>
+        <Input
+          label="Password"
+          name="password"
+          value={formData.password}
+          onChange={handleInputChange}
+          error={errors.password}
+          placeholder="••••••••••••"
+          isPassword
+          autoComplete="current-password"
+        />
+
+        <Button type="submit" className="w-full" loading={loading}>
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
+
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-200"></div>
+          <span className="px-4 text-sm text-gray-500 bg-transparent">or</span>
+          <div className="flex-1 border-t border-gray-200"></div>
         </div>
-      </div>
 
-      {/* Form Side */}
-      <div className="w-full md:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-6 sm:p-8 md:p-12 order-2 md:order-2">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-slate-50">
-              Sign in to your account
-            </h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
-              Welcome back! Please enter your details.
-            </p>
-          </div>
-
-          {apiError && (
-            <div className="p-4 text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg text-center">
-              {typeof apiError === "string"
-                ? apiError
-                : "Login failed. Please try again."}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
-            <div className="relative" style={{ minHeight: "150px" }}>
-              {/* Email Step */}
-              <div
-                className={`absolute w-full transform transition-all duration-300 ease-in-out ${
-                  currentStep === "email"
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-5 pointer-events-none h-0"
-                }`}
-              >
-                <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
-                  Step 1/2
-                </p>
-                <div className="relative">
-                  <label htmlFor="email" className="sr-only">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^\S+@\S+\.\S+$/,
-                        message: "Invalid email address",
-                      },
-                    })}
-                    className={`appearance-none rounded-lg relative block w-full px-4 py-3 border ${
-                      formErrors.email
-                        ? "border-red-500"
-                        : isEmailValidated
-                        ? "border-green-500 dark:border-green-400"
-                        : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 sm:text-base`}
-                    placeholder="Email address"
-                  />
-                  {isEmailValidated && !formErrors.email && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
-                    </div>
-                  )}
-                </div>
-                {formErrors.email && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">
-                    {formErrors.email.message}
-                  </p>
-                )}
-                <div className="mt-6">
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={isLoading}
-                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 disabled:bg-primary-500 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-
-              {/* Password Step */}
-              <div
-                className={`absolute w-full transform transition-all duration-300 ease-in-out ${
-                  currentStep === "password"
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-5 pointer-events-none h-0"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm text-gray-500 dark:text-slate-400">
-                    Step 2/2
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleBackStep}
-                    className="text-sm text-primary hover:text-primary-600 dark:hover:text-primary-400 font-medium focus:outline-none focus:underline"
-                  >
-                    <ArrowLeft className="h-4 w-4 inline mr-1" />
-                    Back to email
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <label htmlFor="password" className="sr-only">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    ref={passwordInputRef}
-                    autoComplete="current-password"
-                    {...register("password", {
-                      required: "Password is required",
-                    })}
-                    className={`appearance-none rounded-lg relative block w-full px-4 py-3 border ${
-                      formErrors.password
-                        ? "border-red-500"
-                        : "border-gray-300 dark:border-slate-700"
-                    } placeholder-gray-500 dark:placeholder-slate-400 text-gray-900 dark:text-slate-50 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 sm:text-base pr-10`}
-                    placeholder="Password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-400 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 dark:focus:ring-offset-slate-900 rounded-md"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-                {formErrors.password && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 py-1">
-                    {formErrors.password.message}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-end mt-2">
-                  <Link
-                    to={`/forgot-password${
-                      redirectUrlFromQuery
-                        ? `?redirect=${encodeURIComponent(
-                            redirectUrlFromQuery
-                          )}`
-                        : ""
-                    }`}
-                    className="text-sm text-primary hover:text-primary-600 dark:hover:text-primary-400 font-medium focus:outline-none focus:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                <div className="mt-6">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 disabled:bg-primary-500 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {isLoading && (
-                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                    )}
-                    {isLoading ? "Signing in..." : "Sign in"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => console.log("Sign in with Google")}
-                className="w-full inline-flex justify-center py-2.5 px-4 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Chrome className="h-5 w-5 mr-2" />
-                Google
-              </button>
-
-              <button
-                type="button"
-                onClick={() => console.log("Sign in with Apple")}
-                className="w-full inline-flex justify-center py-2.5 px-4 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <svg
-                  className="h-5 w-5 mr-2"
-                  viewBox="0 0 24 24"
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="social"
+            type="button"
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
                   fill="currentColor"
-                >
-                  <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
-                </svg>
-                Apple
-              </button>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-slate-400">
-              Don't have an account?{" "}
-              <Link
-                to={`/register${
-                  redirectUrlFromQuery
-                    ? `?redirect=${encodeURIComponent(redirectUrlFromQuery)}`
-                    : ""
-                }`}
-                className="font-medium text-primary hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none focus:underline"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+            }
+          >
+            Google
+          </Button>
+          <Button
+            variant="social"
+            type="button"
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+              </svg>
+            }
+          >
+            Apple
+          </Button>
         </div>
-      </div>
-    </div>
+
+        <div className="text-center pt-6">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="font-medium text-orange-600 hover:text-orange-700 transition-colors"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+
+        <div className="text-center">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Forgot your password?
+          </Link>
+        </div>
+      </form>
+    </AuthLayout>
   );
 };
 

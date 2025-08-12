@@ -1,5 +1,6 @@
 import React, { useState, ReactNode } from "react";
 import { toast } from "react-toastify";
+// import { toast } from "react-hot-toast";
 import {
   User,
   UserGoal,
@@ -7,9 +8,16 @@ import {
   UserAchievement,
   UserWithToken,
   UserCredentials,
+  UserRegistration,
+  RegisterRes,
+  MailVerification,
 } from "../types/user";
 import { fetchApi, fetchWithRefresh } from "../utils";
 import { UserContext } from "../context/UserContext";
+import sec from "react-secure-storage";
+import { useNavigate } from "react-router-dom";
+import { useMessages } from "../hooks/useMessage";
+import { MessageCode } from "../types/message";
 
 // // Hardcoded sample user for login
 // const sampleUser: User = {
@@ -151,19 +159,28 @@ export const defaultDashboardWidgetsConfig = {
 const BASE_URL = import.meta.env.VITE_API_URL + "/user";
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check localStorage
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check sec
   const [user, setUser] = useState<User | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const { showMessage } = useMessages();
+
+  const navigate = useNavigate();
+
   const [accessToken, setAccessToken] = useState<string | null>(
-    () => (localStorage.getItem("aspk") as string) || null
+    () => (sec.getItem("aspk") as string) || null
   );
 
   const isAuthenticated = !!user;
 
-  const handleAuthSuccess = (data: UserWithToken) => {
-    localStorage.setItem("aspk", data.accessToken);
-    setAccessToken(data.accessToken);
+  const handleAuthSuccess = (data: UserWithToken | undefined) => {
+    if (data) {
+      sec.setItem("aspk", data.accessToken as string);
+      setAccessToken(data.accessToken);
+    } else {
+      sec.removeItem("aspk");
+      setAccessToken("");
+    }
   };
 
   const fetchUser = async () => {
@@ -185,8 +202,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error("Erreur lors du fetch user:", error);
       setUser(null);
       setAccessToken(null);
-      localStorage.removeItem("aspk");
-      localStorage.removeItem("rft");
+      sec.removeItem("aspk");
+      sec.removeItem("rft");
     } finally {
       setIsLoading(false);
     }
@@ -221,25 +238,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
       });
       const { message, error, data } = res;
 
+      showMessage(
+        message as MessageCode,
+        {
+          name: user?.fname as string,
+        },
+        {
+          language: "fr",
+        }
+      );
+
       if (error) {
-        setMessage(message);
-        setMessage(
-          message ?? "Erreur lors de la connxion : données manquantes."
-        );
+        const _message =
+          message ?? "Erreur lors de la connxion : données manquantes.";
+
+        setMessage(_message);
+
+        // toast.error(_message);
       }
 
-      if (!data) {
-        setMessage(
-          message ?? "Données utilisateur manquantes dans la réponse."
-        );
-
-        console.log("ERR: ", data);
-
-        throw new Error("Données utilisateur manquantes dans la réponse.");
-      }
-      const { accessToken, refreshToken } = data;
+      const { accessToken, refreshToken } = data!;
 
       handleAuthSuccess(data);
+
+      // toast.success(message);
+      // showMessage(message as MessageCode, {
+      //   name: user?.fname as string,
+      // });
 
       return { accessToken, refreshToken };
     } catch (error) {
@@ -249,19 +274,129 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   };
+  const register = async (props: UserRegistration): Promise<RegisterRes> => {
+    setIsLoading(true);
+    try {
+      const res = await fetchApi<Record<string, string>>(
+        `${BASE_URL}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(props),
+        }
+      );
+      const { message, error } = res;
+
+      if (error) {
+        const _message =
+          message ?? "Erreur lors de la connxion : données manquantes.";
+
+        setMessage(_message);
+        toast.error(_message);
+      }
+
+      toast.success(message);
+
+      return { error, message };
+    } catch (error) {
+      console.error("Erreur lors de la connexion :", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyMail = async (token: string): Promise<MailVerification> => {
+    setIsLoading(true);
+    try {
+      const res = await fetchApi<{ email?: string }>(
+        `${BASE_URL}/verify-mail`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: token }),
+        }
+      );
+      const { error, data } = res;
+
+      if (error) {
+        if (data && data.email) {
+          return { status: "expired", email: data.email };
+        } else {
+          return { status: "invalid" };
+        }
+      }
+
+      return { status: "success" };
+    } catch (error) {
+      console.error("Erreur lors de la connexion :", error);
+      return { status: "error" };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const resendVerificationMail = async (
+    email: string
+  ): Promise<{ message: string | null; resent: boolean }> => {
+    setIsLoading(true);
+    try {
+      const res = await fetchApi<void>(`${BASE_URL}/resend-mail`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email }),
+      });
+      const { message, error } = res;
+
+      if (error) {
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+
+        return { message: message, resent: false };
+      }
+
+      showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+
+      return { message: message, resent: true };
+    } catch (error) {
+      console.error("Erreur lors de l'envoie du mail de confirmation:", error);
+      return { message, resent: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = () => {
-    localStorage.removeItem("user"); // Remove user from storage
+    sec.removeItem("aspk"); // Remove user from storage
+    sec.removeItem("rft");
     setUser(null);
     setMessage(null);
     toast.info("You have been logged out.");
+
+    navigate("/login");
   };
 
   const updateUserProfile = (updatedProfileData: Partial<User>) => {
     setUser((prevUser) => {
       if (!prevUser) return null;
       const updatedUser = { ...prevUser, ...updatedProfileData };
-      localStorage.setItem("user", JSON.stringify(updatedUser)); // Persist changes
+      sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
       toast.success("Profile updated successfully!");
       return updatedUser;
     });
@@ -281,7 +416,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         completed: false,
       };
       const updatedUser = { ...prevUser, goals: [newGoal, ...prevUser.goals] };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sec.setItem("user", JSON.stringify(updatedUser));
       toast.success("Goal added successfully: " + newGoal.title);
       return updatedUser;
     });
@@ -312,7 +447,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return goal;
       });
       const updatedUser = { ...prevUser, goals: updatedGoals };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sec.setItem("user", JSON.stringify(updatedUser));
       if (goalCompletedToast) {
         const completedGoal = updatedGoals.find((g) => g.id === goalId);
         toast.success(`Goal completed: ${completedGoal?.title}!`);
@@ -329,7 +464,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const goalToDelete = prevUser.goals.find((g) => g.id === goalId);
       const updatedGoals = prevUser.goals.filter((goal) => goal.id !== goalId);
       const updatedUser = { ...prevUser, goals: updatedGoals };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sec.setItem("user", JSON.stringify(updatedUser));
       if (goalToDelete) {
         toast.info(`Goal deleted: ${goalToDelete.title}`);
       } else {
@@ -346,7 +481,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         ...prevUser,
         preferences: { ...(prevUser.preferences || {}), ...preferences },
       };
-      localStorage.setItem("user", JSON.stringify(updatedUser)); // Persist changes
+      sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
       toast.success("Preferences saved successfully!");
       return updatedUser;
     });
@@ -412,7 +547,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         ...prevUser,
         achievements: [...prevUser.achievements, newAchievement],
       };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      sec.setItem("user", JSON.stringify(updatedUser));
       toast.success("Achievement Unlocked: Early Riser!");
       return updatedUser;
     });
@@ -426,6 +561,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         message,
         login,
+        register,
+        verifyMail,
+        resendVerificationMail,
         logout,
         updateUserProfile,
         updateUserPreferences,

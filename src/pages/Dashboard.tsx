@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const userName = user.name || "Utilisateur";
+  const userName = user?.fname || "Utilisateur";
 
   // Determine active widget configuration
   const activeWidgetConfig =

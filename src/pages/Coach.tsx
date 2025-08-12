@@ -13,10 +13,8 @@ import {
   Lightbulb,
   Activity,
 } from "lucide-react"; // Added new icons
-import ChatInterface, {
-  ChatMessage,
-  Suggestion,
-} from "../components/chat/ChatInterface";
+import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
+import { Message } from "../types/AiCoach";
 // Removed motion import as it's not used after old chat UI removal, ChatInterface handles its own animations
 // import { motion } from 'framer-motion';
 
@@ -76,13 +74,15 @@ const trainingPlans = [
 export default function Coach() {
   // const { user } = useUser();
   // const [query, setQuery] = useState(''); // Removed old query state
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+  const [chatMessages, setChatMessages] = useState<Message[]>([
     // Renamed and typed state
     {
       id: "init-" + Date.now(),
-      text: "Hi there! I'm your running coach AI. How can I help you today with your training?",
-      sender: "ai",
-      timestamp: new Date(),
+      message:
+        "Hi there! I'm your running coach AI. How can I help you today with your training?",
+      sender: "bot",
+      createdAt: new Date().toISOString(),
+      type: "text",
     },
   ]);
   const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
@@ -91,11 +91,12 @@ export default function Coach() {
     // Updated signature
     if (!messageText.trim()) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: Message = {
       id: "user-" + Date.now(),
-      text: messageText,
+      type: "text",
+      message: messageText,
       sender: "user",
-      timestamp: new Date(),
+      createdAt: new Date().toISOString(),
     };
     setChatMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
@@ -120,11 +121,12 @@ export default function Coach() {
           "Based on your recent running data, I'd suggest focusing on consistency this week. Try for 3-4 runs with at least one day of rest between harder efforts. Your endurance is improving nicely, and we should capitalize on that momentum.";
       }
 
-      const aiMessage: ChatMessage = {
+      const aiMessage: Message = {
         id: "ai-" + Date.now(),
-        text: responseText,
-        sender: "ai",
-        timestamp: new Date(),
+        type: "text",
+        message: responseText,
+        sender: "bot",
+        createdAt: new Date().toLocaleString(),
       };
       setChatMessages((prev) => [...prev, aiMessage]);
       setIsAiTyping(false);
@@ -134,22 +136,24 @@ export default function Coach() {
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
-    const userMessage: ChatMessage = {
+    const userMessage: Message = {
       id: "user-suggestion-" + Date.now(),
-      text: suggestion.text,
+      type: "text",
+      message: suggestion.text,
       sender: "user",
-      timestamp: new Date(),
+      createdAt: new Date().toLocaleString(),
     };
     setChatMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
     // Simulate AI response based on suggestion
     setTimeout(() => {
-      const aiResponse: ChatMessage = {
+      const aiResponse: Message = {
         id: "ai-suggestion-response-" + Date.now(),
-        text: `Regarding "${suggestion.text}", let's explore that. (This is a demo AI response for suggestions)`,
-        sender: "ai",
-        timestamp: new Date(),
+        type: "text",
+        message: `Regarding "${suggestion.text}", let's explore that. (This is a demo AI response for suggestions)`,
+        sender: "bot",
+        createdAt: new Date().toLocaleString(),
       };
       setChatMessages((prev) => [...prev, aiResponse]);
       setIsAiTyping(false);
@@ -157,11 +161,12 @@ export default function Coach() {
   };
 
   const handleTalkToHumanClick = () => {
-    const systemMessage: ChatMessage = {
+    const systemMessage: Message = {
       id: "system-" + Date.now(),
-      text: "Talk to Human requested. An expert will be notified (demo).",
+      type: "text",
+      message: "Talk to Human requested. An expert will be notified (demo).",
       sender: "system",
-      timestamp: new Date(),
+      createdAt: new Date().toLocaleString(),
     };
     setChatMessages((prev) => [...prev, systemMessage]);
     console.log("Talk to human requested from main Coach page.");

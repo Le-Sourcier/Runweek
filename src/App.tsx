@@ -31,6 +31,8 @@ import { PRProvider } from "./context/PRContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserProvider } from "./providers/UserProvider";
+import { MessageProvider } from "./providers/MessageProvider";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 // This component wraps the main application layout and its specific context providers
 const MainAppLayoutContent: React.FC = () => {
@@ -45,6 +47,7 @@ const MainAppLayoutContent: React.FC = () => {
             {/* Layout should contain an <Outlet /> for the nested routes */}
             <Outlet />
           </Layout>
+
           <ToastContainer
             position="top-right"
             autoClose={3000}
@@ -67,6 +70,7 @@ const MainAppLayoutContent: React.FC = () => {
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUser();
   const location = useLocation();
+  const { theme: appTheme } = useTheme(); // Get current app theme
 
   const loadingScreen = (
     <div
@@ -84,91 +88,119 @@ const AppRoutes: React.FC = () => {
   );
 
   return (
-    <Routes>
-      {/* Public Authentication Routes: Redirect if already authenticated */}
-      <Route
-        path="/login"
-        element={
-          isLoading ? (
-            loadingScreen
-          ) : isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <LoginPage />
-          )
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          isLoading ? (
-            loadingScreen
-          ) : isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <RegistrationPage />
-          )
-        }
-      />
-      <Route
-        path="/forgot-password"
-        element={
-          isLoading ? (
-            loadingScreen
-          ) : isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PasswordRecoveryRequestPage />
-          )
-        }
-      />
-      <Route
-        path="/reset-password/:token"
-        element={
-          isLoading ? (
-            loadingScreen
-          ) : isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <PasswordResetPage />
-          )
-        }
-      />
-
-      {/* Protected Application Routes */}
-      <Route
-        path="/*" // This will match all paths not caught by the auth routes above
-        element={
-          isLoading ? (
-            loadingScreen
-          ) : isAuthenticated ? (
-            <MainAppLayoutContent />
-          ) : (
-            <Navigate
-              to={`/login?redirect=${encodeURIComponent(
-                `${location.pathname}${location.search}${location.hash}`
-              )}`}
-              replace
-            />
-          )
-        }
-      >
-        {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
-        <Route index element={<Dashboard />} />{" "}
-        {/* Default route for "/" after login */}
-        <Route path="statistics" element={<Statistics />} />
-        <Route path="coach" element={<Coach />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="goals" element={<Goals />} />
-        <Route path="achievements" element={<Achievements />} />
-        <Route path="personal-records" element={<PersonalRecords />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="support" element={<Support />} />
-        <Route path="settings" element={<Settings />} />
-        {/* Fallback for any unmatched protected routes - redirect to dashboard */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+    <div>
+      {/* <Toaster position="top-right" reverseOrder={false} /> */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        // stacked={true}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={appTheme} // Dynamically set theme
+      />{" "}
+      <Routes>
+        {/* Public Authentication Routes: Redirect if already authenticated */}
+        <Route
+          path="/login"
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <RegistrationPage />
+            )
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <PasswordRecoveryRequestPage />
+            )
+          }
+        />{" "}
+        <Route
+          path="/verify-mail"
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <VerifyEmailPage />
+            )
+          }
+        />
+        {/* <Route path="/verify-email" element={<VerifyEmailPage />} /> */}
+        <Route
+          path="/reset-password/:token"
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <PasswordResetPage />
+            )
+          }
+        />
+        {/* Protected Application Routes */}
+        <Route
+          path="/*" // This will match all paths not caught by the auth routes above
+          element={
+            isLoading ? (
+              loadingScreen
+            ) : isAuthenticated ? (
+              <MainAppLayoutContent />
+            ) : (
+              <Navigate
+                to={`/login?redirect=${encodeURIComponent(
+                  `${location.pathname}${location.search}${location.hash}`
+                )}`}
+                replace
+              />
+            )
+          }
+        >
+          {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
+          <Route index element={<Dashboard />} />{" "}
+          {/* Default route for "/" after login */}
+          <Route path="statistics" element={<Statistics />} />
+          <Route path="coach" element={<Coach />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="goals" element={<Goals />} />
+          <Route path="achievements" element={<Achievements />} />
+          <Route path="personal-records" element={<PersonalRecords />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="support" element={<Support />} />
+          <Route path="settings" element={<Settings />} />
+          {/* Fallback for any unmatched protected routes - redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </div>
   );
 };
 
@@ -176,15 +208,17 @@ const AppRoutes: React.FC = () => {
 function App() {
   return (
     <ThemeProvider>
-      {" "}
-      {/* Added ThemeProvider wrapper */}
-      <FloatingCoachProvider>
+      <MessageProvider>
         {" "}
-        {/* Add the new provider here */}
-        <UserProvider>
-          <AppRoutes />
-        </UserProvider>
-      </FloatingCoachProvider>
+        {/* Added ThemeProvider wrapper */}
+        <FloatingCoachProvider>
+          {" "}
+          {/* Add the new provider here */}
+          <UserProvider>
+            <AppRoutes />
+          </UserProvider>
+        </FloatingCoachProvider>
+      </MessageProvider>
     </ThemeProvider>
   );
 }
