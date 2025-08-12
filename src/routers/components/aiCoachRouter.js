@@ -80,13 +80,21 @@ function genererId() {
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "SUCCÈS"
+ *                   example: "SUCCESS"
  *                 data:
  *                   $ref: '#/components/schemas/MessageCoachIA'
  */
 router.post("/", async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
+
+    // Save user message
+    await db.ChatMessages.create({
+        user_id: userId,
+        message_content: message,
+        sender: 'user',
+        message_type: 'text',
+    });
 
     if (!message) {
         return res.status(400).json({
@@ -153,6 +161,13 @@ router.post("/", async (req, res) => {
         };
 
         const aiReply = await askAI(message, userContext);
+
+        await db.ChatMessages.create({
+            user_id: userId,
+            message_content: aiReply,
+            sender: 'bot',
+            message_type: 'text',
+        });
 
         return res.status(200).json({
             error: false,
@@ -297,6 +312,19 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
 
         const standardizedWorkouts = Array.isArray(workouts) ? workouts : [workouts];
         
+        for (const workout of standardizedWorkouts) {
+            await db.ChatMessages.create({
+                user_id: userId,
+                message_content: `${workout.title}: ${workout.description}`,
+                sender: 'bot',
+                message_type: 'recommandation',
+                metadata: {
+                    icon: workout.icon,
+                    originalData: workout
+                }
+            });
+        }
+
         return res.status(200).json({
             error: false,
             status: 200,
@@ -426,6 +454,19 @@ router.post("/running-plan", async (req, res) => {
 
         const weeklyPlan = Array.isArray(plan.weekly_plan) ? plan.weekly_plan : [];
 
+        for (const dayPlan of weeklyPlan) {
+            await db.ChatMessages.create({
+                user_id: userId,
+                message_content: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
+                sender: 'bot',
+                message_type: 'advices',
+                metadata: {
+                    icon: dayPlan.icon,
+                    day: dayPlan.day
+                }
+            });
+        }
+
         return res.status(200).json({
             error: false,
             status: 200,
@@ -552,6 +593,18 @@ router.post("/recommendations", async (req, res) => {
 
         const recs = Array.isArray(recommendations.recommendations) ? recommendations.recommendations : [];
 
+        for (const rec of recs) {
+            await db.ChatMessages.create({
+                user_id: userId,
+                message_content: `${rec.title} (${rec.category}): ${rec.description}`,
+                sender: 'bot',
+                message_type: 'recommandation',
+                metadata: {
+                    category: rec.category
+                }
+            });
+        }
+
         return res.status(200).json({
             error: false,
             status: 200,
@@ -574,6 +627,143 @@ router.post("/recommendations", async (req, res) => {
             status: 500,
             message: "INTERNAL_SERVER_ERROR",
             data: { error: "Erreur interne du coach IA." }
+        });
+    }
+});
+
+/**
+ * @openapi
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     MessageCoachIA:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 12
+ *         type:
+ *           type: string
+ *           description: Type de message (texte, image, audio, etc.)
+ *           example: "text"
+ *         message:
+ *           type: string
+ *           description: Contenu du message
+ *           example: "Bonjour, comment puis-je vous aider aujourd'hui ?"
+ *         sender:
+ *           type: string
+ *           description: Expéditeur du message (user ou coach)
+ *           example: "bot"
+ *         metadata:
+ *           type: object
+ *           description: Métadonnées associées au message
+ *           example:
+ *             sentiment: "positif"
+ *             confidence: 0.92
+ *
+ * /api/aicoach/history:
+ *   get:
+ *     tags:
+ *       - Coach IA
+ *     summary: Récupérer l'historique des chats avec le coach IA
+ *     description: >
+ *       Retourne l'historique complet des messages échangés avec le coach IA pour l'utilisateur authentifié.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Historique des messages du coach IA.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/MessageCoachIA'
+ *       401:
+ *         description: Non autorisé. L'utilisateur doit fournir un token JWT valide.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: integer
+ *                   example: 401
+ *                 message:
+ *                   type: string
+ *                   example: "UNAUTHORIZED"
+ *       500:
+ *         description: Erreur interne du serveur.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "INTERNAL_SERVER_ERROR"
+ *                 data:
+ *                   type: object
+ *                   example:
+ *                     error: "Erreur interne lors de la récupération de l'historique du chat."
+ */
+router.get("/history", async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const chatHistory = await db.ChatMessages.findAll({
+            where: { user_id: userId },
+            order: [['created_at', 'ASC']],
+        });
+
+        // Map to MessageCoachIA schema if needed, or return raw data
+        const formattedHistory = chatHistory.map(msg => ({
+            id: msg.id,
+            type: msg.message_type,
+            message: msg.message_content,
+            sender: msg.sender,
+            metadata: msg.metadata, // Include metadata if present
+        }));
+
+        return res.status(200).json({
+            error: false,
+            status: 200,
+            message: "SUCCESS",
+            data: formattedHistory,
+        });
+
+    } catch (err) {
+        console.error("Erreur lors de la récupération de l'historique du chat:", err.message);
+        return res.status(500).json({
+            error: true,
+            status: 500,
+            message: "INTERNAL_SERVER_ERROR",
+            data: { error: "Erreur interne lors de la récupération de l'historique du chat." }
         });
     }
 });

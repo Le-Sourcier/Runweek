@@ -48,8 +48,8 @@ module.exports = {
             if (await Users.findOne({ where: { email } }))
                 return serverMessage(res, "ACCOUNT_ALREADY_EXISTS");
 
-            if (await Profiles.findOne({ where: { phone } }))
-                return serverMessage(res, "PHONE_ALREADY_EXISTS");
+            // if (await Profiles.findOne({ where: { phone } }))
+            //     return serverMessage(res, "PHONE_ALREADY_EXISTS");
 
             // Création utilisateur
             const user = await Users.create(
@@ -155,7 +155,7 @@ module.exports = {
         try {
             const { id: admin_id } = req.user;
             const { fname, lname, phone, email, role, credit = 0 } = req.body;
-            if (!fname || !lname || !phone || !email || !role) {
+            if (!fname || !lname || !email || !role) {
                 return serverMessage(res, "REQUIRED_FIELDS_MISSING");
             }
 
@@ -163,9 +163,7 @@ module.exports = {
             if (existingUser)
                 return serverMessage(res, "ACCOUNT_ALREADY_EXISTS");
 
-            const existingPhone = await Profiles.findOne({ where: { phone } });
-            if (existingPhone)
-                return serverMessage(res, "PHONE_ALREADY_EXISTS");
+            
 
             const admin = await Users.findByPk(admin_id, {
                 include: [

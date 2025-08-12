@@ -27,9 +27,8 @@ const userRegisterValidator = async (req, res, next) => {
             lname: Joi.string().required().messages({
                 "any.required": "LAST_NAME_REQUIRED",
             }),
-            phone: Joi.number().positive().required().messages({
+            phone: Joi.number().positive().optional().messages({
                 "number.base": "PHONE_NUMBER_INVALID",
-                "any.required": "PHONE_REQUIRED",
             }),
         })
             .unknown(true) // Disallow extra fields
