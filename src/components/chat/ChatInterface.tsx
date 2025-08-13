@@ -10,6 +10,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { useChatStore } from "../../stores/userChatStore";
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -240,7 +241,7 @@ export interface ChatInterfaceProps {
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   initialMessages = [],
-  onSendMessage,
+  // onSendMessage,
   suggestionChips,
   onSuggestionClick,
   onTalkToHumanClick,
@@ -252,10 +253,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<null | HTMLTextAreaElement>(null);
+  const { sendMessage: onSendMessage, getMessages } = useChatStore();
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load initial messages
   useEffect(() => {
-    setMessages(initialMessages);
-  }, [initialMessages]);
+    const loadMessages = async () => {
+      // Use initialMessages if provided
+      if (initialMessages.length > 0) {
+        setMessages(initialMessages);
+        return;
+      }
+
+      // Otherwise fetch from API
+      setIsLoadingHistory(true);
+      setError(null);
+      try {
+        const msg = await getMessages();
+        setMessages(msg);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load chat history"
+        );
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadMessages();
+  }, [initialMessages]); // Only depend on initialMessages
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -276,7 +303,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessageInternal = async () => {
     const trimmedInput = inputValue.trim();
     if (!trimmedInput) return;
-    await onSendMessage(trimmedInput);
+    const message = await onSendMessage(trimmedInput);
+    setMessages((prev) => [...prev, message]);
+
     setInputValue("");
   };
 

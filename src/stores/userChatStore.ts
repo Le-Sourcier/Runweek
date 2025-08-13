@@ -17,7 +17,7 @@ export const useChatStore = create<ChatState>((set) => ({
     try {
       const accessToken = sec.getItem("aspk");
 
-      const res = await fetchApi<Message[]>(`${BASE_URL}/get-message`, {
+      const res = await fetchApi<Message[]>(`${BASE_URL}/aicoach/history`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
