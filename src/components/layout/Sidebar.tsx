@@ -86,11 +86,11 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
           <div className="flex items-center gap-3">
             <img
               src={user.profileImage}
-              alt={user.name}
+              alt={user.fname}
               className="w-10 h-10 rounded-full object-cover"
             />
             <div>
-              <h3 className="font-medium text-sm">{user.name}</h3>
+              <h3 className="font-medium text-sm">{user.fname}</h3>
               <p className="text-xs text-gray-500">Level {user.stats.level}</p>
             </div>
           </div>
@@ -132,13 +132,12 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
             </li>
           ))}
         </ul>
-      </nav>
 
-      {/* Settings */}
-      <div className="p-3 border-t dark:border-gray-700">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) => `
+        {/* Settings */}
+        <div className="p-3 border-t dark:border-gray-700">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
                   ${
                     isActive
@@ -146,10 +145,11 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
                   }
                 `}
-        >
-          <span>Paramètres</span>
-        </NavLink>
-      </div>
+          >
+            <span>Paramètres</span>
+          </NavLink>
+        </div>
+      </nav>
     </aside>
   );
 }
