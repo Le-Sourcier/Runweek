@@ -258,7 +258,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             language: "fr",
           }
         );
-        
+
         throw new Error(_message);
       }
 
@@ -431,7 +431,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         current: 0,
         completed: false,
       };
-      const updatedUser = { ...prevUser, goals: [newGoal, ...prevUser.goals] };
+      const updatedUser = {
+        ...prevUser,
+        goals: [newGoal, ...(prevUser.goals || [])],
+      };
       sec.setItem("user", JSON.stringify(updatedUser));
       toast.success("Goal added successfully: " + newGoal.title);
       return updatedUser;
@@ -445,7 +448,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser((prevUser) => {
       if (!prevUser) return null;
       let goalCompletedToast = false;
-      const updatedGoals = prevUser.goals.map((goal) => {
+      const updatedGoals = (prevUser.goals || []).map((goal) => {
         if (goal.id === goalId) {
           const fullyUpdatedGoal = { ...goal, ...updatedData };
           // Check for auto-completion
@@ -477,8 +480,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const deleteGoal = (goalId: string) => {
     setUser((prevUser) => {
       if (!prevUser) return null;
-      const goalToDelete = prevUser.goals.find((g) => g.id === goalId);
-      const updatedGoals = prevUser.goals.filter((goal) => goal.id !== goalId);
+      const goalToDelete = (prevUser.goals || []).find((g) => g.id === goalId);
+      const updatedGoals = (prevUser.goals || []).filter(
+        (goal) => goal.id !== goalId
+      );
       const updatedUser = { ...prevUser, goals: updatedGoals };
       sec.setItem("user", JSON.stringify(updatedUser));
       if (goalToDelete) {
