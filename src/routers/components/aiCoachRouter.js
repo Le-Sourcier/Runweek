@@ -34,11 +34,6 @@ const db = require("../../models");
  *         - sender
  */
 
-// Fonction utilitaire pour générer des IDs uniques
-function genererId() {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-}
 
 /**
  * @openapi
@@ -87,15 +82,9 @@ function genererId() {
 router.post("/", async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
+    //const userId = "61f633f1-b841-4430-8e9c-680a32bad96f";
 
-    // Save user message
-    await db.ChatMessages.create({
-        user_id: userId,
-        message_content: message,
-        sender: 'user',
-        message_type: 'text',
-    });
-
+    // Vérification avant d'enregistrer en DB
     if (!message) {
         return res.status(400).json({
             error: true,
@@ -106,6 +95,14 @@ router.post("/", async (req, res) => {
     }
 
     try {
+        // Sauvegarde du message utilisateur
+        const userMessage = await db.ChatMessages.create({
+            user_id: userId,
+            message_content: message,
+            sender: 'user',
+            message_type: 'text',
+        });
+
         const user = await db.Users.findByPk(userId, {
             include: [
                 {
@@ -160,9 +157,16 @@ router.post("/", async (req, res) => {
             })),
         };
 
-        const aiReply = await askAI(message, userContext);
+        //const aiReply = await askAI(message, userContext);
+        try {
+    const aiReply = await askAI(message, userContext);
+} catch (err) {
+    console.error("Erreur brute OpenAI :", err);
+    throw err; // pour voir si c'est un quota, une clé invalide, etc.
+}
 
-        await db.ChatMessages.create({
+        // Sauvegarde du message AI
+        const aiMessage = await db.ChatMessages.create({
             user_id: userId,
             message_content: aiReply,
             sender: 'bot',
@@ -174,7 +178,7 @@ router.post("/", async (req, res) => {
             status: 200,
             message: "SUCCESS",
             data: {
-                id: generateId(),
+                id: aiMessage.id,
                 type: "text",
                 message: aiReply,
                 sender: "bot"
@@ -182,7 +186,7 @@ router.post("/", async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Erreur IA coach:", err.message);
+        console.error("Erreur IA coach:", err);
         return res.status(500).json({
             error: true,
             status: 500,
@@ -309,15 +313,27 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
                 data: { error: "Réponse IA invalide." }
             });
         }
-
         const standardizedWorkouts = Array.isArray(workouts) ? workouts : [workouts];
-        
+
+        const workoutResponses = [];
+
         for (const workout of standardizedWorkouts) {
-            await db.ChatMessages.create({
+            const workoutMsg = await db.ChatMessages.create({
                 user_id: userId,
                 message_content: `${workout.title}: ${workout.description}`,
                 sender: 'bot',
                 message_type: 'recommandation',
+                metadata: {
+                    icon: workout.icon,
+                    originalData: workout
+                }
+            });
+
+            workoutResponses.push({
+                id: workoutMsg.id,
+                type: "recommandation",
+                message: `${workout.title}: ${workout.description}`,
+                sender: "bot",
                 metadata: {
                     icon: workout.icon,
                     originalData: workout
@@ -329,16 +345,7 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: standardizedWorkouts.map(workout => ({
-                id: generateId(),
-                type: "recommandation",
-                message: `${workout.title}: ${workout.description}`,
-                sender: "bot",
-                metadata: {
-                    icon: workout.icon,
-                    originalData: workout
-                }
-            }))
+            data: workoutResponses
         });
 
     } catch (err) {
@@ -453,13 +460,25 @@ router.post("/running-plan", async (req, res) => {
         }
 
         const weeklyPlan = Array.isArray(plan.weekly_plan) ? plan.weekly_plan : [];
+        const planResponses = [];
 
         for (const dayPlan of weeklyPlan) {
-            await db.ChatMessages.create({
+            const planMsg = await db.ChatMessages.create({
                 user_id: userId,
                 message_content: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
                 sender: 'bot',
                 message_type: 'advices',
+                metadata: {
+                    icon: dayPlan.icon,
+                    day: dayPlan.day
+                }
+            });
+
+            planResponses.push({
+                id: planMsg.id,
+                type: "advices",
+                message: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
+                sender: "bot",
                 metadata: {
                     icon: dayPlan.icon,
                     day: dayPlan.day
@@ -471,17 +490,9 @@ router.post("/running-plan", async (req, res) => {
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: weeklyPlan.map(dayPlan => ({
-                id: generateId(),
-                type: "advices",
-                message: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
-                sender: "bot",
-                metadata: {
-                    icon: dayPlan.icon,
-                    day: dayPlan.day
-                }
-            }))
+            data: planResponses
         });
+
 
     } catch (err) {
         console.error("Erreur IA coach running plan:", err.message);
@@ -592,13 +603,24 @@ router.post("/recommendations", async (req, res) => {
         }
 
         const recs = Array.isArray(recommendations.recommendations) ? recommendations.recommendations : [];
+        const recResponses = [];
 
         for (const rec of recs) {
-            await db.ChatMessages.create({
+            const recMsg = await db.ChatMessages.create({
                 user_id: userId,
                 message_content: `${rec.title} (${rec.category}): ${rec.description}`,
                 sender: 'bot',
                 message_type: 'recommandation',
+                metadata: {
+                    category: rec.category
+                }
+            });
+
+            recResponses.push({
+                id: recMsg.id, // ✅ ID réel de la BDD
+                type: "recommandation",
+                message: `${rec.title} (${rec.category}): ${rec.description}`,
+                sender: "bot",
                 metadata: {
                     category: rec.category
                 }
@@ -609,16 +631,9 @@ router.post("/recommendations", async (req, res) => {
             error: false,
             status: 200,
             message: "SUCCESS",
-            data: recs.map(rec => ({
-                id: generateId(),
-                type: "recommandation",
-                message: `${rec.title} (${rec.category}): ${rec.description}`,
-                sender: "bot",
-                metadata: {
-                    category: rec.category
-                }
-            }))
+            data: recResponses
         });
+
 
     } catch (err) {
         console.error("Erreur IA coach recommendations:", err.message);

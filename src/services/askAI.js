@@ -1,6 +1,7 @@
 const { OpenAI } = require("openai");
 require("dotenv").config();
 
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -9,6 +10,11 @@ const openai = new OpenAI({
 let lastCall = 0;
 
 async function askAI(userMessage, userContext) {
+
+    console.log("Clé utilisée :", process.env.OPENAI_API_KEY);
+console.log("Message envoyé :", userMessage);
+console.log("Contexte utilisateur :", userContext);
+
     // Throttle : attendre au moins 1 seconde entre les appels
     const now = Date.now();
     if (now - lastCall < 1000) {
@@ -55,17 +61,30 @@ async function askAI(userMessage, userContext) {
 
         return chatCompletion.choices[0].message.content;
 
-    } catch (error) {
-        if (error.status === 429) {
-            // Erreur de quota ou trop de requêtes
-            console.error("Erreur IA coach : Quota dépassé ou trop de requêtes envoyées.");
-            return "Le service IA a atteint sa limite d'utilisation pour le moment. Merci de réessayer plus tard.";
-        }
+    // } catch (error) {
+    //     if (error.status === 429) {
+    //         // Erreur de quota ou trop de requêtes
+    //         console.error("Erreur IA coach : Quota dépassé ou trop de requêtes envoyées.");
+    //         return "Le service IA a atteint sa limite d'utilisation pour le moment. Merci de réessayer plus tard.";
+    //     }
 
-        // Autres erreurs API
-        console.error("Erreur IA coach :", error);
-        return " Une erreur est survenue lors de la génération de la réponse du coach.";
-    }
+    //     // Autres erreurs API
+    //     console.error("Erreur IA coach :", error);
+    //     return " Une erreur est survenue lors de la génération de la réponse du coach.";
+    // }
+    } catch (error) {
+    // console.error("Erreur IA coach (code):", error.status);
+    // console.error("Erreur IA coach (message):", error.message);
+    // console.error("Détails complets:", error);
+
+    // if (error.status === 429) {
+    //     return `Limite atteinte : ${error.message || "Quota ou fréquence dépassé."}`;
+    // }
+    console.error("Erreur IA coach:", error.response?.data || error.message || error);
+    throw error;
+
+    return "Une erreur est survenue lors de la génération de la réponse du coach.";
+}
 }
 
 module.exports = askAI;
