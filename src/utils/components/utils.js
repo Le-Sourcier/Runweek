@@ -284,17 +284,32 @@ const isSuperAdmin = (user) => {
     return user && ["SUPER_ADMIN"].includes(user.role);
 };
 
+const { getIO } = require("../../socket/socketManager");
+
 async function createNotification({ user_id, type, content, metadata }) {
-    try {
-        await Notifications.create({
-            user_id,
-            type,
-            content,
-            metadata,
-        });
-    } catch (err) {
-        console.error("Failed to create notification:", err);
-    }
+  try {
+    const notification = await Notifications.create({
+      user_id,
+      type,
+      content,
+      metadata,
+    });
+
+    // Envoyer la notification en temps réel
+    const io = getIO();
+    const notificationData = {
+      id: notification.id,
+      type: notification.type,
+      content: notification.content,
+      is_read: notification.is_read,
+      createdAt: notification.createdAt,
+      metadata: notification.metadata,
+    };
+    io.to(user_id.toString()).emit("new_notification", notificationData);
+
+  } catch (err) {
+    console.error("Failed to create notification:", err);
+  }
 }
 
 function generateRandomPassword(length = 12) {

@@ -18,7 +18,10 @@ const { authorize } = require("../../middlewares/authMiddleware");
  *     tags:
  *       - Activities
  *     summary: Log a new activity
- *     description: Creates a new activity record for the authenticated user.
+ *     description: >
+ *       Creates a new activity record for the authenticated user.  
+ *       Also creates a notification for the user upon successful creation.
+ *       The request must be sent with `Content-Type: application/json` and include all required fields.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -27,6 +30,15 @@ const { authorize } = require("../../middlewares/authMiddleware");
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/ActivityInput'
+ *           example:
+ *             type: "Course à pied"
+ *             title: "Jogging du matin"
+ *             description: "Petit footing avant le travail"
+ *             distance: 5
+ *             duration: 45
+ *             date: "2025-08-14T06:30:00Z"
+ *             metadata:
+ *               terrain: "asphalte"
  *     responses:
  *       201:
  *         description: Activity created successfully.
@@ -47,7 +59,7 @@ const { authorize } = require("../../middlewares/authMiddleware");
  *                 data:
  *                   $ref: '#/components/schemas/Activity'
  *       400:
- *         description: Bad request (e.g., missing required fields).
+ *         description: Bad request (e.g., missing required fields or invalid body format).
  *         content:
  *           application/json:
  *             schema:
@@ -76,6 +88,8 @@ const { authorize } = require("../../middlewares/authMiddleware");
  *               $ref: '#/components/schemas/Error500'
  */
 router.post("/", authorize, activityController.createActivity);
+
+
 
 /**
  * @openapi

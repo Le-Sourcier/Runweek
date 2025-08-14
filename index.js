@@ -1,29 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
-const socketIo = require("socket.io");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const helmet = require("helmet");
-const cookieParser = require("cookie-parser");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./swaggerConfig"); // Import the generated spec
-const config = require("./src/config");
-require("./src/events");
-
-let logger;
-if (process.env.NODE_ENV === "development") {
-  logger = require("./src/utils/components/logger");
-}
-require("./db"); //initialize db instance
-require("./src/events/dbDownloader"); //Auto download database
+const socketManager = require("./src/socket/socketManager");
 
 const app = express();
 const server = http.createServer(app);
 
-const io = socketIo(server, {
-  cors: config.cors,
-});
+const io = socketManager.init(server, { cors: config.cors });
 
 // Sécurité & middlewares
 app.use(helmet());
@@ -58,10 +41,48 @@ app.use("/api", require("./src/routers"));
 // Swagger UI Setup
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Démarrer les sockets
-app.set("io", io);
+// Middleware pour rendre 'io' accessible dans les routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
-io.on("connection", (socket) => {});
+// Gestion des connexions Socket.IO
+io.on("connection", (socket) => {
+  let logger;
+  if (process.env.NODE_ENV === "development") {
+    logger = require("./src/utils/components/logger");
+    logger.info(`Un utilisateur est connecté: ${socket.id}`);
+  } else {
+    console.log(`Un utilisateur est connecté: ${socket.id}`);
+  }
+
+  // L'utilisateur doit s'identifier en émettant cet événement depuis le client
+  socket.on("authenticate", (userId) => {
+    if (userId) {
+      if (process.env.NODE_ENV === "development") {
+        logger.info(
+          `Socket ${socket.id} authentifié pour l'utilisateur ${userId}`
+        );
+      } else {
+        console.log(
+          `Socket ${socket.id} authentifié pour l'utilisateur ${userId}`
+        );
+      }
+      // L'utilisateur rejoint une "room" qui porte son propre ID
+      // pour pouvoir lui envoyer des notifications ciblées.
+      socket.join(userId);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    if (process.env.NODE_ENV === "development") {
+      logger.info(`Utilisateur déconnecté: ${socket.id}`);
+    } else {
+      console.log(`Utilisateur déconnecté: ${socket.id}`);
+    }
+  });
+});
 
 // silence all console outputs on production
 if (process.env.NODE_ENV === "production") {

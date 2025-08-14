@@ -25,7 +25,7 @@ router.get("/login", authController.googleLogin);
  *     description: >
  *       Ce endpoint gère la réponse du flux d'authentification OAuth 2.0 de Google.
  *       Il échange le code d'autorisation contre des jetons d'accès et de rafraîchissement,
- *       puis les stocke en base de données pour les appels futurs à l'API Google Fit.
+ *       puis les stocke en base de données pour les appels futurs à l'API Google Fit. Une notification est envoyée à l'utilisateur en cas de succès.
  *     requestBody:
  *       required: true
  *       content:

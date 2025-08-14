@@ -941,3 +941,120 @@ The server uses Socket.IO to push real-time updates, primarily for job statuses.
 ---
 
 *This API Reference is based on code analysis. Some behaviors, especially for error handling or specific edge cases, might require further testing to fully confirm.*
+
+## Activity Endpoints
+
+Base Path: `/api/activities`
+Authentication: Bearer Token required for all `/api/activities` endpoints.
+
+---
+
+### Create Activity
+
+*   **Endpoint:** `POST /`
+*   **Description:** Creates a new activity for the authenticated user.
+*   **Auth:** Bearer Token
+*   **Request Body:** `application/json`
+
+    ```json
+    {
+        "type": "Running",
+        "title": "Morning Run",
+        "description": "A 5km run in the park.",
+        "distance": 5,
+        "duration": 30,
+        "date": "2025-08-14T10:00:00.000Z",
+        "metadata": {
+            "weather": "Sunny"
+        }
+    }
+    ```
+
+*   **Validation Rules:**
+    *   `type`: (string, required) - The type of activity (e.g., "Running", "Cycling").
+    *   `title`: (string, required) - The title of the activity.
+    *   `description`: (string) - A description of the activity.
+    *   `distance`: (number) - The distance of the activity in kilometers.
+    *   `duration`: (number) - The duration of the activity in minutes.
+    *   `date`: (string, ISO 8601 format) - The date and time of the activity.
+    *   `metadata`: (object) - Any extra data related to the activity.
+
+*   **Success Response (201 - Created):**
+
+    ```json
+    {
+        "error": false,
+        "message": "Activité enregistrée avec succès.",
+        "data": {
+            "id": "activity-uuid",
+            "user_id": "user-uuid",
+            "type": "Running",
+            "title": "Morning Run",
+            "description": "A 5km run in the park.",
+            "distance": 5,
+            "duration": 30,
+            "date": "2025-08-14T10:00:00.000Z",
+            "metadata": {
+                "weather": "Sunny"
+            },
+            "createdAt": "2025-08-14T10:00:00.000Z",
+            "updatedAt": "2025-08-14T10:00:00.000Z"
+        }
+    }
+    ```
+
+*   **Error Responses:**
+    *   `400 Bad Request` ("Le corps de la requête est vide ou invalide.", "Le type et le titre de l'activité sont requis.", "La distance doit être un nombre.", "La durée doit être un nombre.", "La date fournie est invalide.")
+    *   `401 Unauthorized` ("FORBIDDEN_RESOURCE", "TOKEN_EXPIRED", "TOKEN_INVALID")
+    *   `500 Internal Server Error` ("Erreur interne du serveur.")
+
+---
+
+### Get All Activities
+
+*   **Endpoint:** `GET /`
+*   **Description:** Retrieves all activities for the authenticated user, ordered by date in descending order.
+*   **Auth:** Bearer Token
+*   **Success Response (200 - OK):**
+
+    ```json
+    {
+        "error": false,
+        "data": [
+            {
+                "id": "activity-uuid-2",
+                "user_id": "user-uuid",
+                "type": "Cycling",
+                "title": "Evening Ride",
+                "description": null,
+                "distance": 20,
+                "duration": 60,
+                "date": "2025-08-13T18:00:00.000Z",
+                "metadata": null,
+                "createdAt": "2025-08-13T18:00:00.000Z",
+                "updatedAt": "2025-08-13T18:00:00.000Z"
+            },
+            {
+                "id": "activity-uuid-1",
+                "user_id": "user-uuid",
+                "type": "Running",
+                "title": "Morning Run",
+                "description": "A 5km run in the park.",
+                "distance": 5,
+                "duration": 30,
+                "date": "2025-08-14T10:00:00.000Z",
+                "metadata": {
+                    "weather": "Sunny"
+                },
+                "createdAt": "2025-08-14T10:00:00.000Z",
+                "updatedAt": "2025-08-14T10:00:00.000Z"
+            }
+        ]
+    }
+    ```
+
+*   **Error Responses:**
+    *   `401 Unauthorized` ("FORBIDDEN_RESOURCE", "TOKEN_EXPIRED", "TOKEN_INVALID")
+    *   `500 Internal Server Error` ("Erreur interne du serveur.")
+
+---

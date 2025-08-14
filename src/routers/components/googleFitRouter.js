@@ -4,6 +4,7 @@ const router = express.Router();
 
 const getValidAccessToken = require("../../utils/getValidAccessToken");
 const authorizeGoogleFit = require("../../middlewares/googleFitAuth");
+const { createNotification } = require("../../utils");
 
 /**
  * @swagger
@@ -114,6 +115,7 @@ router.get("/steps", authorizeGoogleFit, async (req, res) => {
  *       - Les calories dépensées (com.google.calories.expended)
  *       - La distance parcourue (com.google.distance.delta)
  *       - Les minutes d'activité (com.google.active_minutes)
+ *       Une notification est envoyée à l'utilisateur après une synchronisation réussie.
  *     tags: [Google Fit]
  *     security:
  *       - bearerAuth: []
@@ -193,6 +195,15 @@ router.get("/metrics", authorizeGoogleFit, async (req, res) => {
         },
       }
     );
+
+    await createNotification({
+      user_id: req.user.id,
+      type: "GOOGLE_FIT_SYNC",
+      content: "Vos dernières données Google Fit ont été synchronisées.",
+      metadata: {
+        route: "/metrics",
+      },
+    });
 
     res.status(200).json({
       error: false,

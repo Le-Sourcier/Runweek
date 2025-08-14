@@ -48,7 +48,7 @@ router
    *                 example: Acme Inc.
    *               phone:
    *                 type: string
-   *                 example: "+1234567890"
+   *                 example: "+1234567891"
    *               website:
    *                 type: string
    *                 example: "https://acme.com"

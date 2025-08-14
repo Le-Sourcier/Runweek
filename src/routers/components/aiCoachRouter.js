@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const askAI = require("../../services/askAI");
 const db = require("../../models");
+const { createNotification } = require("../../utils");
 
 /**
  * @openapi
@@ -43,7 +44,7 @@ const db = require("../../models");
  *       - Coach IA
  *     summary: Obtenir des conseils du coach IA
  *     description: >
- *       Envoie un message au coach IA et reçoit une réponse standardisée.
+ *       Envoie un message au coach IA et reçoit une réponse standardisée. Une notification est envoyée à l'utilisateur lorsque la réponse est prête.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -81,8 +82,8 @@ const db = require("../../models");
  */
 router.post("/", async (req, res) => {
     const { message } = req.body;
-    const userId = req.user.id;
-    //const userId = "61f633f1-b841-4430-8e9c-680a32bad96f";
+    //const userId = req.user.id;
+    const userId = "61f633f1-b841-4430-8e9c-680a32bad96f";
 
     // Vérification avant d'enregistrer en DB
     if (!message) {
@@ -171,6 +172,16 @@ router.post("/", async (req, res) => {
             message_content: aiReply,
             sender: 'bot',
             message_type: 'text',
+        });
+
+        // Créer une notification pour la réponse de l'IA
+        await createNotification({
+            user_id: userId,
+            type: "AICOACH_RESPONSE",
+            content: "Le coach IA vous a répondu. Cliquez pour voir la réponse.",
+            metadata: {
+                chat_message_id: aiMessage.id,
+            },
         });
 
         return res.status(200).json({

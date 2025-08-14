@@ -1,5 +1,6 @@
 const axios = require("axios");
 const db = require("../../models");
+const { createNotification } = require("../../utils");
 
 const CLIENT_ID = process.env.GOOGLE_FIT_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_FIT_CLIENT_SECRET;
@@ -81,6 +82,13 @@ const googleCallback = async (req, res) => {
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt,
+    });
+
+    // Créer une notification de succès
+    await createNotification({
+      user_id: userId,
+      type: "GOOGLE_FIT_CONNECTED",
+      content: "Votre compte a été connecté à Google Fit avec succès.",
     });
 
     // Retourner une réponse de succès
