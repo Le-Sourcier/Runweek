@@ -14,6 +14,7 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import PersonalRecords from "./pages/PersonalRecords";
 import Diet from "./pages/Diet";
+import TrainingPlan from "./pages/TrainingPlan";
 
 // Auth Page Components
 import LoginPage from "./pages/LoginPage";
@@ -95,6 +96,7 @@ const AuthRoutesHandler = () => {
         <Route path="achievements" element={<Achievements />} />
         <Route path="personal-records" element={<PersonalRecords />} />
         <Route path="diet" element={<Diet />} />
+        <Route path={ROUTES.TRAINING_PLAN} element={<TrainingPlan />} />
         <Route path="profile" element={<Profile />} />
         <Route path="support" element={<Support />} />
         <Route path="settings" element={<Settings />} />

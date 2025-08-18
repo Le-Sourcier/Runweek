@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 // import { useUser } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import {
@@ -12,10 +13,17 @@ import {
   TrendingUp,
   Lightbulb,
   Activity,
+  Utensils, // For nutrition
+  AlertTriangle,
+  RotateCcw,
+  CheckCircle,
+  Plus,
 } from "lucide-react"; // Added new icons
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
-import { useChatStore } from "../stores/userChatStore";
+import { toast } from "react-toastify";
+import { aiCoachStore } from "../stores/AiCoachStore";
+import { chatStore } from "../stores/userChatStore";
 // Removed motion import as it's not used after old chat UI removal, ChatInterface handles its own animations
 // import { motion } from 'framer-motion';
 
@@ -73,27 +81,40 @@ const trainingPlans = [
 ];
 
 export default function Coach() {
-  // const { user } = useUser();
-  // const [query, setQuery] = useState(''); // Removed old query state
-  const [chatMessages, setChatMessages] = useState<Message[]>([
-    // Renamed and typed state
-    {
-      id: "init-" + Date.now(),
-      message:
-        "Hi there! I'm your running coach AI. How can I help you today with your training?",
-      sender: "bot",
-      createdAt: new Date().toISOString(),
-      type: "text",
-    },
-  ]);
+
+  const { messages, getMessages, sendMessage: sendChatMessageToStore } = chatStore();
+  const [chatMessages, setChatMessages] = useState<Message[]>(() => {
+    if (messages.length > 0) return messages;
+    return [
+      {
+        id: "init-" + Date.now(),
+        message:
+          "Hi there! I'm your running coach AI. How can I help you today with your training?",
+        sender: "bot",
+        createdAt: new Date().toISOString(),
+        type: "text",
+      },
+    ]
+  });
   const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
-  const [pendingMessages, setPendingMessages] = useState<Set<string>>(
-    new Set()
-  );
-  const [failedMessages, setFailedMessages] = useState<Map<string, string>>(
-    new Map()
-  );
-  const { sendMessage: sendChatMessageToStore } = useChatStore();
+  const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
+  const [failedMessages, setFailedMessages] = useState<Map<string, string>>(new Map());
+  const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(new Set());
+  const [weeklyFocus, setWeeklyFocus] = useState({
+    title: "Building Base Endurance",
+    description: "This week, focus on easy runs to build your aerobic base. Keep your heart rate below 75% of your max.",
+    progress: 2,
+    total: 4
+  });
+
+  useEffect(() => {
+    loadMessages();
+  }, []);
+
+  const loadMessages = async () => {
+    await getMessages();
+    setChatMessages(chatStore.getState().messages);
+  }
 
   const processMessageSend = async (messageText: string, messageId: string) => {
     try {
@@ -101,15 +122,14 @@ export default function Coach() {
       const aiResponseData = await sendChatMessageToStore(messageText);
 
       // Success - remove from pending and add AI response
-      setPendingMessages((prev) => {
+      setPendingMessages(prev => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
         return newSet;
       });
 
       // Use the response from the API
-      const responseText =
-        aiResponseData.message || "Réponse reçue du serveur.";
+      const responseText = aiResponseData.message || "Réponse reçue du serveur.";
 
       const aiMessage: Message = {
         id: "ai-" + Date.now(),
@@ -122,17 +142,14 @@ export default function Coach() {
       setIsAiTyping(false);
     } catch (error) {
       // Handle failure
-      setPendingMessages((prev) => {
+      setPendingMessages(prev => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
         return newSet;
       });
 
-      const errorMessage =
-        error instanceof Error ? error.message : "Erreur inconnue";
-      setFailedMessages(
-        (prev) => new Map([...prev, [messageId, errorMessage]])
-      );
+      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+      setFailedMessages(prev => new Map([...prev, [messageId, errorMessage]]));
       setIsAiTyping(false);
     }
   };
@@ -150,22 +167,16 @@ export default function Coach() {
       createdAt: new Date().toISOString(),
     };
     setChatMessages((prev) => [...prev, userMessage]);
-    setPendingMessages((prev) => new Set([...prev, messageId]));
+    setPendingMessages(prev => new Set([...prev, messageId]));
     setIsAiTyping(true);
 
     // Set timeout to show failure after 5 minutes if still pending
     setTimeout(() => {
-      setPendingMessages((prev) => {
+      setPendingMessages(prev => {
         if (prev.has(messageId)) {
           const newSet = new Set(prev);
           newSet.delete(messageId);
-          setFailedMessages(
-            (prevFailed) =>
-              new Map([
-                ...prevFailed,
-                [messageId, "Timeout - Message non envoyé après 5 minutes"],
-              ])
-          );
+          setFailedMessages(prevFailed => new Map([...prevFailed, [messageId, "Timeout - Message non envoyé après 5 minutes"]]));
           return newSet;
         }
         return prev;
@@ -177,16 +188,16 @@ export default function Coach() {
 
   const handleRetryMessage = (messageId: string) => {
     // Find the original message
-    const originalMessage = chatMessages.find((msg) => msg.id === messageId);
+    const originalMessage = chatMessages.find(msg => msg.id === messageId);
     if (!originalMessage) return;
 
     // Remove from failed messages and add back to pending
-    setFailedMessages((prev) => {
+    setFailedMessages(prev => {
       const newMap = new Map(prev);
       newMap.delete(messageId);
       return newMap;
     });
-    setPendingMessages((prev) => new Set([...prev, messageId]));
+    setPendingMessages(prev => new Set([...prev, messageId]));
     setIsAiTyping(true);
 
     processMessageSend(originalMessage.message, messageId);
@@ -229,6 +240,52 @@ export default function Coach() {
     console.log("Talk to human requested from main Coach page.");
   };
 
+  const suggestedWorkouts = [
+    {
+      id: "easy-run",
+      type: "Easy Run",
+      distance: "5-6 km",
+      description: "conversational pace",
+      icon: <Footprints size={18} className="text-blue-500 dark:text-blue-400" />,
+      difficulty: "easy"
+    },
+    {
+      id: "long-run",
+      type: "Long Run",
+      distance: "10-12 km",
+      description: "easy pace",
+      icon: <Footprints size={18} className="text-green-500 dark:text-green-400" />,
+      difficulty: "moderate"
+    },
+    {
+      id: "recovery",
+      type: "Recovery",
+      distance: "3-4 km",
+      description: "very easy + strength",
+      icon: <HeartPulse size={18} className="text-red-500 dark:text-red-400" />,
+      difficulty: "easy"
+    }
+  ];
+
+  const handleCompleteWorkout = (workoutId: string, workoutType: string) => {
+    if (completedWorkouts.has(workoutId)) {
+      toast.info(`${workoutType} déjà marqué comme terminé`);
+      return;
+    }
+
+    setCompletedWorkouts(prev => new Set([...prev, workoutId]));
+    setWeeklyFocus(prev => ({
+      ...prev,
+      progress: Math.min(prev.progress + 1, prev.total)
+    }));
+    toast.success(`${workoutType} terminé ! Excellent travail ! 🏃‍♂️`);
+  };
+
+  const handleAddToCalendar = (workout: any) => {
+    // Simulate adding to calendar
+    toast.success(`${workout.type} ajouté au calendrier pour demain`);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -258,7 +315,7 @@ export default function Coach() {
             pendingMessages={pendingMessages}
             failedMessages={failedMessages}
             onRetryMessage={handleRetryMessage}
-            // className="h-full" is default and should work with parent's h-[600px] and flex-col
+          // className="h-full" is default and should work with parent's h-[600px] and flex-col
           />
         </Card>
 
@@ -267,72 +324,82 @@ export default function Coach() {
           {/* Coach insights */}
           <Card title="Weekly Focus">
             {/* Updated styling for Weekly Focus main section */}
-            <div className="border-l-4 border-green-500 bg-green-50/50 pl-3 py-3 pr-2 rounded-r-md flex items-start gap-3">
+            <div className="border-l-4 border-green-500 bg-green-50/50 dark:bg-green-900/20 pl-3 py-3 pr-2 rounded-r-md flex items-start gap-3">
               <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-green-500 shrink-0 border border-green-200">
                 <Target size={20} />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200">
-                  Building Base Endurance
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  This week, focus on easy runs to build your aerobic base. Keep
-                  your heart rate below 75% of your max.
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-gray-700 dark:text-gray-200">
+                    {weeklyFocus.title}
+                  </h4>
+                  <span className="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+                    {weeklyFocus.progress}/{weeklyFocus.total}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {weeklyFocus.description}
                 </p>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${(weeklyFocus.progress / weeklyFocus.total) * 100}%` }}
+                  />
+                </div>
               </div>
             </div>
 
             <div className="mt-4">
-              <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">
-                Suggested Workouts
+              <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-300">
+                Entraînements Suggérés
               </h4>
               <div className="space-y-3">
-                {/* Suggested Workout Item 1 */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <Footprints
-                    size={18}
-                    className="text-blue-500 dark:text-blue-400"
-                  />
-                  <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">
-                      Easy Run
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      5-6 km at conversational pace
-                    </p>
-                  </div>
-                </div>
-                {/* Suggested Workout Item 2 */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <Footprints
-                    size={18}
-                    className="text-green-500 dark:text-green-400"
-                  />{" "}
-                  {/* Changed to Footprints for consistency, could be specific for long run if desired */}
-                  <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">
-                      Long Run
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      10-12 km at easy pace
-                    </p>
-                  </div>
-                </div>
-                {/* Suggested Workout Item 3 */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
-                  <HeartPulse
-                    size={18}
-                    className="text-red-500 dark:text-red-400"
-                  />
-                  <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-200">
-                      Recovery
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      3-4 km very easy + strength
-                    </p>
-                  </div>
-                </div>
+                {suggestedWorkouts.map((workout) => {
+                  const isCompleted = completedWorkouts.has(workout.id);
+
+                  return (
+                    <div
+                      key={workout.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isCompleted
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:border-primary/50'
+                        }`}
+                    >
+                      {workout.icon}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className={`font-medium ${isCompleted ? 'text-green-700 dark:text-green-300 line-through' : 'text-gray-700 dark:text-gray-200'}`}>
+                            {workout.type}
+                          </p>
+                          {isCompleted && <CheckCircle size={16} className="text-green-500" />}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {workout.distance} at {workout.description}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        {!isCompleted && (
+                          <>
+                            <button
+                              onClick={() => handleAddToCalendar(workout)}
+                              className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded"
+                              title="Ajouter au calendrier"
+                            >
+                              <Plus size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleCompleteWorkout(workout.id, workout.type)}
+                              className="p-1.5 text-gray-400 hover:text-green-500 transition-colors rounded"
+                              title="Marquer comme terminé"
+                            >
+                              <CheckCircle size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </Card>
@@ -357,7 +424,12 @@ export default function Coach() {
                     {plan.description}
                   </p>
                   <button className="group mt-2 text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1">
-                    <span className="group-hover:underline">View plan</span>
+                    <Link
+                      to={`/training-plan/${plan.id}`}
+                      className="group-hover:underline"
+                    >
+                      View plan
+                    </Link>
                     <ArrowRight
                       size={14}
                       className="transition-transform group-hover:translate-x-1"
@@ -415,3 +487,4 @@ export default function Coach() {
     </div>
   );
 }
+

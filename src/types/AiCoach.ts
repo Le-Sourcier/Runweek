@@ -13,6 +13,6 @@ export interface ChatState {
   isLoading: boolean;
   error: string | null;
   sendMessage: (content: string) => Promise<Message>;
-  getMessages: () => Promise<Message[]>;
+  getMessages: () => Promise<void>;
   clearMessages: () => void; // Nouvelle méthode
 }

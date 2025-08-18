@@ -237,4 +237,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   PROFILE: "/profile",
 
+
+  TRAINING_PLAN: "/training-plan",
+
 } as const;

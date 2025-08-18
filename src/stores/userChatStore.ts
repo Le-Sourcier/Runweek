@@ -1,12 +1,10 @@
 import { create } from "zustand";
-import { fetchApi } from "../utils";
 import { ChatState, Message } from "../types/AiCoach";
-import sec from "react-secure-storage";
 import { v4 as uuidv4 } from "uuid"; // npm install uuid
+import { apiUtils } from "../hooks/useApi";
+import { ApiUrl } from "../utils/api-url";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-export const useChatStore = create<ChatState>((set) => ({
+export const chatStore = create<ChatState>((set) => ({
   messages: [], // Renommé de 'message' à 'messages' pour plus de clarté
   isLoading: false,
   error: null,
@@ -15,39 +13,21 @@ export const useChatStore = create<ChatState>((set) => ({
   getMessages: async () => {
     set({ isLoading: true, error: null });
     try {
-      const accessToken = sec.getItem("aspk");
-
-      const res = await fetchApi<Message[]>(`${BASE_URL}/aicoach/history`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const { message, error, data } = res;
-      if (error) {
-        throw new Error(message as string);
-      }
-
-      if (!data) {
-        throw new Error("No response data");
-      }
-
-      set({ isLoading: false });
-      return data;
+      const { data } = await apiUtils.get<Message[]>(ApiUrl.GET_AI_COACH_MESSAGES);
+      set({ messages: data });
     } catch (err) {
       const error =
         err instanceof Error ? err : new Error("Getting messages failed");
       set({ error: error.message, isLoading: false });
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
   // Send message to the bot
   sendMessage: async (content: string) => {
     set({ isLoading: true, error: null });
 
-    const accessToken = sec.getItem("aspk");
     const tempId = uuidv4();
 
     // D'abord ajouter le message de l'utilisateur
@@ -64,26 +44,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
     try {
       // Ensuite envoyer au backend et obtenir la réponse
-      const res = await fetchApi<Message>(`${BASE_URL}/aicoach`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          message: content,
-        }),
-      });
-
-      const { message, error, data } = res;
-
-      if (error) {
-        throw new Error(message || "Failed to get AI response");
-      }
-
-      if (!data) {
-        throw new Error("No data received from AI");
-      }
+      const { data } = await apiUtils.post<Message>(ApiUrl.SEND_AI_COACH_MESSAGES, { message: content });
 
       const botMessage: Message = {
         ...data,
