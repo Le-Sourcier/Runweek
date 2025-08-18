@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
 import { Users, Link2, Facebook, Twitter, Zap, BarChart2 } from "lucide-react"; // Example icons
 import { motion } from "framer-motion";
@@ -57,7 +57,7 @@ interface UserSocialAccounts {
 export default function ConnectedAccountsSettings({
   onBack,
 }: ConnectedAccountsSettingsProps) {
-  const { user, updateUserProfile } = useUser();
+  const { user, updateUserProfile } = useUserContext();
 
   // Local state to manage social accounts, initialized from user context.
   // This allows for optimistic updates or handling intermediate states if needed.

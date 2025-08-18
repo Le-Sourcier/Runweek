@@ -1,5 +1,5 @@
 import { useState, useEffect, ChangeEvent } from "react";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
 import { Edit } from "lucide-react";
 
@@ -10,7 +10,7 @@ interface PersonalInfoSettingsProps {
 export default function PersonalInfoSettings({
   onBack,
 }: PersonalInfoSettingsProps) {
-  const { user, updateUserProfile } = useUser();
+  const { user, updateUserProfile } = useUserContext();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || "");

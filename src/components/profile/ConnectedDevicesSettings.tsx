@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge"; // Assuming Badge component exists and is styled
 import { Activity, Smartphone, Check, X, PlusCircle } from "lucide-react";
@@ -22,7 +22,7 @@ interface ConnectedDevice {
 export default function ConnectedDevicesSettings({
   onBack,
 }: ConnectedDevicesSettingsProps) {
-  const { user, updateUserProfile } = useUser();
+  const { user, updateUserProfile } = useUserContext();
 
   // Local state to manage devices, initialized from user context
   // This allows modification (like revoke) before updating the context

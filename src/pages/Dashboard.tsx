@@ -1,4 +1,4 @@
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import { usePRs } from "../context/PRContext"; // Import usePRs
 import { useNotifications } from "../context/NotificationContext"; // Import for notifications
 import { isThisMonth, parseISO, format } from "date-fns"; // Import date-fns functions & format
@@ -28,16 +28,14 @@ import TipOfTheDayWidget from "../components/dashboard/widgets/TipOfTheDayWidget
 import HeartRateTrendWidget from "../components/dashboard/widgets/HeartRateTrendWidget"; // Added
 
 export default function Dashboard() {
-  const userContext = useUser();
-  const { user, updateUserPreferences } = userContext; // Destructure updateUserPreferences
-  const notificationContext = useNotifications();
+  const { user, updateUserPreferences } = useUserContext(); // Destructure updateUserPreferences
   const { processedPRs: prs } = usePRs();
 
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
 
   if (!user) return null;
 
-  const userName = user?.fname || "Utilisateur";
+  const userName = user.fname || "Utilisateur";
 
   // Determine active widget configuration
   const activeWidgetConfig =

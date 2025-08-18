@@ -20,10 +20,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
+import { parseDate } from "../utils/date-formatter";
 
 export default function Profile() {
-  const { user, updateUserProfile, updateUserPreferences, logout } = useUser(); // Added logout
+  const { user, updateUserProfile, updateUserPreferences, logout } = useUserContext(); // Added logout
   const [activeTab, setActiveTab] = useState("account");
   const [accountSubView, setAccountSubView] = useState<
     | "overview"
@@ -35,9 +36,9 @@ export default function Profile() {
   >("overview");
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(
-    user?.fname + "" + user?.lname || ""
-  );
+
+  const [editedFname, setEditedFname] = useState(user?.fname || "");
+  const [editedLname, setEditedLname] = useState(user?.lname || "");
   const [editedEmail, setEditedEmail] = useState(user?.email || "");
   const [editedProfileImage, setEditedProfileImage] = useState(
     user?.profileImage || ""
@@ -74,7 +75,6 @@ export default function Profile() {
   // Effect to update edited fields AND preferences if user object changes
   useEffect(() => {
     if (user) {
-      setEditedName(user?.fname + " " + user?.lname);
       setEditedEmail(user.email);
       setEditedProfileImage(user.profileImage); // Add this line
       if (user.preferences) {
@@ -135,7 +135,8 @@ export default function Profile() {
   const handleEditToggle = () => {
     if (!isEditing) {
       // Entering edit mode, initialize with current user data
-      setEditedName(user.name);
+      setEditedFname(user.fname);
+      setEditedLname(user.lname);
       setEditedEmail(user.email);
       setEditedProfileImage(user.profileImage);
     }
@@ -146,7 +147,8 @@ export default function Profile() {
     if (user) {
       // Ensure user is not null before attempting update
       updateUserProfile({
-        name: editedName,
+        fname: editedFname,
+        lname: editedLname,
         email: editedEmail,
         profileImage: editedProfileImage,
       }); // Add profileImage
@@ -157,7 +159,8 @@ export default function Profile() {
 
   const handleCancelEdit = () => {
     // Revert changes to original user data
-    setEditedName(user.name);
+    setEditedFname(user.fname);
+    setEditedLname(user.lname);
     setEditedEmail(user.email);
     setEditedProfileImage(user.profileImage); // Add this line
     setIsEditing(false);
@@ -217,7 +220,7 @@ export default function Profile() {
             <div className="relative">
               <img
                 src={isEditing ? editedProfileImage : user.profileImage} // Show edited or original image
-                alt={editedName}
+                alt={editedFname + " " + editedLname}
                 className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
               />
               {isEditing ? (
@@ -258,16 +261,27 @@ export default function Profile() {
             </div>
 
             {isEditing ? (
-              <input
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                className="input mt-4 text-center text-xl font-bold w-full max-w-xs bg-background text-foreground border-border focus:ring-primary focus:border-primary"
-                aria-label="User name"
-              />
+              <div className="mb-4 grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  value={editedFname}
+                  onChange={(e) => setEditedFname(e.target.value)}
+                  className="input mt-4 text-md font-bold w-full max-w-xs bg-background text-foreground border-border focus:ring-primary focus:border-primary
+                  col-span-2 md:col-span-1"
+                  aria-label="User name"
+                />
+                <input
+                  type="text"
+                  value={editedLname}
+                  onChange={(e) => setEditedLname(e.target.value)}
+                  className="input mt-2 md:mt-4 text-md font-bold w-full max-w-xs bg-background text-foreground border-border focus:ring-primary focus:border-primary
+                  col-span-2 md:col-span-1"
+                  aria-label="User name"
+                />
+              </div>
             ) : (
               <h2 className="text-xl font-bold mt-4 text-foreground">
-                {user.name}
+                {user.fname} {user.lname}
               </h2>
             )}
             <p className="text-muted-foreground">
@@ -277,13 +291,13 @@ export default function Profile() {
             <div className="w-full mt-4">
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Level Progress</span>
-                <span>{user.stats?.points % 1000} / 1000 XP</span>
+                <span>{user.stats?.points || 0 % 1000} / 1000 XP</span>
               </div>
               <ProgressBar
-                value={user.stats?.points % 1000}
+                value={user.stats?.points || 0 % 1000}
                 max={1000}
                 className="mt-1"
-                // ProgressBar itself might need internal theming if not using CSS vars for its colors
+              // ProgressBar itself might need internal theming if not using CSS vars for its colors
               />
             </div>
 
@@ -296,7 +310,7 @@ export default function Profile() {
                       type="email"
                       value={editedEmail}
                       onChange={(e) => setEditedEmail(e.target.value)}
-                      className="input w-full max-w-xs text-sm bg-background text-foreground border-border focus:ring-primary focus:border-primary"
+                      className="input w-full max-w-xs text-md font-bold bg-background text-foreground border-border focus:ring-primary focus:border-primary"
                       aria-label="User email"
                     />
                   ) : (
@@ -306,11 +320,7 @@ export default function Profile() {
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Calendar size={18} />
                   <span>
-                    Joined {user.updatedAt}
-                    {/* {new Date(user.updatedAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })} */}
+                    Joined : {parseDate(user.updatedAt)}
                   </span>
                 </div>
               </div>
@@ -348,31 +358,28 @@ export default function Profile() {
           <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab("account")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "account"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:border-muted"
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${activeTab === "account"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground hover:border-muted"
+                }`}
             >
               Account Settings
             </button>
             <button
               onClick={() => setActiveTab("preferences")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "preferences"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:border-muted"
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${activeTab === "preferences"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground hover:border-muted"
+                }`}
             >
               Running Preferences
             </button>
             <button
               onClick={() => setActiveTab("privacy")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "privacy"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:border-muted"
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${activeTab === "privacy"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground hover:border-muted"
+                }`}
             >
               Privacy
             </button>
@@ -485,21 +492,19 @@ export default function Profile() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => setDistanceUnit("kilometers")}
-                        className={`px-4 py-2 rounded-lg ${
-                          distanceUnit === "kilometers"
-                            ? "btn-primary"
-                            : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
-                        }`}
+                        className={`px-4 py-2 rounded-lg ${distanceUnit === "kilometers"
+                          ? "btn-primary"
+                          : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                          }`}
                       >
                         Kilometers
                       </button>
                       <button
                         onClick={() => setDistanceUnit("miles")}
-                        className={`px-4 py-2 rounded-lg ${
-                          distanceUnit === "miles"
-                            ? "btn-primary"
-                            : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
-                        }`}
+                        className={`px-4 py-2 rounded-lg ${distanceUnit === "miles"
+                          ? "btn-primary"
+                          : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                          }`}
                       >
                         Miles
                       </button>
@@ -523,11 +528,10 @@ export default function Profile() {
                                   : [...prevDays, day]
                               )
                             }
-                            className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                              preferredRunDays.includes(day)
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80 dark:hover:bg-muted"
-                            }`}
+                            className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${preferredRunDays.includes(day)
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80 dark:hover:bg-muted"
+                              }`}
                           >
                             {day.charAt(0)}
                           </button>
@@ -546,11 +550,10 @@ export default function Profile() {
                         <button
                           key={time}
                           onClick={() => setPreferredRunTime(time)}
-                          className={`px-4 py-2 rounded-lg capitalize ${
-                            preferredRunTime === time
-                              ? "btn-primary"
-                              : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
-                          }`}
+                          className={`px-4 py-2 rounded-lg capitalize ${preferredRunTime === time
+                            ? "btn-primary"
+                            : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                            }`}
                         >
                           {time}
                         </button>
@@ -573,11 +576,10 @@ export default function Profile() {
                         <button
                           key={focus}
                           onClick={() => setTrainingFocus(focus)}
-                          className={`px-4 py-2 rounded-lg capitalize ${
-                            trainingFocus === focus
-                              ? "btn-primary"
-                              : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
-                          }`}
+                          className={`px-4 py-2 rounded-lg capitalize ${trainingFocus === focus
+                            ? "btn-primary"
+                            : "btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20"
+                            }`}
                         >
                           {focus}
                         </button>
@@ -685,14 +687,12 @@ export default function Profile() {
                         />
                         <label
                           htmlFor="data-sharing-enabled"
-                          className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                            dataSharing.enabled ? "bg-primary" : "bg-muted"
-                          }`}
+                          className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.enabled ? "bg-primary" : "bg-muted"
+                            }`}
                         >
                           <span
-                            className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                              dataSharing.enabled ? "translate-x-6" : ""
-                            }`}
+                            className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.enabled ? "translate-x-6" : ""
+                              }`}
                           ></span>
                         </label>
                       </div>
@@ -716,14 +716,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="share-nutrition"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.shareNutrition ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.shareNutrition ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.shareNutrition ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.shareNutrition ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -745,14 +743,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="share-activities"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.shareActivities ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.shareActivities ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.shareActivities ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.shareActivities ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -774,14 +770,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="share-goals"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.shareGoals ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.shareGoals ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.shareGoals ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.shareGoals ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -803,14 +797,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="share-achievements"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.shareAchievements ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.shareAchievements ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.shareAchievements ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.shareAchievements ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -832,14 +824,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="allow-friend-requests"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.allowFriendRequests ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.allowFriendRequests ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.allowFriendRequests ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.allowFriendRequests ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -861,14 +851,12 @@ export default function Profile() {
                             />
                             <label
                               htmlFor="show-in-search"
-                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                                dataSharing.showInSearch ? "bg-primary" : "bg-muted"
-                              }`}
+                              className={`block h-5 overflow-hidden rounded-full cursor-pointer transition-colors ${dataSharing.showInSearch ? "bg-primary" : "bg-muted"
+                                }`}
                             >
                               <span
-                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                                  dataSharing.showInSearch ? "translate-x-5" : ""
-                                }`}
+                                className={`block h-5 w-5 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${dataSharing.showInSearch ? "translate-x-5" : ""
+                                  }`}
                               ></span>
                             </label>
                           </div>
@@ -905,14 +893,12 @@ export default function Profile() {
                       />
                       <label
                         htmlFor="location-sharing"
-                        className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${
-                          locationSharing ? "bg-primary" : "bg-muted"
-                        }`}
+                        className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${locationSharing ? "bg-primary" : "bg-muted"
+                          }`}
                       >
                         <span
-                          className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-                            locationSharing ? "translate-x-6" : ""
-                          }`}
+                          className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${locationSharing ? "translate-x-6" : ""
+                            }`}
                         ></span>
                       </label>
                     </div>

@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion"; // Import framer-motion components
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import LoadingScreen from "../ui/LoadingScreen";
 import { useFloatingCoach } from "../../context/FloatingCoachContext"; // Import useFloatingCoach
 import FloatingCoach from "../../components/coach/FloatingCoach"; // Import FloatingCoach component
@@ -15,7 +15,7 @@ type LayoutProps = {
 export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { isLoading } = useUser();
+  const { isLoading } = useUserContext();
   const { isFloatingCoachActive } = useFloatingCoach(); // Consume FloatingCoach context
 
   // Close mobile menu when route changes

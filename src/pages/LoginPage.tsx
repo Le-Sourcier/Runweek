@@ -3,16 +3,17 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../components/layout/AuthLayout";
 import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
+import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
 
 const LoginPage: React.FC = () => {
-  const { isLoading: loading, login } = useUser();
+  const { isLoading: loading, login } = useUserContext();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // const [loading, setLoading] = useState(false);
+   const {navigateWithParams} = useAppNavigation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -48,6 +49,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(formData);
+      navigateWithParams(ROUTES.HOME);
     } catch (error) {
       console.error("Login failed:", error);
       // Error is already handled in the UserProvider

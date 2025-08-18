@@ -1,4 +1,4 @@
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import {
@@ -135,7 +135,7 @@ const allAchievements = [
 ];
 
 export default function Achievements() {
-  const { user } = useUser();
+  const { user } = useUserContext();
   const [activeCategory, setActiveCategory] = useState("all");
 
   if (!user) return null;

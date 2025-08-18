@@ -1,4 +1,4 @@
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import {
   Calendar,
@@ -132,7 +132,7 @@ const initialActivities: Activity[] = [
 ];
 
 export default function Statistics() {
-  const { user } = useUser();
+  const { user } = useUserContext();
   const [timeframe, setTimeframe] = useState("weekly");
   const [sortedActivities, setSortedActivities] =
     useState<Activity[]>(initialActivities);

@@ -6,19 +6,22 @@ import {
   UserGoal,
   UserPreferences,
   UserAchievement,
-  UserWithToken,
+  LoginResponse,
   UserCredentials,
   UserRegistration,
   RegisterRes,
   MailVerification,
 } from "../types/user";
-import { fetchApi, fetchWithRefresh } from "../utils";
+import { fetchApi } from "../utils";
 import { UserContext } from "../context/UserContext";
 import sec from "react-secure-storage";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMessages } from "../hooks/useMessage";
 import { MessageCode } from "../types/message";
 import { getCookie, removeCookie } from "../utils/Cookies";
+import { apiUtils } from "../hooks/useApi";
+import { ApiUrl } from "../utils/api-url";
+import { extractErrorMessage } from "../utils/error-handler";
 
 // // Hardcoded sample user for login
 // const sampleUser: User = {
@@ -182,7 +185,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user;
 
-  const handleAuthSuccess = (data: UserWithToken | undefined) => {
+  const handleAuthSuccess = (data: LoginResponse | undefined) => {
     if (data) {
       sec.setItem("aspk", data.accessToken as string);
       setAccessToken(data.accessToken);
@@ -210,23 +213,41 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const userData = await fetchWithRefresh<User>(
-        `${BASE_URL}/me`,
-        { method: "GET" },
-        () => accessToken,
-        (token) => setAccessToken(token)
-      );
+      const { data } = await apiUtils.get<User>(ApiUrl.ME);
+      if (data) setUser(data);
+    } catch (error: any) {
 
-      if (userData) setUser(userData);
-    } catch (error) {
+      if (error.response.status === 401) {
+        await refreshUserTokens();
+        await fetchUser();
+      }
+
       console.error("Erreur lors du fetch user:", error);
       setUser(null);
       setAccessToken(null);
       sec.removeItem("aspk");
+      sec.removeItem("rft");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const refreshUserTokens = async () => {
+    const refreshToken = localStorage.getItem("rft");
+    if (!refreshToken) throw new Error("Aucun refreshToken");
+
+    const { data } = await apiUtils.post<LoginResponse>(ApiUrl.REFRESH, { refreshToken });
+
+    if (!data.accessToken) throw new Error("Refresh échoué");
+
+    const newToken = data.accessToken;
+    const newRefresh = data.refreshToken;
+
+    // On met à jour le token
+    setAccessToken(newToken);
+    localStorage.setItem("aspk", newToken);
+    if (newRefresh) localStorage.setItem("rft", newRefresh);
+  }
 
   React.useEffect(() => {
     const init = async () => {
@@ -241,38 +262,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
-  const login = async (props: UserCredentials): Promise<UserWithToken> => {
+  const login = async (props: UserCredentials) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<UserWithToken>(`${BASE_URL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: props.email,
-          password: props.password,
-          rememberMe: props.rememberMe,
-        }),
-      });
-      const { message, error, data } = res;
+      const { data } = await apiUtils.post<LoginResponse>(ApiUrl.LOGIN, props);
 
-      if (error) {
-        const _message =
-          message ?? "Erreur lors de la connxion : données manquantes.";
+      // if (error) {
+      //   const _message =
+      //     message ?? "Erreur lors de la connexion : données manquantes.";
 
-        setMessage(_message);
+      //   setMessage(_message);
 
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+      //   showMessage(
+      //     message as MessageCode,
+      //     {},
+      //     {
+      //       language: "fr",
+      //     }
+      //   );
 
-        throw new Error(_message);
-      }
+      //   throw new Error(_message);
+      // }
 
       if (!data || !data.accessToken) {
         const _message = "Erreur lors de la connexion : données manquantes.";
@@ -280,28 +290,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
         throw new Error(_message);
       }
 
-      const { accessToken, refreshToken } = data;
-
       handleAuthSuccess(data);
 
+      showMessage(message as MessageCode, {
+        name: user?.fname ?? "",
+      }, {
+        language: "fr",
+      });
+
+    } catch (error) {
+      const _message = extractErrorMessage(error);
+     
+
+      setMessage(_message.message);
+
       showMessage(
-        message as MessageCode,
-        {
-          name: user?.fname ?? "",
-        },
+        _message.message as MessageCode,
+        {},
         {
           language: "fr",
         }
       );
-
-      return { accessToken, refreshToken };
-    } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
+      console.error("Erreur lors de la connexion (message) :", error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
+
   const register = async (props: UserRegistration): Promise<RegisterRes> => {
     setIsLoading(true);
     try {
@@ -319,7 +335,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         const _message =
-          message ?? "Erreur lors de la connxion : données manquantes.";
+          message ?? "Erreur lors de la connexion : données manquantes.";
 
         setMessage(_message);
         // toast.error(_message);
@@ -397,6 +413,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   };
+
   const resendVerificationMail = async (
     email: string
   ): Promise<{ message: string | null; resent: boolean }> => {

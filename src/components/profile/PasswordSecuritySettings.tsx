@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Card from "../ui/Card";
 import { ArrowLeft, ShieldCheck, LockKeyhole, Loader2 } from "lucide-react"; // Added Loader2
-import { useUser } from "../../hooks/useUser"; // Import useUser
+import { useUserContext } from "../../hooks/useUser"; // Import useUser
 import { toast } from "react-toastify";
 
 interface PasswordSecuritySettingsProps {
@@ -11,7 +11,7 @@ interface PasswordSecuritySettingsProps {
 const PasswordSecuritySettings: React.FC<PasswordSecuritySettingsProps> = ({
   onBack,
 }) => {
-  const { user, changePassword, updateUserPreferences } = useUser(); // Add user and updateUserPreferences
+  const { user, changePassword, updateUserPreferences } = useUserContext(); // Add user and updateUserPreferences
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");

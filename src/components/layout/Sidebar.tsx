@@ -12,7 +12,7 @@ import {
   Activity,
   Utensils,
 } from "lucide-react";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import { motion } from "framer-motion";
 
 type SidebarProps = {
@@ -21,7 +21,7 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ className = "", onClose }: SidebarProps) {
-  const { user } = useUser();
+  const { user } = useUserContext();
 
   const navItems = [
     {

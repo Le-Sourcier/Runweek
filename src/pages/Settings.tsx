@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import { useTheme } from "../context/ThemeContext";
 import Card from "../components/ui/Card";
 import ThemePreview from "../components/ui/ThemePreview";
@@ -62,7 +62,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 
 export default function Settings() {
-  const { user, updateUserPreferences, logout, deleteUser } = useUser();
+  const { user, updateUserPreferences, logout, deleteUser } = useUserContext();
   const { theme, setTheme, colorPalette, setColorPalette } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();

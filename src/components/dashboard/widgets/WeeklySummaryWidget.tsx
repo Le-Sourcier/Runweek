@@ -1,10 +1,10 @@
 // src/components/dashboard/widgets/WeeklySummaryWidget.tsx
 import React from "react";
-import { useUser } from "../../../hooks/useUser";
+import { useUserContext } from "../../../hooks/useUser";
 import { BarChart2, Zap, CalendarDays } from "lucide-react"; // Example icons
 
 const WeeklySummaryWidget: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useUserContext();
 
   // Mock data for demonstration alongside real data
   const weeklyDistance = user?.stats?.weeklyDistance || 0;

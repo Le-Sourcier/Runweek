@@ -6,7 +6,7 @@ import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
 import { CheckCircle, XCircle, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { MailVerificationStatus } from "../types/user";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 
 const VerifyEmailPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,7 +14,7 @@ const VerifyEmailPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState("");
-  const { verifyMail, resendVerificationMail, isLoading } = useUser();
+  const { verifyMail, resendVerificationMail, isLoading } = useUserContext();
 
   const token = searchParams.get("pk");
 

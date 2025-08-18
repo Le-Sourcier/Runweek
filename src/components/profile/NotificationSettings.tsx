@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
 import { Bell } from "lucide-react"; // Assuming Bell icon is suitable
 import { motion } from "framer-motion";
@@ -27,7 +27,7 @@ const defaultNotificationSettings: NotificationPreferences = {
 export default function NotificationSettings({
   onBack,
 }: NotificationSettingsProps) {
-  const { user, updateUserPreferences } = useUser();
+  const { user, updateUserPreferences } = useUserContext();
   const [currentNotificationSettings, setCurrentNotificationSettings] =
     useState<NotificationPreferences>(
       user?.preferences?.notificationSettings || defaultNotificationSettings

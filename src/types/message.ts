@@ -1,4 +1,4 @@
-import { MESSAGE_MAPPINGS } from "../utils/utils";
+import { MESSAGE_MAPPINGS } from "../utils/error-handler";
 
 export type Language = keyof typeof MESSAGE_MAPPINGS;
 export type MessageCode = keyof (typeof MESSAGE_MAPPINGS)["en"]; // Suppose que 'en' a tous les codes

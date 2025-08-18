@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 import Badge from "../components/ui/Badge";
@@ -56,7 +56,7 @@ export default function Goals() {
     addGoal,
     updateGoal,
     deleteGoal: deleteContextGoal,
-  } = useUser();
+  } = useUserContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<UserGoal | undefined>(

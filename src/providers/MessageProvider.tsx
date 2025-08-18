@@ -1,7 +1,7 @@
 // MessageContext.tsx
 import React from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { MESSAGE_MAPPINGS } from "../utils/utils";
+import { getBaseMessage } from "../utils/error-handler";
 import { Language, MessageCode } from "../types/message";
 import { MessageContext } from "../context/MessageContext";
 import { useTheme } from "../context/ThemeContext";
@@ -14,11 +14,9 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     variables: Record<string, string | number> = {},
     language: Language = "en"
   ) => {
+
     // Fallback to English if translation missing
-    const baseMessage =
-      MESSAGE_MAPPINGS[language][code] ||
-      MESSAGE_MAPPINGS["en"][code] ||
-      MESSAGE_MAPPINGS["en"].UNKNOWN_ERROR;
+    const baseMessage = getBaseMessage(language, code);
 
     let message = baseMessage;
     for (const [key, value] of Object.entries(variables)) {

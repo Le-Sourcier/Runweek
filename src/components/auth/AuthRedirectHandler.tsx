@@ -1,6 +1,6 @@
 // src/components/auth/AuthRedirectHandler.tsx
 import { Navigate, useLocation, useParams } from "react-router-dom";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 
 export const AuthRedirectHandler = ({
   authType = "login",
@@ -13,7 +13,7 @@ export const AuthRedirectHandler = ({
     | "reset-password"
     | "forgot-password";
 }) => {
-  const { isAuthenticated, isLoading } = useUser();
+  const { isAuthenticated, isLoading } = useUserContext();
   const location = useLocation();
   const params = useParams();
   const searchParams = new URLSearchParams(location.search);

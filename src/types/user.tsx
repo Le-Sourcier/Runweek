@@ -31,8 +31,8 @@ export type UserAchievement = {
 
 export type User = {
   id: string;
-  fname?: string;
-  lname?: string;
+  fname: string;
+  lname: string;
   email: string;
   profileImage: string;
   updatedAt: string;
@@ -122,10 +122,11 @@ export type UserRegistration = {
   password: string;
 };
 
-export type UserWithToken = {
+export type LoginResponse = {
   accessToken: string;
   refreshToken?: string; // Password might be optional if using OAuth or magic links later
 };
+
 export type RegisterRes = {
   error: boolean;
   message: string | null;
@@ -150,7 +151,7 @@ export type UserContextType = {
   isLoading: boolean;
   isAuthenticated: boolean; // Added for easier auth checks
   message: string | null; // For login/auth errors
-  login: (scredentials: UserCredentials) => Promise<UserWithToken>; // Made async to mimic API call
+  login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   register: (auth: UserRegistration) => Promise<RegisterRes>; // Made async to mimic API call
   verifyMail: (token: string) => Promise<MailVerification>;
   resendVerificationMail: (

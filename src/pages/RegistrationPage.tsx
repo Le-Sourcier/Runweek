@@ -4,12 +4,12 @@ import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
 import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useUser } from "../hooks/useUser";
+import { useUserContext } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
 import { Modal } from "../components/ui/modal";
 
 const RegisterPage: React.FC = () => {
-  const { isLoading: loading, register } = useUser();
+  const { isLoading: loading, register } = useUserContext();
 
   const [formData, setFormData] = React.useState({
     firstName: "",

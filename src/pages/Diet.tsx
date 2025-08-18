@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../hooks/useUser';
+import { useUserContext } from '../hooks/useUser';
 import { useDiet } from '../context/DietContext';
 import { useSocial } from '../context/SocialContext';
 import Card from '../components/ui/Card';
@@ -43,7 +43,7 @@ import SocialFeed from '../components/diet/SocialFeed';
 
 const Diet: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useUserContext();
   const {
     currentDayNutrition,
     dailyNutrition,

@@ -69,11 +69,11 @@
 // src/components/auth/ProtectedRoute.tsx
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useUser } from "../../hooks/useUser";
+import { useUserContext } from "../../hooks/useUser";
 import { setCookie } from "../../utils/Cookies";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useUser();
+  const { isAuthenticated, isLoading } = useUserContext();
   const location = useLocation();
 
   const loadingScreen = (

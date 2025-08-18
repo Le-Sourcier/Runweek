@@ -1,3 +1,5 @@
+import { Language, MessageCode } from "../types/message";
+
 export const MESSAGE_MAPPINGS = {
   en: {
     // Success (2xx)
@@ -747,5 +749,39 @@ export const MESSAGE_MAPPINGS = {
     // Default
     UNKNOWN_ERROR:
       "Une erreur inattendue s'est produite. Notre équipe technique a été notifiée et enquêtera sur le problème.",
-  },
+  }
 };
+
+
+export const getBaseMessage = (language: Language, code: MessageCode) => {
+  return MESSAGE_MAPPINGS[language][code] ||
+    MESSAGE_MAPPINGS["en"][code] ||
+    MESSAGE_MAPPINGS["en"].UNKNOWN_ERROR
+}
+
+export function extractErrorMessage(error: any, defaultMessage?: string): {
+	message: string,
+	code?: string
+} {
+	const code: string = error.status
+
+	// Vérifier si error.response existe
+	if (!error.response || !error.response.data) {
+		return {message: defaultMessage!, code};
+	}
+
+	const {message} = error.response.data;
+
+	// Cas 1 : message est une chaîne
+	if (typeof message === 'string') {
+		return {message: message.trim(), code};
+	}
+
+	// Cas 2 : message est un tableau
+	if (Array.isArray(message) && message.length > 0) {
+		return {message: message[0].trim(), code};
+	}
+
+	// Cas 3 : aucun message valide trouvé
+	return {message: defaultMessage!, code};
+}
