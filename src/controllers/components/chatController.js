@@ -113,7 +113,7 @@ module.exports = {
       const previousMessages = await ChatMessages.findAll({
         where: { user_id: userId },
         order: [["created_at", "DESC"]], // DESC pour avoir les plus récents en premier
-        limit: 10,
+        limit: 20,
       });
 
       // Inverser l'ordre pour avoir la conversation dans l'ordre chronologique
@@ -136,7 +136,7 @@ module.exports = {
       const recentActivities = await Activities.findAll({
         where: { user_id: userId },
         order: [["date", "DESC"]],
-        limit: 5,
+        limit: 10,
       });
 
       const userContext = {
