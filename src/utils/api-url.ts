@@ -5,6 +5,7 @@ export const ApiUrl = {
   REFRESH: "/user/refresh",
   ME: "/user/me",
   UPDATE_PROFILE: "/user/update",
+  RESEND_VERIFICATION_MAIL: "/user/resend-mail",
 
   /**
  * Fonction pour les url à paramètres sous la forme url/:id

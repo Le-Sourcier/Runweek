@@ -4,6 +4,7 @@ import AuthLayout from "../components/layout/AuthLayout";
 import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
 import { ArrowLeft, Mail } from "lucide-react";
+import { ROUTES } from "../hooks/useAppNavigation";
 
 const PasswordRecoveryRequestPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -92,8 +93,8 @@ const PasswordRecoveryRequestPage: React.FC = () => {
               Try another email
             </Button>
 
-            <Link to="/login">
-              <Button variant="outline" className="w-full">
+            <Link to={ROUTES.LOGIN}>
+              <Button variant="outline" className="w-full mt-5">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to sign in
               </Button>
@@ -130,8 +131,8 @@ const PasswordRecoveryRequestPage: React.FC = () => {
           <p>You can sign in with your existing credentials.</p>
         </div>
 
-        <Link to="/login">
-          <Button variant="outline" className="w-full">
+        <Link to={ROUTES.LOGIN}>
+          <Button variant="outline" className="w-full mt-5">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to sign in
           </Button>

@@ -7,16 +7,20 @@ import { Button2 as Button } from "../components/ui/Button";
 import { CheckCircle, XCircle, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { MailVerificationStatus } from "../types/user";
 import { useUserContext } from "../hooks/useUser";
+import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
+import { extractErrorMessage } from "../utils/error-handler";
 
 const VerifyEmailPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const { getCurrentLocation } = useAppNavigation();
+
+  const { pk, email: urlEmail } = getCurrentLocation().queryParams;
   const [status, setStatus] = useState<MailVerificationStatus>("loading");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(urlEmail as string || "");
   const [resendSuccess, setResendSuccess] = useState(false);
   const [error, setError] = useState("");
   const { verifyMail, resendVerificationMail, isLoading } = useUserContext();
 
-  const token = searchParams.get("pk");
+  const token = pk as string;
 
   const _verifyMail = async () => {
     if (!token) {
@@ -24,12 +28,16 @@ const VerifyEmailPage: React.FC = () => {
       return;
     }
     try {
-      const res = await verifyMail(token);
-      setStatus(res.status);
-      if (res.email) setEmail(res.email);
-    } catch {
+      await verifyMail(token);
+      setStatus("success");
+    } catch (error) {
+      const _error = extractErrorMessage(error).message;
+      if (_error === "INVALID_TOKEN") {
+        setStatus("invalid");
+      } else if (_error === "ACCOUNT_ALREADY_VERIFIED") {
+        setStatus("already-validated");
+      }
       setStatus("error");
-      setEmail("");
     }
   };
 
@@ -58,13 +66,20 @@ const VerifyEmailPage: React.FC = () => {
       return;
     }
     setError("");
-    const res = await resendVerificationMail(email);
 
-    if (res.message === "ACCOUNT_ALREADY_VERIFIED") {
-      setStatus("already-validated");
+    try {
+      await resendVerificationMail(email);
+      setStatus("success");
+      setResendSuccess(true);
+    } catch (error) {
+      const _error = extractErrorMessage(error).message;
+      if (_error === "INVALID_TOKEN") {
+        setStatus("invalid");
+      } else if (_error === "ACCOUNT_ALREADY_VERIFIED") {
+        setStatus("already-validated");
+      }
+      setStatus("error");
     }
-
-    setResendSuccess(res.resent);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,19 +179,19 @@ const VerifyEmailPage: React.FC = () => {
         status === "expired"
           ? "Verification link expired"
           : status === "invalid"
-          ? "Invalid verification link"
-          : status === "already-validated"
-          ? "Email already verified"
-          : "Verification failed"
+            ? "Invalid verification link"
+            : status === "already-validated"
+              ? "Email already verified"
+              : "Verification failed"
       }
       subtitle={
         status === "expired"
           ? "Your verification link has expired. Request a new one below."
           : status === "invalid"
-          ? "The verification link is invalid or malformed."
-          : status === "already-validated"
-          ? "This email address has already been verified. You can sign in with your account."
-          : "We couldn't verify your email. Try requesting a new verification link."
+            ? "The verification link is invalid or malformed."
+            : status === "already-validated"
+              ? "This email address has already been verified. You can sign in with your account."
+              : "We couldn't verify your email. Try requesting a new verification link."
       }
       showVisual={true}
     >
@@ -241,14 +256,14 @@ const VerifyEmailPage: React.FC = () => {
         )}
 
         <div className="space-y-3 pt-4">
-          <Link to="/register">
+          <Link to={ROUTES.REGISTER}>
             <Button variant="secondary" className="w-full">
               Create a new account
             </Button>
           </Link>
 
-          <Link to="/login">
-            <Button variant="outline" className="w-full">
+          <Link to={ROUTES.LOGIN}>
+            <Button variant="outline" className="w-full mt-5">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to sign in
             </Button>

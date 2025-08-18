@@ -233,7 +233,8 @@ export const ROUTES = {
   LOGIN: "/login",
   REGISTER: "/register",
   VERIFY_EMAIL: "/verify-mail",
-  RESET_PASSWORD: "/reset-password",
+  RESET_PASSWORD: "/reset-password/:token",
   FORGOT_PASSWORD: "/forgot-password",
   PROFILE: "/profile",
+
 } as const;

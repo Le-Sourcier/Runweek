@@ -304,60 +304,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await apiUtils.post(ApiUrl.REGISTER, props);
-
-      // const res = await fetchApi<Record<string, string>>(
-      //   `${BASE_URL}/register`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify(props),
-      //   }
-      // );
-      // const { message, error } = res;
-
-      // if (error) {
-      //   const _message =
-      //     message ?? "Erreur lors de la connexion : données manquantes.";
-
-      //   setMessage(_message);
-      //   // toast.error(_message);
-
-      //   showMessage(
-      //     message as MessageCode,
-      //     {},
-      //     {
-      //       language: "fr",
-      //     }
-      //   );
-      // }
-
-      // toast.success(message);
-
-      // if (!error) {
-      //   // Récupère le chemin de redirection depuis les cookies ou le state
-      //   const redirectPath =
-      //     getCookie("redirect_path") ||
-      //     (location.state?.from?.pathname as string) ||
-      //     "/dashboard";
-
-      //   // Nettoie le cookie
-      //   removeCookie("redirect_path");
-
-      //   // Redirige vers le chemin sauvegardé ou la page par défaut
-      //   navigate(redirectPath, { replace: true });
-
-      //   showMessage(
-      //     message as MessageCode,
-      //     {},
-      //     {
-      //       language: "fr",
-      //     }
-      //   );
-      // }
-
-      // return { error, message };
     } catch (error) {
       console.error("Erreur lors de la connexion :", error);
       throw error;
@@ -366,33 +312,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifyMail = async (token: string): Promise<MailVerification> => {
+  const verifyMail = async (token: string) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<{ email?: string }>(
-        `${BASE_URL}/verify-mail`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: token }),
-        }
-      );
-      const { error, data } = res;
-
-      if (error) {
-        if (data && data.email) {
-          return { status: "expired", email: data.email };
-        } else {
-          return { status: "invalid" };
-        }
-      }
-
-      return { status: "success" };
+      await apiUtils.post(ApiUrl.VERIFY_MAIL, { token });
     } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
-      return { status: "error" };
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -400,42 +325,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const resendVerificationMail = async (
     email: string
-  ): Promise<{ message: string | null; resent: boolean }> => {
+  ) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<void>(`${BASE_URL}/resend-mail`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: email }),
-      });
-      const { message, error } = res;
-
-      if (error) {
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
-
-        return { message: message, resent: false };
-      }
-
-      showMessage(
-        message as MessageCode,
-        {},
-        {
-          language: "fr",
-        }
-      );
-
-      return { message: message, resent: true };
+      await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });     
     } catch (error) {
       console.error("Erreur lors de l'envoie du mail de confirmation:", error);
-      return { message, resent: false };
+      throw error;
     } finally {
       setIsLoading(false);
     }

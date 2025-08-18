@@ -5,6 +5,7 @@ import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
 import { useUserContext } from "../hooks/useUser";
 import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
+import { extractErrorMessage } from "../utils/error-handler";
 
 const LoginPage: React.FC = () => {
   const { isLoading: loading, login } = useUserContext();
@@ -13,7 +14,7 @@ const LoginPage: React.FC = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { navigateWithParams } = useAppNavigation();
+  const { navigateWithParams, navigateWithQuery } = useAppNavigation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -51,7 +52,11 @@ const LoginPage: React.FC = () => {
       await login(formData);
       navigateWithParams(ROUTES.HOME);
     } catch (error) {
-      console.error("Login failed:", error);
+
+      if (extractErrorMessage(error).message === "ACCOUNT_UNVERIFIED") {
+        navigateWithQuery(ROUTES.VERIFY_EMAIL, { email: formData.email });
+      }
+      console.error("Login failed:", extractErrorMessage(error));
       // Error is already handled in the UserProvider
     }
   };

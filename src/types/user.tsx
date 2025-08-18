@@ -153,8 +153,8 @@ export type UserContextType = {
   isAuthenticated: boolean; // Added for easier auth checks
   message: string | null; // For login/auth errors
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
-  register: (auth: UserRegistration) => Promise<RegisterRes>; // Made async to mimic API call
-  verifyMail: (token: string) => Promise<MailVerification>;
+  register: (auth: UserRegistration) => Promise<void>; // Made async to mimic API call
+  verifyMail: (token: string) => Promise<void>;
   resendVerificationMail: (
     email: string
   ) => Promise<{ message: string | null; resent: boolean }>;

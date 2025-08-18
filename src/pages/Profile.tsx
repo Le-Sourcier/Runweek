@@ -24,6 +24,8 @@ import { useUserContext } from "../hooks/useUser";
 import { parseDate } from "../utils/date-formatter";
 import { useMessages } from "../hooks/useMessage";
 import { MessageCode } from "../types/message";
+import { extractErrorMessage } from "../utils/error-handler";
+import Spiner from "../components/ui/Spiner";
 
 export default function Profile() {
   const { user, updateUserProfile, updateUserPreferences, logout } = useUserContext(); // Added logout
@@ -40,7 +42,7 @@ export default function Profile() {
   >("overview");
 
   const [isEditing, setIsEditing] = useState(false);
-
+  const [isSavingUpdates, setIsSavingUpdates] = useState(false);
   const [editedFname, setEditedFname] = useState(user?.fname || "");
   const [editedLname, setEditedLname] = useState(user?.lname || "");
   const [editedEmail, setEditedEmail] = useState(user?.email || "");
@@ -149,23 +151,23 @@ export default function Profile() {
   };
 
   const handleSaveChanges = async () => {
+    setIsSavingUpdates(true);
     try {
-      if (user) {
-        // Ensure user is not null before attempting update
-        await updateUserProfile({
-          fname: editedFname,
-          lname: editedLname,
-          email: editedEmail,
-          phone: editedPhone,
-          image: editedProfileImage,
-        }); // Add profileImage
-      }
-      setIsEditing(false);
+      await updateUserProfile({
+        fname: editedFname,
+        lname: editedLname,
+        email: editedEmail,
+        phone: editedPhone,
+        image: editedProfileImage,
+      });
+
       showMessage("USER_UPDATED", {}, { language: "fr" });
+      setIsEditing(false);
     } catch (error) {
       console.log("error:", error);
-
-      showMessage(error as MessageCode, {}, { language: "fr" });
+      showMessage(extractErrorMessage(error).message as MessageCode, {}, { language: "fr" });
+    } finally {
+      setIsSavingUpdates(false);
     }
   };
 
@@ -369,8 +371,11 @@ export default function Profile() {
                 <button
                   onClick={handleSaveChanges}
                   className="btn btn-primary w-full"
+                  disabled={isSavingUpdates}
                 >
-                  Save Changes
+                  {isSavingUpdates ?
+                    <div className="flex items-center gap-2"><Spiner /> Saving...</div>
+                    : "Save Changes"}
                 </button>
                 <button
                   onClick={handleCancelEdit}

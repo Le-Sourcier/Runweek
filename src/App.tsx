@@ -36,6 +36,7 @@ import { MessageProvider } from "./providers/MessageProvider";
 // Components
 import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/layout/ProtectRouteLayout";
+import { ROUTES } from "./hooks/useAppNavigation";
 
 const MainAppLayoutContent: React.FC = () => {
   return (
@@ -65,18 +66,18 @@ const AuthRoutesHandler = () => {
   return (
     <Routes>
       {/* Public Auth Routes */}
-      <Route path="/login" element={<LoginPage />} />
+      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
 
-      <Route path="/register" element={<RegistrationPage />} />
+      <Route path={ROUTES.REGISTER} element={<RegistrationPage />} />
 
       <Route
-        path="/forgot-password"
+        path={ROUTES.FORGOT_PASSWORD}
         element={<PasswordRecoveryRequestPage />}
       />
 
-      <Route path="/verify-mail" element={<VerifyEmailPage />} />
+      <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
 
-      <Route path="/reset-password/:token" element={<PasswordResetPage />} />
+      <Route path={ROUTES.RESET_PASSWORD} element={<PasswordResetPage />} />
 
       {/* Protected App Routes */}
       <Route
