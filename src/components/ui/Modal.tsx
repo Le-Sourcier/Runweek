@@ -1,60 +1,68 @@
-import React, { ReactNode } from 'react';
-import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from "react-router-dom";
+import { Button2 as Button } from "./Button";
+import { Check, Mail, X } from "lucide-react";
 
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl'; // Optional size prop
-}
-
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-  };
-
-  // if (!isOpen) return null; // AnimatePresence handles this
-
+type ModalSuccessProp = {
+  email?: string;
+  onOpen?: () => void | undefined;
+  onClose?: () => void | undefined;
+};
+export const ModalSuccess = ({ ...props }: ModalSuccessProp) => {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }} // Fast transition for overlay
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={onClose} // Close on overlay click
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 relative">
+        <button
+          onClick={props.onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 30 }} // Softened: scale 0.9 to 0.95, y 50 to 30
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 30 }} // Softened: scale 0.9 to 0.95, y 50 to 30
-            transition={{ duration: 0.25, ease: "easeOut" }} // Softened: duration 0.3 to 0.25
-            className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 w-full ${sizeClasses[size]}`}
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
-          >
-            <div className="flex items-center justify-between">
-              {title && <h3 className="text-lg font-semibold text-foreground">{title}</h3>}
-              <button
-                onClick={onClose}
-                className="p-1 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
-                aria-label="Close modal"
-              >
-                <X size={20} />
-              </button>
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mb-4">
+            <Check className="h-8 w-8 text-white" />
+          </div>
+
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            Compte créé avec succès !
+          </h3>
+
+          <p className="text-gray-600 mb-4">
+            Votre compte RunWeek a été créé. Pour commencer à utiliser
+            l'application, vous devez vérifier votre adresse email.
+          </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-center justify-center mb-2">
+              <Mail className="h-5 w-5 text-blue-600 mr-2" />
+              <p className="font-medium text-blue-800">
+                Email de vérification envoyé
+              </p>
             </div>
-            <div>{children}</div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <p className="text-sm text-blue-700">
+              Nous avons envoyé un lien de vérification à :
+            </p>
+            <p className="font-medium text-blue-800 mt-1">{props.email}</p>
+          </div>
+
+          <div className="space-y-3 flex flex-col gap-2">
+            <p className="text-sm text-gray-600">
+              Vérifiez votre boîte de réception (et vos spams) puis cliquez sur
+              le lien pour activer votre compte.
+            </p>
+
+            <Link to="/verify-mail">
+              <Button className="w-full">Aller à la vérification email</Button>
+            </Link>
+
+            <Link to="/login">
+              <Button variant="outline" className="w-full">
+                Retour à la connexion
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
-
-export default Modal;
