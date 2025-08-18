@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const auth = await login(formData);
+      await login(formData);
     } catch (error) {
       console.error("Login failed:", error);
       // Error is already handled in the UserProvider

@@ -1,4 +1,5 @@
-import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
+import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import React from "react";
 
 // Layout and Page Components
 import Layout from "./components/layout/Layout";
@@ -19,200 +20,96 @@ import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import PasswordRecoveryRequestPage from "./pages/PasswordRecoveryRequestPage";
 import PasswordResetPage from "./pages/PasswordResetPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 // Context Providers
-import { ThemeProvider, useTheme } from "./context/ThemeContext"; // Added useTheme import
-import { FloatingCoachProvider } from "./context/FloatingCoachContext"; // Import FloatingCoachProvider
-import { useUser } from "./hooks/useUser";
+import { ThemeProvider } from "./context/ThemeContext";
+import { FloatingCoachProvider } from "./context/FloatingCoachContext";
 import { SearchProvider } from "./context/SearchContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { PRProvider } from "./context/PRContext";
 import { DietProvider } from "./context/DietContext";
 import { SocialProvider } from "./context/SocialContext";
-
-// Other Imports
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { UserProvider } from "./providers/UserProvider";
 import { MessageProvider } from "./providers/MessageProvider";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
 
-// This component wraps the main application layout and its specific context providers
+// Components
+import "react-toastify/dist/ReactToastify.css";
+import ProtectedRoute from "./components/layout/ProtectRouteLayout";
+
 const MainAppLayoutContent: React.FC = () => {
-  const { theme: appTheme } = useTheme(); // Get current app theme
-
   return (
-    <SearchProvider>
-      <NotificationProvider>
-        <PRProvider>
-          <DietProvider>
-            <SocialProvider>
-              <FloatingCoachProvider>
-              <Layout>
-                {" "}
-                {/* Layout should contain an <Outlet /> for the nested routes */}
-                <Outlet />
-              </Layout>
-              </FloatingCoachProvider>
-            </SocialProvider>
-          </DietProvider>
-
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme={appTheme} // Dynamically set theme
-          />
-        </PRProvider>
-      </NotificationProvider>
-    </SearchProvider>
-  );
-};
-
-// This component defines the application's routing structure
-const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useUser();
-  const location = useLocation();
-
-  const loadingScreen = (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        background: "var(--background)",
-        color: "var(--foreground)",
-      }}
-    >
-      Loading application...
-    </div>
-  );
-
-  return (
-    <div>
-      <Routes>
-        {/* Public Authentication Routes: Redirect if already authenticated */}
-        <Route
-          path="/login"
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <LoginPage />
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <RegistrationPage />
-            )
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <PasswordRecoveryRequestPage />
-            )
-          }
-        />{" "}
-        <Route
-          path="/verify-mail"
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <VerifyEmailPage />
-            )
-          }
-        />
-        {/* <Route path="/verify-email" element={<VerifyEmailPage />} /> */}
-        <Route
-          path="/reset-password/:token"
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <PasswordResetPage />
-            )
-          }
-        />
-        {/* Protected Application Routes */}
-        <Route
-          path="/*" // This will match all paths not caught by the auth routes above
-          element={
-            isLoading ? (
-              loadingScreen
-            ) : isAuthenticated ? (
-              <MainAppLayoutContent />
-            ) : (
-              <Navigate
-                to={`/login?redirect=${encodeURIComponent(
-                  `${location.pathname}${location.search}${location.hash}`
-                )}`}
-                replace
-              />
-            )
-          }
-        >
-          {/* These routes are children of MainAppLayoutContent and render inside its <Outlet /> */}
-          <Route index element={<Dashboard />} />{" "}
-          {/* Default route for "/" after login */}
-          <Route path="statistics" element={<Statistics />} />
-          <Route path="coach" element={<Coach />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="goals" element={<Goals />} />
-          <Route path="achievements" element={<Achievements />} />
-          <Route path="personal-records" element={<PersonalRecords />} />
-          <Route path="diet" element={<Diet />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="support" element={<Support />} />
-          <Route path="settings" element={<Settings />} />
-          {/* Fallback for any unmatched protected routes - redirect to dashboard */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+    <div className="">
+      <SearchProvider>
+        <NotificationProvider>
+          <PRProvider>
+            <DietProvider>
+              <SocialProvider>
+                <FloatingCoachProvider>
+                  <Layout>
+                    <Outlet />
+                  </Layout>
+                </FloatingCoachProvider>
+              </SocialProvider>
+            </DietProvider>
+          </PRProvider>
+        </NotificationProvider>
+      </SearchProvider>
     </div>
   );
 };
 
-// Main App component: Sets up UserProvider and renders the AppRoutes
+const AuthRoutesHandler = () => {
+  // const location = useLocation();
+
+  return (
+    <Routes>
+      {/* Public Auth Routes */}
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route path="/register" element={<RegistrationPage />} />
+
+      <Route
+        path="/forgot-password"
+        element={<PasswordRecoveryRequestPage />}
+      />
+
+      <Route path="/verify-mail" element={<VerifyEmailPage />} />
+
+      <Route path="/reset-password/:token" element={<PasswordResetPage />} />
+
+      {/* Protected App Routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainAppLayoutContent />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="statistics" element={<Statistics />} />
+        <Route path="coach" element={<Coach />} />
+        <Route path="calendar" element={<Calendar />} />
+        <Route path="goals" element={<Goals />} />
+        <Route path="achievements" element={<Achievements />} />
+        <Route path="personal-records" element={<PersonalRecords />} />
+        <Route path="diet" element={<Diet />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="support" element={<Support />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <ThemeProvider>
       <MessageProvider>
-        {" "}
-        {/* Added ThemeProvider wrapper */}
-        <FloatingCoachProvider>
-          {" "}
-          {/* Add the new provider here */}
-          <UserProvider>
-            <AppRoutes />
-          </UserProvider>
-        </FloatingCoachProvider>
+        <UserProvider>
+          <AuthRoutesHandler />
+        </UserProvider>
       </MessageProvider>
     </ThemeProvider>
   );

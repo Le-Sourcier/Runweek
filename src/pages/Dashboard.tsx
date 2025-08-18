@@ -1,7 +1,6 @@
 import { useUser } from "../hooks/useUser";
 import { usePRs } from "../context/PRContext"; // Import usePRs
 import { useNotifications } from "../context/NotificationContext"; // Import for notifications
-import { toast } from "react-toastify"; // Import for toasts
 import { isThisMonth, parseISO, format } from "date-fns"; // Import date-fns functions & format
 import { fr } from "date-fns/locale"; // Import French locale for date formatting
 import {
@@ -509,9 +508,9 @@ export default function Dashboard() {
             case "tipOfTheDay":
               widgetContent = renderTipOfTheDayWidget();
               break;
-            case "nutritionSummary":
-              widgetContent = renderNutritionSummary();
-              break;
+            // case "nutritionSummary":
+            //   widgetContent = renderNutritionSummary();
+            //   break;
             default:
               return null;
           }

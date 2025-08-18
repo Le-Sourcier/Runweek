@@ -1,9 +1,10 @@
 // MessageContext.tsx
 import React from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { MESSAGE_MAPPINGS } from "../utils/utils";
 import { Language, MessageCode } from "../types/message";
 import { MessageContext } from "../context/MessageContext";
+import { useTheme } from "../context/ThemeContext";
 
 export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -25,6 +26,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return message;
   };
+  const { theme: appTheme } = useTheme();
 
   const showMessage = (
     code: MessageCode,
@@ -62,6 +64,18 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <MessageContext.Provider value={{ showMessage, getMessage }}>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={appTheme}
+      />
       {children}
     </MessageContext.Provider>
   );

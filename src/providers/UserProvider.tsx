@@ -15,9 +15,10 @@ import {
 import { fetchApi, fetchWithRefresh } from "../utils";
 import { UserContext } from "../context/UserContext";
 import sec from "react-secure-storage";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMessages } from "../hooks/useMessage";
 import { MessageCode } from "../types/message";
+import { getCookie, removeCookie } from "../utils/Cookies";
 
 // // Hardcoded sample user for login
 // const sampleUser: User = {
@@ -174,7 +175,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const { showMessage } = useMessages();
 
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [accessToken, setAccessToken] = useState<string | null>(
     () => (sec.getItem("aspk") as string) || null
   );
@@ -189,6 +190,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       sec.removeItem("aspk");
       setAccessToken("");
     }
+    // Récupère le chemin de redirection depuis les cookies ou le state
+    const redirectPath =
+      getCookie("redirect_path") ||
+      (location.state?.from?.pathname as string) ||
+      "/dashboard";
+
+    // Nettoie le cookie
+    removeCookie("redirect_path");
+
+    // Redirige vers le chemin sauvegardé ou la page par défaut
+    navigate(redirectPath, { replace: true });
   };
 
   const fetchUser = async () => {
@@ -275,7 +287,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       showMessage(
         message as MessageCode,
         {
-          name: user?.fname as string,
+          name: user?.fname ?? "",
         },
         {
           language: "fr",
@@ -310,10 +322,40 @@ export function UserProvider({ children }: { children: ReactNode }) {
           message ?? "Erreur lors de la connxion : données manquantes.";
 
         setMessage(_message);
-        toast.error(_message);
+        // toast.error(_message);
+
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
       }
 
-      toast.success(message);
+      // toast.success(message);
+
+      if (!error) {
+        // Récupère le chemin de redirection depuis les cookies ou le state
+        const redirectPath =
+          getCookie("redirect_path") ||
+          (location.state?.from?.pathname as string) ||
+          "/dashboard";
+
+        // Nettoie le cookie
+        removeCookie("redirect_path");
+
+        // Redirige vers le chemin sauvegardé ou la page par défaut
+        navigate(redirectPath, { replace: true });
+
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+      }
 
       return { error, message };
     } catch (error) {

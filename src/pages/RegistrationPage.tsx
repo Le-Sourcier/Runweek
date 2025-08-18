@@ -6,19 +6,20 @@ import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
-import { useMessages } from "../hooks/useMessage";
-import { MessageCode } from "../types/message";
+import { ModalSuccess } from "../components/ui/modal";
 
 const RegisterPage: React.FC = () => {
   const { isLoading: loading, register } = useUser();
-  const { showMessage } = useMessages();
 
   const [formData, setFormData] = React.useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [registeredEmail, setRegisteredEmail] = React.useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,8 +48,12 @@ const RegisterPage: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     if (!formData.email) {
@@ -71,11 +76,9 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const [fname, ...lnameParts] = formData.fullName.trim().split(" ");
-    const lname = lnameParts.join(" ");
     const _formData: UserRegistration = {
-      fname: fname || "",
-      lname: lname || "",
+      fname: formData.firstName.trim(),
+      lname: formData.lastName.trim(),
       email: formData.email,
       password: formData.password,
     };
@@ -83,7 +86,8 @@ const RegisterPage: React.FC = () => {
     const _ = await register(_formData);
     if (_.error) return;
     else {
-      showMessage(_.message as string as MessageCode);
+      setRegisteredEmail(_formData.email);
+      setShowSuccessModal(true);
     }
   };
 
@@ -93,26 +97,41 @@ const RegisterPage: React.FC = () => {
       subtitle="Start your personalized running journey today"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Input
-          label="Full name"
-          type="text"
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleInputChange}
-          error={errors.fullName}
-          placeholder="John Doe"
-          autoComplete="name"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="First name"
+            type="text"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleInputChange}
+            error={errors.firstName}
+            placeholder="John"
+            autoComplete="given-name"
+            disabled={loading}
+          />
+          <Input
+            label="Last name"
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+            error={errors.lastName}
+            placeholder="Doe"
+            autoComplete="family-name"
+            disabled={loading}
+          />
+        </div>
 
         <Input
           label="Email"
-          type="email"
+          type="text"
           name="email"
           value={formData.email}
           onChange={handleInputChange}
           error={errors.email}
           placeholder="john@example.com"
           autoComplete="email"
+          disabled={loading}
         />
 
         <div className="space-y-3">
@@ -125,6 +144,7 @@ const RegisterPage: React.FC = () => {
             placeholder="••••••••••••"
             isPassword
             autoComplete="new-password"
+            disabled={loading}
           />
 
           {formData.password && (
@@ -238,6 +258,13 @@ const RegisterPage: React.FC = () => {
           .
         </div>
       </form>
+
+      {!showSuccessModal && (
+        <ModalSuccess
+          email={registeredEmail}
+          onClose={() => setShowSuccessModal(false)}
+        />
+      )}
     </AuthLayout>
   );
 };
