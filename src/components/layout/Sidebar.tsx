@@ -85,7 +85,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
         <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center gap-3">
             <img
-              src={user.profileImage}
+              src={user.image}
               alt={user.fname}
               className="w-10 h-10 rounded-full object-cover"
             />

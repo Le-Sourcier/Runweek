@@ -38,6 +38,9 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     const { language = "en", toastId, autoClose } = options;
     const message = getMessage(code, variables, language);
 
+    console.log("message:", message);
+    
+
     // Determine message type based on code
     if (code.startsWith("STRIPE_") || code === "INSUFFICIENT_FUNDS") {
       toast.warn(message, { toastId, autoClose });

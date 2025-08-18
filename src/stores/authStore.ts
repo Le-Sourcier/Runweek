@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 	},
 
 	setUser: (user?: User|null) => {
-		set({user: {...user, profileImage: user?.profileImage || defaultImage} as User});
+		set({user: {...user, image: user?.image || defaultImage} as User});
 	},
 
 	logout: () => set({accessToken: null, refreshToken: null, user: null}),

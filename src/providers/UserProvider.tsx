@@ -1,6 +1,5 @@
 import React, { useState, ReactNode } from "react";
 import { toast } from "react-toastify";
-// import { toast } from "react-hot-toast";
 import {
   User,
   UserGoal,
@@ -300,7 +299,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       const _message = extractErrorMessage(error);
-     
+
 
       setMessage(_message.message);
 
@@ -467,14 +466,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     navigate("/login");
   };
 
-  const updateUserProfile = (updatedProfileData: Partial<User>) => {
-    setUser((prevUser) => {
-      if (!prevUser) return null;
-      const updatedUser = { ...prevUser, ...updatedProfileData };
-      sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
-      toast.success("Profile updated successfully!");
-      return updatedUser;
-    });
+  const updateUserProfile = async (updatedProfileData: Partial<User>) => {
+
+    try {
+      await apiUtils.put<User>(ApiUrl.UPDATE_PROFILE, updatedProfileData);
+      await fetchUser();
+    } catch (error) {
+      throw error;
+    }
   };
 
   const addGoal = (

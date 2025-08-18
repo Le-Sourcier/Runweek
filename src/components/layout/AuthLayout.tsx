@@ -1,5 +1,9 @@
-import React from "react";
-import { Activity, X } from "lucide-react";
+import React, { Suspense, useEffect } from "react";
+import { Activity } from "lucide-react";
+import { useUserContext } from "../../hooks/useUser";
+import { ROUTES, useAppNavigation } from "../../hooks/useAppNavigation";
+import LoadingScreen from "../ui/LoadingScreen";
+
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -14,7 +18,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   subtitle,
   showVisual = true,
 }) => {
-  return (
+  const { navigateWithParams } = useAppNavigation();
+  const { isAuthenticated } = useUserContext();
+
+  useEffect(() => {
+    if (isAuthenticated) navigateWithParams(ROUTES.HOME);
+  }, [isAuthenticated]);
+
+  const authLayoutContent = (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 lg:p-8 flex items-center justify-center">
       <div className="max-w-7xl mx-auto">
         <div className="bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 rounded-3xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[700px] relative">
@@ -68,13 +79,12 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
                         {Array.from({ length: 7 }, (_, i) => (
                           <div
                             key={i}
-                            className={`p-2 rounded-lg ${
-                              i === 3
-                                ? "bg-orange-500 text-white"
-                                : i === 5
+                            className={`p-2 rounded-lg ${i === 3
+                              ? "bg-orange-500 text-white"
+                              : i === 5
                                 ? "bg-orange-100 text-orange-600"
                                 : "text-gray-400"
-                            }`}
+                              }`}
                           >
                             {22 + i}
                           </div>
@@ -146,6 +156,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       </div>
     </div>
   );
+
+  return <Suspense fallback={<LoadingScreen />}>
+    {authLayoutContent}
+  </Suspense>;
 };
 
 export default AuthLayout;

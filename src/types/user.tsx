@@ -34,8 +34,9 @@ export type User = {
   fname: string;
   lname: string;
   email: string;
-  profileImage: string;
-  updatedAt: string;
+  phone: string;
+  image: string;
+  createdAt: string;
   stats: UserStats;
   goals: UserGoal[];
   achievements: UserAchievement[];
@@ -158,7 +159,7 @@ export type UserContextType = {
     email: string
   ) => Promise<{ message: string | null; resent: boolean }>;
   logout: () => void;
-  updateUserProfile: (updatedProfileData: Partial<User>) => void;
+  updateUserProfile: (updatedProfileData: Partial<User>) => Promise<void>;
   updateUserPreferences: (preferences: UserPreferences) => void;
   changePassword: (
     currentPassword: string,

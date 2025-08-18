@@ -759,7 +759,7 @@ export const getBaseMessage = (language: Language, code: MessageCode) => {
     MESSAGE_MAPPINGS["en"].UNKNOWN_ERROR
 }
 
-export function extractErrorMessage(error: any, defaultMessage?: string): {
+export function extractErrorMessage(error: any, defaultMessage: string = "UNKNOWN_ERROR"): {
 	message: string,
 	code?: string
 } {

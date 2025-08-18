@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-   const {navigateWithParams} = useAppNavigation();
+  const { navigateWithParams } = useAppNavigation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Added useNavigate
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 import PasswordSecuritySettings from "../components/profile/PasswordSecuritySettings"; // Added import
@@ -18,13 +17,18 @@ import {
   Activity,
   Link as LinkIcon,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUserContext } from "../hooks/useUser";
 import { parseDate } from "../utils/date-formatter";
+import { useMessages } from "../hooks/useMessage";
+import { MessageCode } from "../types/message";
 
 export default function Profile() {
   const { user, updateUserProfile, updateUserPreferences, logout } = useUserContext(); // Added logout
+  const { showMessage } = useMessages();
+
   const [activeTab, setActiveTab] = useState("account");
   const [accountSubView, setAccountSubView] = useState<
     | "overview"
@@ -40,8 +44,9 @@ export default function Profile() {
   const [editedFname, setEditedFname] = useState(user?.fname || "");
   const [editedLname, setEditedLname] = useState(user?.lname || "");
   const [editedEmail, setEditedEmail] = useState(user?.email || "");
+  const [editedPhone, setEditedPhone] = useState(user?.phone || "");
   const [editedProfileImage, setEditedProfileImage] = useState(
-    user?.profileImage || ""
+    user?.image || ""
   );
 
   // Preferences State - Initialize with defaults, then update from user.preferences in useEffect
@@ -76,7 +81,7 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setEditedEmail(user.email);
-      setEditedProfileImage(user.profileImage); // Add this line
+      setEditedProfileImage(user.image); // Add this line
       if (user.preferences) {
         setDistanceUnit(user.preferences.distanceUnit || "kilometers");
         setPreferredRunDays(
@@ -138,23 +143,30 @@ export default function Profile() {
       setEditedFname(user.fname);
       setEditedLname(user.lname);
       setEditedEmail(user.email);
-      setEditedProfileImage(user.profileImage);
+      setEditedProfileImage(user.image);
     }
     setIsEditing(!isEditing);
   };
 
-  const handleSaveChanges = () => {
-    if (user) {
-      // Ensure user is not null before attempting update
-      updateUserProfile({
-        fname: editedFname,
-        lname: editedLname,
-        email: editedEmail,
-        profileImage: editedProfileImage,
-      }); // Add profileImage
+  const handleSaveChanges = async () => {
+    try {
+      if (user) {
+        // Ensure user is not null before attempting update
+        await updateUserProfile({
+          fname: editedFname,
+          lname: editedLname,
+          email: editedEmail,
+          phone: editedPhone,
+          image: editedProfileImage,
+        }); // Add profileImage
+      }
+      setIsEditing(false);
+      showMessage("USER_UPDATED", {}, { language: "fr" });
+    } catch (error) {
+      console.log("error:", error);
+
+      showMessage(error as MessageCode, {}, { language: "fr" });
     }
-    setIsEditing(false);
-    // Optionally: show a success notification
   };
 
   const handleCancelEdit = () => {
@@ -162,7 +174,8 @@ export default function Profile() {
     setEditedFname(user.fname);
     setEditedLname(user.lname);
     setEditedEmail(user.email);
-    setEditedProfileImage(user.profileImage); // Add this line
+    setEditedPhone(user.phone);
+    setEditedProfileImage(user.image); // Add this line
     setIsEditing(false);
   };
 
@@ -218,11 +231,20 @@ export default function Profile() {
         <Card className="lg:col-span-4 bg-card text-card-foreground border-border">
           <div className="flex flex-col items-center text-center">
             <div className="relative">
-              <img
-                src={isEditing ? editedProfileImage : user.profileImage} // Show edited or original image
-                alt={editedFname + " " + editedLname}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
-              />
+              {/* Avatar avec initiales si pas d'image */}
+              {(isEditing ? editedProfileImage : user.image) ? (
+                <img
+                  src={isEditing ? editedProfileImage : user.image}
+                  alt={editedFname + " " + editedLname}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-700 shadow-sm bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-white text-2xl font-semibold">
+                    {editedFname?.charAt(0)?.toUpperCase() || ""}{editedLname?.charAt(0)?.toUpperCase() || ""}
+                  </span>
+                </div>
+              )}
               {isEditing ? (
                 <>
                   <input
@@ -317,10 +339,26 @@ export default function Profile() {
                     <span>{user.email}</span>
                   )}
                 </div>
+
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Phone size={18} />
+                  {isEditing ? (
+                    <input
+                      type="phone"
+                      value={editedPhone}
+                      onChange={(e) => setEditedPhone(e.target.value)}
+                      className="input w-full max-w-xs text-md font-bold bg-background text-foreground border-border focus:ring-primary focus:border-primary"
+                      aria-label="User phone"
+                    />
+                  ) : (
+                    <span>{user.phone}</span>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Calendar size={18} />
                   <span>
-                    Joined : {parseDate(user.updatedAt)}
+                    Joined : {parseDate(user.createdAt)}
                   </span>
                 </div>
               </div>

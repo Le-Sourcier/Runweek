@@ -16,14 +16,14 @@ export default function PersonalInfoSettings({
   const [editedName, setEditedName] = useState(user?.name || "");
   const [editedEmail, setEditedEmail] = useState(user?.email || "");
   const [editedProfileImage, setEditedProfileImage] = useState(
-    user?.profileImage || ""
+    user?.image || ""
   );
 
   useEffect(() => {
     if (user) {
       setEditedName(user.name);
       setEditedEmail(user.email);
-      setEditedProfileImage(user.profileImage);
+      setEditedProfileImage(user.image);
     }
   }, [user]);
 
@@ -33,7 +33,7 @@ export default function PersonalInfoSettings({
     if (!isEditing) {
       setEditedName(user.name);
       setEditedEmail(user.email);
-      setEditedProfileImage(user.profileImage);
+      setEditedProfileImage(user.image);
     }
     setIsEditing(!isEditing);
   };
@@ -43,7 +43,7 @@ export default function PersonalInfoSettings({
       updateUserProfile({
         name: editedName,
         email: editedEmail,
-        profileImage: editedProfileImage,
+        image: editedProfileImage,
       });
     }
     setIsEditing(false);
@@ -52,7 +52,7 @@ export default function PersonalInfoSettings({
   const handleCancelEdit = () => {
     setEditedName(user.name);
     setEditedEmail(user.email);
-    setEditedProfileImage(user.profileImage);
+    setEditedProfileImage(user.image);
     setIsEditing(false);
   };
 
@@ -80,7 +80,7 @@ export default function PersonalInfoSettings({
       <div className="flex flex-col items-center text-center">
         <div className="relative">
           <img
-            src={isEditing ? editedProfileImage : user.profileImage}
+            src={isEditing ? editedProfileImage : user.image}
             alt={editedName}
             className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
           />

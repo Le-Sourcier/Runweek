@@ -510,14 +510,14 @@ export default function Settings() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 mb-6">
                     <img
-                      src={user?.profileImage}
+                      src={user?.image}
                       alt={user?.fname}
                       className="w-20 h-20 rounded-full object-cover border-4 border-border"
                     />
                     <div>
                       <h3 className="font-semibold text-foreground text-lg">{user?.fname} {user?.lname}</h3>
                       <p className="text-muted-foreground">{user?.email}</p>
-                      <p className="text-sm text-muted-foreground">Membre depuis {new Date(user?.updatedAt || '').toLocaleDateString()}</p>
+                      <p className="text-sm text-muted-foreground">Membre depuis {new Date(user?.createdAt || '').toLocaleDateString()}</p>
                     </div>
                   </div>
 
