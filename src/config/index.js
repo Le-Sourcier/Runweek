@@ -2,7 +2,7 @@ const _config = {
   development: {
     database: "runweek_db",
     username: "postgres",
-    password: "admin",
+    password: "Lesourcier",
     host: "localhost",
     dialect: "postgres",
     logging: false,
@@ -20,8 +20,12 @@ const _config = {
     dialect: "postgres",
     logging: false,
     cors: {
-      origin: process.env.ORIGINE_URL,
-      credentials: process.env.NODE_ENV === "production" ? true : false,
+      // origin: process.env.ORIGINE_URL,
+      // credentials: process.env.NODE_ENV === "production" ? true : false,
+
+      origin: "*",
+      //origin: process.env.ORIGINE_URL,
+      credentials: false,
     },
   },
 };

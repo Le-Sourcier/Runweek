@@ -33,7 +33,6 @@ router
    *             required:
    *               - fname
    *               - lname
-   *               - phone
    *               - email
    *               - password
    *             properties:
@@ -43,15 +42,6 @@ router
    *               lname:
    *                 type: string
    *                 example: Doe
-   *               company:
-   *                 type: string
-   *                 example: Acme Inc.
-   *               phone:
-   *                 type: string
-   *                 example: "+1234567890"
-   *               website:
-   *                 type: string
-   *                 example: "https://acme.com"
    *               email:
    *                 type: string
    *                 format: email
@@ -60,10 +50,6 @@ router
    *                 type: string
    *                 format: password
    *                 example: StrongP@ssw0rd!
-   *               referral_code:
-   *                 type: string
-   *                 description: Optional referral code provided by a sponsor
-   *                 example: "abc123XYZ"
    *     responses:
    *       '201':
    *         description: Account created successfully. Verification email sent.

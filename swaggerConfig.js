@@ -142,17 +142,6 @@ const options = {
           properties: {
             fname: { type: "string", example: "John" },
             lname: { type: "string", example: "Doe" },
-            company: {
-              type: "string",
-              example: "JD Inc.",
-              nullable: true,
-            },
-            phone: { type: "string", example: "1234567890" },
-            website: {
-              type: "string",
-              example: "https://johndoe.com",
-              nullable: true,
-            },
             email: {
               type: "string",
               format: "email",
@@ -164,7 +153,7 @@ const options = {
               example: "StrongP@ssw0rd!",
             },
           },
-          required: ["fname", "lname", "phone", "email", "password"],
+          required: ["fname", "lname", "email", "password"],
         },
         UserLoginInput: {
           type: "object",
@@ -259,35 +248,8 @@ const options = {
               description: "Short user biography",
               example: "I love SaaS, growth hacking and automation.",
             },
-
-            // Company info
-            company: {
-              type: "string",
-              description: "Company name",
-              example: "Acme Corp",
-            },
-            website: {
-              type: "string",
-              format: "uri",
-              description: "Company website",
-              example: "https://acme.com",
-            },
-
-            // Subscription info
-            plan: {
-              type: "string",
-              enum: ["FREE", "STARTER", "PRO", "EXPERT"],
-              description: "Current subscription plan",
-              example: "PRO",
-            },
-            credits: {
-              type: "integer",
-              description: "Number of credits remaining in the current period",
-              example: 1200,
-            },
-
             // Optional metadata
-            updatedAt: {
+            createdAt: {
               type: "string",
               format: "date-time",
               description: "Last update timestamp",
@@ -333,16 +295,6 @@ const options = {
             bio: {
               type: "string",
               example: "Software Developer",
-              nullable: true,
-            },
-            company: {
-              type: "string",
-              example: "Acme Corp",
-              nullable: true,
-            },
-            website: {
-              type: "string",
-              example: "website.com",
               nullable: true,
             },
           },
@@ -424,128 +376,6 @@ const options = {
               nullable: true,
             },
           },
-        },
-        // Scraping Job Schemas
-        ScrapingJob: {
-          type: "object",
-          properties: {
-            id: { type: "string", format: "uuid" },
-            user_id: { type: "string", format: "uuid" },
-            source: { type: "string", example: "google-maps" },
-            query: { type: "string", example: "restaurants" },
-            location: {
-              type: "string",
-              example: "Paris",
-              nullable: true,
-            },
-            results: { type: "integer", example: 0 },
-            limite: {
-              type: "integer",
-              example: 50,
-              nullable: true,
-            },
-            status: {
-              type: "string",
-              enum: ["pending", "running", "completed", "failed"],
-              example: "pending",
-            },
-            createdAt: { type: "string", format: "date-time" },
-            updatedAt: { type: "string", format: "date-time" },
-          },
-        },
-        ScrapingJobInput: {
-          type: "object",
-          properties: {
-            source: { type: "string", example: "google-maps" },
-            query: { type: "string", example: "restaurants" },
-            location: {
-              type: "string",
-              example: "Paris",
-              nullable: true,
-            },
-            // results: { type: 'integer', example: 0 }, // Usually not set by client on create
-            limite: {
-              type: "integer",
-              example: 50,
-              nullable: true,
-            },
-          },
-          required: ["source", "query"],
-        },
-        JobResult: {
-          type: "object",
-          properties: {
-            id: {
-              type: "string",
-              format: "uuid",
-              description: "Matches corresponding ScrapingJob ID",
-            },
-            result: {
-              type: "object",
-              description: "JSON object or array containing scraped data",
-            }, // Can be more specific if structure is known
-            createdAt: { type: "string", format: "date-time" },
-            updatedAt: { type: "string", format: "date-time" },
-          },
-        },
-        // Enrichment Job Schemas
-        EnrichJob: {
-          type: "object",
-          properties: {
-            id: { type: "string", format: "uuid" },
-            user_id: { type: "string", format: "uuid" },
-            name: { type: "string", example: "uploaded_data.csv" },
-            sources: {
-              type: "array",
-              items: { type: "string" },
-              example: ["pappers", "google"],
-            },
-            records: { type: "integer", example: 100 },
-            enriched: {
-              type: "integer",
-              example: 0,
-              nullable: true,
-            },
-            link: {
-              type: "string",
-              nullable: true,
-              description: "Link to the enriched file",
-            },
-            status: {
-              type: "string",
-              enum: ["in_progress", "queued", "completed", "failed"],
-              example: "in_progress",
-            },
-            createdAt: { type: "string", format: "date-time" },
-            updatedAt: { type: "string", format: "date-time" },
-          },
-        },
-        EnrichJobMappingInputMeta: {
-          // For the 'meta' part of multipart/form-data
-          type: "object",
-          properties: {
-            user_id: { type: "string", format: "uuid" },
-            mapping: {
-              type: "object",
-              additionalProperties: { type: "string" },
-              example: {
-                siret_number: "SIRET_Col_Name",
-                nom_entreprise: "Company_Name_Col",
-              },
-            },
-            sources: {
-              type: "array",
-              items: { type: "string" },
-              example: ["pappers", "google"],
-            },
-            expected_columns: {
-              type: "array",
-              items: { type: "string" },
-              example: ["siret", "company_name"],
-              nullable: true,
-            },
-          },
-          required: ["user_id", "mapping", "sources"],
         },
         // Ajoutez ce nouveau schéma Product
         Product: {
@@ -686,7 +516,8 @@ const options = {
             originDataSourceId: {
               type: "string",
               description: "Source des données.",
-              example: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
+              example:
+                "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
             },
             value: {
               type: "array",
@@ -716,7 +547,8 @@ const options = {
                 properties: {
                   dataSourceId: {
                     type: "string",
-                    example: "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
+                    example:
+                      "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
                   },
                   point: {
                     type: "array",
@@ -768,7 +600,8 @@ const options = {
             },
             dataTypeName: {
               type: "string",
-              description: "Type de données (ex: com.google.calories.expended).",
+              description:
+                "Type de données (ex: com.google.calories.expended).",
             },
             originDataSourceId: {
               type: "string",
