@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
+import { Modal } from "../components/ui/modal";
 
 const RegisterPage: React.FC = () => {
   const { isLoading: loading, register } = useUser();
@@ -258,8 +259,8 @@ const RegisterPage: React.FC = () => {
         </div>
       </form>
 
-      {!showSuccessModal && (
-        <ModalSuccess
+      {showSuccessModal && (
+        <Modal
           email={registeredEmail}
           onClose={() => setShowSuccessModal(false)}
         />

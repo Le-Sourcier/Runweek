@@ -18,10 +18,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 lg:p-8 flex items-center justify-center">
       <div className="max-w-7xl mx-auto">
         <div className="bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 rounded-3xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[700px] relative">
-          {/* Close button */}
-          <button className="absolute top-6 right-6 z-20 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/90 transition-all">
-            <X className="w-4 h-4 text-gray-600" />
-          </button>
 
           <div className="flex flex-col lg:flex-row min-h-[600px] lg:min-h-[700px]">
             {/* Left Panel - Form */}
