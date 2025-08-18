@@ -266,23 +266,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await apiUtils.post<LoginResponse>(ApiUrl.LOGIN, props);
 
-      // if (error) {
-      //   const _message =
-      //     message ?? "Erreur lors de la connexion : données manquantes.";
-
-      //   setMessage(_message);
-
-      //   showMessage(
-      //     message as MessageCode,
-      //     {},
-      //     {
-      //       language: "fr",
-      //     }
-      //   );
-
-      //   throw new Error(_message);
-      // }
-
       if (!data || !data.accessToken) {
         const _message = "Erreur lors de la connexion : données manquantes.";
         setMessage(_message);
@@ -317,62 +300,64 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (props: UserRegistration): Promise<RegisterRes> => {
+  const register = async (props: UserRegistration) => {
     setIsLoading(true);
     try {
-      const res = await fetchApi<Record<string, string>>(
-        `${BASE_URL}/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(props),
-        }
-      );
-      const { message, error } = res;
+      await apiUtils.post(ApiUrl.REGISTER, props);
 
-      if (error) {
-        const _message =
-          message ?? "Erreur lors de la connexion : données manquantes.";
+      // const res = await fetchApi<Record<string, string>>(
+      //   `${BASE_URL}/register`,
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify(props),
+      //   }
+      // );
+      // const { message, error } = res;
 
-        setMessage(_message);
-        // toast.error(_message);
+      // if (error) {
+      //   const _message =
+      //     message ?? "Erreur lors de la connexion : données manquantes.";
 
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
-      }
+      //   setMessage(_message);
+      //   // toast.error(_message);
+
+      //   showMessage(
+      //     message as MessageCode,
+      //     {},
+      //     {
+      //       language: "fr",
+      //     }
+      //   );
+      // }
 
       // toast.success(message);
 
-      if (!error) {
-        // Récupère le chemin de redirection depuis les cookies ou le state
-        const redirectPath =
-          getCookie("redirect_path") ||
-          (location.state?.from?.pathname as string) ||
-          "/dashboard";
+      // if (!error) {
+      //   // Récupère le chemin de redirection depuis les cookies ou le state
+      //   const redirectPath =
+      //     getCookie("redirect_path") ||
+      //     (location.state?.from?.pathname as string) ||
+      //     "/dashboard";
 
-        // Nettoie le cookie
-        removeCookie("redirect_path");
+      //   // Nettoie le cookie
+      //   removeCookie("redirect_path");
 
-        // Redirige vers le chemin sauvegardé ou la page par défaut
-        navigate(redirectPath, { replace: true });
+      //   // Redirige vers le chemin sauvegardé ou la page par défaut
+      //   navigate(redirectPath, { replace: true });
 
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
-      }
+      //   showMessage(
+      //     message as MessageCode,
+      //     {},
+      //     {
+      //       language: "fr",
+      //     }
+      //   );
+      // }
 
-      return { error, message };
+      // return { error, message };
     } catch (error) {
       console.error("Erreur lors de la connexion :", error);
       throw error;

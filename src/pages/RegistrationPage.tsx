@@ -7,9 +7,16 @@ import { Link } from "react-router-dom";
 import { useUserContext } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
 import { Modal } from "../components/ui/modal";
+import { getCookie, removeCookie } from "../utils/Cookies";
+import { useAppNavigation } from "../hooks/useAppNavigation";
+import { extractErrorMessage } from "../utils/error-handler";
+import { MessageCode } from "../types/message";
+import { useMessages } from "../hooks/useMessage";
 
 const RegisterPage: React.FC = () => {
   const { isLoading: loading, register } = useUserContext();
+  const { getCurrentLocation } = useAppNavigation();
+  const { showMessage } = useMessages();
 
   const [formData, setFormData] = React.useState({
     firstName: "",
@@ -83,11 +90,29 @@ const RegisterPage: React.FC = () => {
       password: formData.password,
     };
 
-    const _ = await register(_formData);
-    if (_.error) return;
-    else {
+    try {
+      await register(_formData);
+
+      const redirectPath =
+        getCookie("redirect_path") ||
+        (getCurrentLocation().pathname) ||
+        "/dashboard";
+
+      removeCookie("redirect_path");
+
+      // Redirige vers le chemin sauvegardé ou la page par défaut
+      // navigateWithParams(redirectPath);
       setRegisteredEmail(_formData.email);
       setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error during registration:", extractErrorMessage(error));
+      showMessage(
+        extractErrorMessage(error).message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
     }
   };
 
@@ -153,15 +178,14 @@ const RegisterPage: React.FC = () => {
                 {[1, 2, 3, 4].map((level) => (
                   <div
                     key={level}
-                    className={`h-2 flex-1 rounded-full transition-colors ${
-                      level <= score
-                        ? score <= 2
-                          ? "bg-red-400"
-                          : score === 3
+                    className={`h-2 flex-1 rounded-full transition-colors ${level <= score
+                      ? score <= 2
+                        ? "bg-red-400"
+                        : score === 3
                           ? "bg-yellow-400"
                           : "bg-green-400"
-                        : "bg-gray-200"
-                    }`}
+                      : "bg-gray-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -274,9 +298,8 @@ const PasswordCheck: React.FC<{ check: boolean; text: string }> = ({
   text,
 }) => (
   <div
-    className={`flex items-center gap-2 ${
-      check ? "text-green-600" : "text-gray-400"
-    }`}
+    className={`flex items-center gap-2 ${check ? "text-green-600" : "text-gray-400"
+      }`}
   >
     {check ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
     <span>{text}</span>
