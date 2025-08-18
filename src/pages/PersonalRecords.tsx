@@ -3,7 +3,7 @@ import { usePRs } from '../context/PRContext';
 import { PersonalRecord } from '../types';
 import { calculatePace, timeStringToSeconds, metersToKilometers } from '../utils/formatters';
 import Card from '../components/ui/Card';
-import Modal from '../components/ui/Modal';
+import { Modal } from '../components/ui/modal';
 import { Trophy, PlusCircle, Edit2, Trash2, CalendarDays, Clock, Waypoints, Filter, ArrowDownUp } from 'lucide-react';
 
 const DISTANCE_FILTER_OPTIONS = [

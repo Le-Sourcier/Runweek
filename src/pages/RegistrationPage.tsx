@@ -6,7 +6,6 @@ import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
-import { ModalSuccess } from "../components/ui/modal";
 
 const RegisterPage: React.FC = () => {
   const { isLoading: loading, register } = useUser();

@@ -4,7 +4,7 @@ import { useUser } from '../hooks/useUser';
 import { useDiet } from '../context/DietContext';
 import { useSocial } from '../context/SocialContext';
 import Card from '../components/ui/Card';
-import Modal from '../components/ui/Modal';
+import { Modal } from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import ProgressBar from '../components/ui/ProgressBar';
@@ -67,7 +67,7 @@ const Diet: React.FC = () => {
   const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
   const [isCreateFoodModalOpen, setIsCreateFoodModalOpen] = useState(false);
-  
+
   // Form states
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   const [foodSearchQuery, setFoodSearchQuery] = useState('');
@@ -77,7 +77,7 @@ const Diet: React.FC = () => {
   const [unit, setUnit] = useState<'g' | 'portion'>('g');
   const [waterIntake, setWaterIntakeLocal] = useState(currentDayNutrition?.waterIntake || 0);
   const [dailyNotes, setDailyNotes] = useState(currentDayNutrition?.notes || '');
-  
+
   // Custom food form
   const [customFoodForm, setCustomFoodForm] = useState({
     name: '',
@@ -365,23 +365,22 @@ const Diet: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full ${
-                      dietAnalysis.overallScore >= 80 ? 'bg-green-500' :
-                      dietAnalysis.overallScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
+                    <div className={`w-4 h-4 rounded-full ${dietAnalysis.overallScore >= 80 ? 'bg-green-500' :
+                        dietAnalysis.overallScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}></div>
                     <span className="text-lg font-semibold text-foreground">
                       Score: {dietAnalysis.overallScore}/100
                     </span>
                   </div>
                   <Badge variant={
                     dietAnalysis.weeklyTrend === 'improving' ? 'success' :
-                    dietAnalysis.weeklyTrend === 'declining' ? 'error' : 'default'
+                      dietAnalysis.weeklyTrend === 'declining' ? 'error' : 'default'
                   }>
                     {dietAnalysis.weeklyTrend === 'improving' ? '📈 En amélioration' :
-                     dietAnalysis.weeklyTrend === 'declining' ? '📉 En baisse' : '➡️ Stable'}
+                      dietAnalysis.weeklyTrend === 'declining' ? '📉 En baisse' : '➡️ Stable'}
                   </Badge>
                 </div>
-                
+
                 <AnimatePresence>
                   {dietAnalysis.recommendations.map((rec, index) => (
                     <motion.div
@@ -390,12 +389,11 @@ const Diet: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        rec.type === 'warning' ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10' :
-                        rec.type === 'improvement' ? 'border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10' :
-                        rec.type === 'achievement' ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' :
-                        'border-blue-500 bg-blue-50/50 dark:bg-blue-900/10'
-                      }`}
+                      className={`p-4 rounded-lg border-l-4 ${rec.type === 'warning' ? 'border-red-500 bg-red-50/50 dark:bg-red-900/10' :
+                          rec.type === 'improvement' ? 'border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10' :
+                            rec.type === 'achievement' ? 'border-green-500 bg-green-50/50 dark:bg-green-900/10' :
+                              'border-blue-500 bg-blue-50/50 dark:bg-blue-900/10'
+                        }`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-3 flex-1">
@@ -470,8 +468,8 @@ const Diet: React.FC = () => {
                   };
 
                   return (
-                    <motion.div 
-                      key={mealType} 
+                    <motion.div
+                      key={mealType}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="border border-border rounded-lg p-4 bg-background"
@@ -481,8 +479,8 @@ const Diet: React.FC = () => {
                           {getMealIcon(mealType)}
                           <h4 className="font-semibold text-foreground capitalize">
                             {mealType === 'breakfast' ? 'Petit-déjeuner' :
-                             mealType === 'lunch' ? 'Déjeuner' :
-                             mealType === 'dinner' ? 'Dîner' : 'Collation'}
+                              mealType === 'lunch' ? 'Déjeuner' :
+                                mealType === 'dinner' ? 'Dîner' : 'Collation'}
                           </h4>
                         </div>
                         <div className="text-right">
@@ -505,7 +503,7 @@ const Diet: React.FC = () => {
                                 </Badge>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
-                                {Math.round(meal.foodItem.calories * (meal.unit === 'g' ? meal.quantity / 100 : meal.quantity))} cal • 
+                                {Math.round(meal.foodItem.calories * (meal.unit === 'g' ? meal.quantity / 100 : meal.quantity))} cal •
                                 {Math.round(meal.foodItem.protein * (meal.unit === 'g' ? meal.quantity / 100 : meal.quantity))}g protéines
                               </div>
                             </div>
@@ -580,8 +578,8 @@ const Diet: React.FC = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Activez le partage de données nutritionnelles dans vos paramètres pour accéder aux fonctionnalités sociales.
                 </p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => navigate('/settings?tab=privacy&section=dataSharing')}
                   className="btn-sm"
                 >
@@ -595,10 +593,9 @@ const Diet: React.FC = () => {
           <Card title="Analyse IA">
             <div className="space-y-4">
               <div className="text-center">
-                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2 ${
-                  dietAnalysis.overallScore >= 80 ? 'bg-green-500' :
-                  dietAnalysis.overallScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}>
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2 ${dietAnalysis.overallScore >= 80 ? 'bg-green-500' :
+                    dietAnalysis.overallScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}>
                   {dietAnalysis.overallScore}
                 </div>
                 <p className="text-sm text-muted-foreground">Score nutritionnel</p>
@@ -620,7 +617,7 @@ const Diet: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {dietAnalysis.areasForImprovement.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
@@ -717,14 +714,13 @@ const Diet: React.FC = () => {
                   <div className="flex items-center gap-4 text-xs">
                     <button
                       onClick={() => likeMeal(sharedMeal.id)}
-                      className={`flex items-center gap-1 transition-colors ${
-                        sharedMeal.isLiked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
-                      }`}
+                      className={`flex items-center gap-1 transition-colors ${sharedMeal.isLiked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
+                        }`}
                     >
                       <Heart size={12} fill={sharedMeal.isLiked ? 'currentColor' : 'none'} />
                       {sharedMeal.likes}
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         const comment = prompt("Ajouter un commentaire:");
                         if (comment) addComment(sharedMeal.id, comment);
@@ -773,11 +769,10 @@ const Diet: React.FC = () => {
                 <button
                   key={type.value}
                   onClick={() => setSelectedMealType(type.value as any)}
-                  className={`p-3 rounded-lg border flex items-center gap-2 text-sm transition-all ${
-                    selectedMealType === type.value
+                  className={`p-3 rounded-lg border flex items-center gap-2 text-sm transition-all ${selectedMealType === type.value
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                  }`}
+                    }`}
                 >
                   {type.icon}
                   {type.label}
@@ -826,7 +821,7 @@ const Diet: React.FC = () => {
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             </div>
-            
+
             {searchResults.length > 0 && (
               <div className="mt-2 max-h-48 overflow-y-auto border border-border rounded-lg bg-background">
                 {searchResults.map((food) => (
