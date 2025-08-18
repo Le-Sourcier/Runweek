@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-// import { useUser } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import {
   Clock,
@@ -13,19 +12,13 @@ import {
   TrendingUp,
   Lightbulb,
   Activity,
-  Utensils, // For nutrition
-  AlertTriangle,
-  RotateCcw,
   CheckCircle,
   Plus,
-} from "lucide-react"; // Added new icons
+} from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
 import { toast } from "react-toastify";
-import { aiCoachStore } from "../stores/AiCoachStore";
 import { chatStore } from "../stores/userChatStore";
-// Removed motion import as it's not used after old chat UI removal, ChatInterface handles its own animations
-// import { motion } from 'framer-motion';
 
 // Mock data for coach tips
 const coachTips = [

@@ -199,7 +199,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               <Clock
                                 size={12}
                                 className="text-primary-foreground opacity-70 animate-pulse"
-                                title="Message en cours d'envoi..."
                               />
                             )}
                             {failedMessages.has(message.id) && (
@@ -207,16 +206,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                                 <AlertTriangle
                                   size={12}
                                   className="text-red-300 cursor-help"
-                                  title={
-                                    failedMessages.get(message.id) ||
-                                    "Échec d'envoi"
-                                  }
                                 />
                                 {onRetryMessage && (
                                   <RotateCcw
                                     size={12}
                                     className="text-primary-foreground opacity-70 cursor-pointer hover:opacity-100"
-                                    title="Renvoyer le message"
                                     onClick={() => onRetryMessage(message.id!)}
                                   />
                                 )}
