@@ -12,6 +12,7 @@ export interface ChatState {
   messages: Message[]; // Changé de 'message' à 'messages'
   isLoading: boolean;
   error: string | null;
+  initialMessage: Message;
   sendMessage: (content: string) => Promise<Message>;
   getMessages: () => Promise<void>;
   clearMessages: () => void; // Nouvelle méthode

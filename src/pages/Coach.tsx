@@ -76,19 +76,7 @@ const trainingPlans = [
 export default function Coach() {
 
   const { messages, getMessages, sendMessage: sendChatMessageToStore } = chatStore();
-  const [chatMessages, setChatMessages] = useState<Message[]>(() => {
-    if (messages.length > 0) return messages;
-    return [
-      {
-        id: "init-" + Date.now(),
-        message:
-          "Hi there! I'm your running coach AI. How can I help you today with your training?",
-        sender: "bot",
-        createdAt: new Date().toISOString(),
-        type: "text",
-      },
-    ]
-  });
+  const [chatMessages, setChatMessages] = useState<Message[]>(messages);
   const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
   const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
   const [failedMessages, setFailedMessages] = useState<Map<string, string>>(new Map());

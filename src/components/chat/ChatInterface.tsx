@@ -157,10 +157,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div
                   key={message.id}
                   className={`w-full flex ${isUser
-                      ? "justify-end"
-                      : isBot
-                        ? "justify-start"
-                        : "justify-center"
+                    ? "justify-end"
+                    : isBot
+                      ? "justify-start"
+                      : "justify-center"
                     }`}
                 >
                   {/* Bulle pour BOT */}
@@ -171,7 +171,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         className="text-primary flex-shrink-0 mb-1"
                       />
                       <div className="bg-muted text-muted-foreground rounded-2xl rounded-bl-sm px-4 py-2 shadow-md border border-border relative">
-                        <p className="text-sm whitespace-pre-line dark:text-white">
+                        <p className="text-sm whitespace-pre-line dark:text-white mb-6">
                           {getMessageText(message)}
                         </p>
                         <span className="absolute bottom-1 right-2 text-[10px] text-muted-foreground opacity-70">
