@@ -32,11 +32,10 @@ const seedPlans = require("./src/functions/components/seedPlan");
         await client.end();
 
         // Synchronise Sequelize (après que la DB soit assurée)
-        await db.sequelize.sync({ force: false });
-
+        await db.sequelize.sync({ alter: true });
         await seedPlans();
 
-        console.log("Sequelize: Models synced to database.");
+        
     } catch (error) {
         console.error("Error during database setup:", error);
     }

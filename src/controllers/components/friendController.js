@@ -1,5 +1,4 @@
 const { Users, FriendRequest, Friend } = require('../../models');
-const serverMessage = require('../../utils/components/serverMessage');
 const { Op } = require('sequelize');
 
 const sendFriendRequest = async (req, res) => {
@@ -8,10 +7,9 @@ const sendFriendRequest = async (req, res) => {
     const { receiverId } = req.body;
 
     if (senderId === receiverId) {
-      return serverMessage(res, 400, { error: 'You cannot send a friend request to yourself.' });
+      return res.status(400).json({ error: true, message: 'You cannot send a friend request to yourself.' });
     }
 
-    // Check if a request already exists
     const existingRequest = await FriendRequest.findOne({
       where: {
         [Op.or]: [
@@ -22,10 +20,9 @@ const sendFriendRequest = async (req, res) => {
     });
 
     if (existingRequest) {
-      return serverMessage(res, 400, { error: 'A friend request already exists between you and this user.' });
+      return res.status(400).json({ error: true, message: 'A friend request already exists between you and this user.' });
     }
 
-    // Check if they are already friends
     const areFriends = await Friend.findOne({
       where: {
         [Op.or]: [
@@ -36,7 +33,7 @@ const sendFriendRequest = async (req, res) => {
     });
 
     if (areFriends) {
-        return serverMessage(res, 400, { error: 'You are already friends with this user.' });
+        return res.status(400).json({ error: true, message: 'You are already friends with this user.' });
     }
 
     const friendRequest = await FriendRequest.create({
@@ -44,11 +41,14 @@ const sendFriendRequest = async (req, res) => {
       receiver_id: receiverId,
     });
 
-    serverMessage(res, 201, 'Friend request sent successfully', { friendRequest });
+    return res.status(201).json({ error: false, message: 'Friend request sent successfully', data: { friendRequest } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while sending the friend request' });
+    return res.status(500).json({
+      error: true,
+      message: "An error occurred while sending the friend request.",
+    });
   }
 };
 
@@ -60,28 +60,27 @@ const acceptFriendRequest = async (req, res) => {
         const friendRequest = await FriendRequest.findByPk(requestId);
 
         if (!friendRequest || friendRequest.receiver_id !== userId) {
-            return serverMessage(res, 404, { error: 'Friend request not found or you are not the receiver.' });
+            return res.status(404).json({ error: true, message: 'Friend request not found or you are not the receiver.' });
         }
 
         if (friendRequest.status !== 'pending') {
-            return serverMessage(res, 400, { error: `This friend request is already ${friendRequest.status}.` });
+            return res.status(400).json({ error: true, message: `This friend request is already ${friendRequest.status}.` });
         }
 
         friendRequest.status = 'accepted';
         await friendRequest.save();
 
-        // Create the friendship
         await Friend.create({
             user_id: friendRequest.sender_id,
             friend_id: friendRequest.receiver_id,
             status: 'accepted',
         });
 
-        serverMessage(res, 200, 'Friend request accepted successfully');
+        return res.status(200).json({ error: false, message: 'Friend request accepted successfully' });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while accepting the friend request' });
+        return res.status(500).json({ error: true, message: 'An error occurred while accepting the friend request' });
     }
 };
 
@@ -93,21 +92,21 @@ const declineFriendRequest = async (req, res) => {
         const friendRequest = await FriendRequest.findByPk(requestId);
 
         if (!friendRequest || friendRequest.receiver_id !== userId) {
-            return serverMessage(res, 404, { error: 'Friend request not found or you are not the receiver.' });
+            return res.status(404).json({ error: true, message: 'Friend request not found or you are not the receiver.' });
         }
 
         if (friendRequest.status !== 'pending') {
-            return serverMessage(res, 400, { error: `This friend request is already ${friendRequest.status}.` });
+            return res.status(400).json({ error: true, message: `This friend request is already ${friendRequest.status}.` });
         }
 
         friendRequest.status = 'declined';
         await friendRequest.save();
 
-        serverMessage(res, 200, 'Friend request declined successfully');
+        return res.status(200).json({ error: false, message: 'Friend request declined successfully' });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while declining the friend request' });
+        return res.status(500).json({ error: true, message: 'An error occurred while declining the friend request' });
     }
 };
 
@@ -134,11 +133,11 @@ const getFriends = async (req, res) => {
             }
         });
 
-        serverMessage(res, 200, 'Friends list retrieved successfully', { friends: friendList });
+        return res.status(200).json({ error: false, message: "Friends list retrieved successfully", data: { friends: friendList } });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while retrieving the friends list' });
+        return res.status(500).json({ error: true, message: 'An error occurred while retrieving the friends list' });
     }
 };
 
@@ -156,11 +155,19 @@ const getFriendRequests = async (req, res) => {
             ],
         });
 
-        serverMessage(res, 200, 'Friend requests retrieved successfully', { friendRequests });
+        return res.status(200).json({
+            error: false,
+            message: "Friend requests retrieved successfully",
+            data: { friendRequests },
+        });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while retrieving friend requests' });
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while retrieving friend requests.",
+            data: { error: error.message },
+        });
     }
 };
 

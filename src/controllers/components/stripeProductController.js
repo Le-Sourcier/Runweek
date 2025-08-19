@@ -1,9 +1,7 @@
 const Stripe = require("stripe");
 const { v4: uuidv4 } = require("uuid");
 const {
-    serverMessage,
     isAdminOrSuperAdmin,
-    stripeErrorCode,
     ProductHelper,
 } = require("../../utils");
 const { Users, Plans } = require("../../models");
@@ -16,12 +14,14 @@ if (!STRIPE_KEY) {
 }
 const stripe = Stripe(STRIPE_KEY);
 
-module.exports = {
-    /*********************************
-     * PRODUCT MANAGEMENT CONTROLLERS
-     *********************************/
+const handleStripeError = (res, error, defaultMessage) => {
+    console.error(error);
+    const message = error.message || defaultMessage;
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({ error: true, message });
+}
 
-    // Create new product
+module.exports = {
     createProduct: async (req, res) => {
         try {
             const {
@@ -31,21 +31,19 @@ module.exports = {
                 credit_allocated = 0,
                 features = [],
                 price_monthly,
-                annual_discount = 0.2, // 20% de réduction par défaut
+                annual_discount = 0.2,
                 activate_annual_plan = true,
                 currency = "eur",
             } = req.body;
 
             if (annual_discount < 0 || annual_discount >= 1) {
-                return serverMessage(res, "INVALID_DISCOUNT_VALUE");
+                return res.status(400).json({ error: true, message: "Invalid discount value" });
             }
 
-            // Validation des entrées
             if (!name || !description) {
-                return serverMessage(res, "MISSING_REQUIRED_FIELDS");
+                return res.status(400).json({ error: true, message: "Missing required fields" });
             }
 
-            // 1. Créer le produit
             const product = await stripe.products.create({
                 name,
                 description,
@@ -57,7 +55,6 @@ module.exports = {
                 active: true,
             });
 
-            // 2. Créer le prix mensuel
             const monthlyPriceObj = await stripe.prices.create({
                 product: product.id,
                 unit_amount: price_monthly,
@@ -74,7 +71,6 @@ module.exports = {
                     price_monthly * 12 * (1 - annual_discount)
                 );
 
-                // 3. Créer le prix annuel
                 await stripe.prices.create({
                     product: product.id,
                     unit_amount: annualAmount,
@@ -87,41 +83,31 @@ module.exports = {
                 });
             }
 
-            // 4. Définir le prix mensuel comme prix par défaut
             await stripe.products.update(product.id, {
                 default_price: monthlyPriceObj.id,
             });
 
-            // 5. Récupérer le produit avec les détails complets
             const updatedProduct = await stripe.products.retrieve(product.id, {
                 expand: ["default_price"],
             });
 
             const prices = await stripe.prices.list({
-                product: product.d,
+                product: product.id,
                 active: true,
                 expand: ["data.product"],
             });
 
-            // Synchronisation avec la base
             const dbProduct = await ProductHelper.syncProductWithDatabase(
                 updatedProduct,
                 prices.data
             );
 
-            return serverMessage(
-                res,
-                "CREATE_PRODUCT_SUCCESS",
-                ProductHelper.formatProductResponse(updatedProduct, prices.data)
-            );
+            return res.status(201).json({ error: false, message: "Product created successfully", data: ProductHelper.formatProductResponse(updatedProduct, prices.data) });
         } catch (error) {
-            console.error("Erreur lors de la création du produit:", error);
-            const message = stripeErrorCode(error, "PRODUCT_CREATION_FAILED");
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Product creation failed");
         }
     },
 
-    // Get all produits from stripe and or db
     getProducts: async (req, res) => {
         try {
             const {
@@ -130,86 +116,79 @@ module.exports = {
                 starting_after,
             } = req.query;
 
-            // Utiliser le ProductHelper pour récupérer les produits
             const result = await ProductHelper.getAllProducts({
                 active_only: active_only === "true",
                 limit: parseInt(limit),
                 starting_after,
             });
 
-            if (result.length === 0)
-                return serverMessage(res, "PRODUCTS_NOT_FOUND");
+            if (result.data.length === 0) {
+                return res.status(404).json({ error: true, message: "Products not found" });
+            }
 
-            return serverMessage(res, "PRODUCTS_RETRIEVED", {
-                count: result.data.length,
-                products: result.data,
-                pagination: {
-                    has_more: result.has_more,
-                    next_starting_after: result.next_starting_after,
-                },
+            return res.status(200).json({
+                error: false,
+                message: "Products retrieved",
+                data: {
+                    count: result.data.length,
+                    products: result.data,
+                    pagination: {
+                        has_more: result.has_more,
+                        next_starting_after: result.next_starting_after,
+                    },
+                }
             });
         } catch (error) {
-            console.error(
-                "Erreur lors de la récupération des produits:",
-                error
-            );
-            const message = stripeErrorCode(error, "PRODUCTS_RETRIEVAL_FAILED");
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Products retrieval failed");
         }
     },
 
-    // Get Product By ID
     getProductById: async (req, res) => {
         try {
             const { id: productId } = req.params;
 
-            if (!productId) return serverMessage(res, "PRODUCT_ID_REQUIRED");
-
-            // Récupérer le produit
-            const existeProduct = await stripe.products.retrieve(productId);
-
-            if (!existeProduct) serverMessage(res, "PRODUCT_NOT_FOUND");
+            if (!productId) {
+                return res.status(400).json({ error: true, message: "Product ID required" });
+            }
 
             const product = await ProductHelper.getProduct(productId);
 
-            return serverMessage(res, "PRODUCT_RETRIEVED", product);
+            if (!product) {
+                return res.status(404).json({ error: true, message: "Product not found" });
+            }
+
+            return res.status(200).json({ error: false, message: "Product retrieved", data: product });
         } catch (error) {
-            console.error("Erreur lors de la récupération du produit:", error);
-            const message = stripeErrorCode(error, "PRODUCT_RETRIEVAL_FAILED");
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Product retrieval failed");
         }
     },
 
-    // Update Product
     updateProduct: async (req, res) => {
         try {
             const { id: productId } = req.params;
             const {
                 name,
                 description,
-                // is_free = false,
                 credit_allocated = 0,
                 features = [],
                 price_monthly,
-                annual_discount = 0.2, // 20% de réduction par défaut
+                annual_discount = 0.2,
                 activate_annual_plan = true,
                 currency = "eur",
+                default_price_interval
             } = req.body;
 
             if (!productId || !price_monthly) {
-                return serverMessage(res, "MISSING_REQUIRED_FIELDS");
+                return res.status(400).json({ error: true, message: "Missing required fields" });
             }
 
-            // Vérifier si le produit existe
             const product = await stripe.products.retrieve(productId);
 
             if (!product) {
-                serverMessage(res, "PRODUCT_NOT_FOUND");
+                return res.status(404).json({ error: true, message: "Product not found" });
             }
 
-            // 2. Préparer les métadonnées
             const metadata = {
-                // is_free: String(is_free),
                 credit_allocated: String(credit_allocated),
                 features: Array.isArray(features)
                     ? JSON.stringify(features)
@@ -218,7 +197,6 @@ module.exports = {
                 activate_annual_plan: String(activate_annual_plan),
             };
 
-            // 3. Mettre à jour le produit
             const updateParams = {
                 metadata,
             };
@@ -228,7 +206,6 @@ module.exports = {
 
             await stripe.products.update(productId, updateParams);
 
-            // Récupérer les prix existants
             const existingPrices = await stripe.prices.list({
                 product: productId,
                 active: true,
@@ -237,9 +214,7 @@ module.exports = {
             let monthlyPriceId = null;
             let yearlyPriceId = null;
 
-            // Créer ou mettre à jour les prix
             if (price_monthly) {
-                // Archiver l'ancien prix mensuel s'il existe
                 const existingMonthlyPrice = existingPrices.data.find(
                     (price) =>
                         price.recurring && price.recurring.interval === "month"
@@ -251,7 +226,6 @@ module.exports = {
                     });
                 }
 
-                // Créer un nouveau prix mensuel
                 const newMonthlyPrice = await stripe.prices.create({
                     product: productId,
                     unit_amount: price_monthly,
@@ -271,7 +245,6 @@ module.exports = {
                     price_monthly * 12 * (1 - annual_discount)
                 );
 
-                // Archiver l'ancien prix annuel s'il existe
                 const existingYearlyPrice = existingPrices.data.find(
                     (price) =>
                         price.recurring && price.recurring.interval === "year"
@@ -283,7 +256,6 @@ module.exports = {
                     });
                 }
 
-                // Créer un nouveau prix annuel
                 const newYearlyPrice = await stripe.prices.create({
                     product: productId,
                     unit_amount: annualAmount,
@@ -298,7 +270,6 @@ module.exports = {
                 yearlyPriceId = newYearlyPrice.id;
             }
 
-            // Définir le prix par défaut selon le paramètre
             const defaultPriceId =
                 default_price_interval === "month"
                     ? monthlyPriceId ||
@@ -320,7 +291,6 @@ module.exports = {
                 });
             }
 
-            // Récupérer le produit mis à jour avec tous ses prix
             const updatedProduct = await stripe.products.retrieve(productId, {
                 expand: ["default_price"],
             });
@@ -331,149 +301,79 @@ module.exports = {
                 expand: ["data.product"],
             });
 
-            // Sync avec la base
             const dbProduct = await ProductHelper.syncProductWithDatabase(
                 updatedProduct,
                 prices.data
             );
 
-            return serverMessage(
-                res,
-                "PRODUCT_UPDATED",
-                ProductHelper.formatProductResponse(dbProduct, prices.data)
-            );
-
-            // const data = formatProductResponse(updatedProduct, prices.data);
-
-            // return serverMessage(res, "PRODUCT_PRICES_UPDATED", data);
+            return res.status(200).json({ error: false, message: "Product updated", data: ProductHelper.formatProductResponse(dbProduct, prices.data) });
         } catch (error) {
-            console.error("Erreur lors de la mise à jour des prix:", error);
-            const message = stripeErrorCode(error, "PRICE_UPDATE_FAILED");
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Price update failed");
         }
     },
 
-    // Delete Product
     deleteProduct: async (req, res) => {
         try {
             const { id: userId } = req.user;
             const { id: productId } = req.params;
 
             if (!productId) {
-                return serverMessage(res, "MISSING_PRODUCT_ID");
+                return res.status(400).json({ error: true, message: "Missing product ID" });
             }
 
-            // Vérification des permissions
             const admin = await Users.findByPk(userId);
             if (!admin || !isAdminOrSuperAdmin(admin)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return res.status(403).json({ error: true, message: "Insufficient permissions" });
             }
 
-            // 1. Récupérer le produit pour vérifier qu'il existe
             const product = await stripe.products.retrieve(productId);
+            const dbProduct = await Plans.findOne({ where: { product_id: productId } });
 
-            // 1.2 Vérifier si le produit existe dans la base de données
-            const dbProduct = await Plans.findOne({
-                where: { product_id: productId },
-            });
-
-            // Si le produit n'existe ni en base ni sur Stripe
             if (!dbProduct && !product) {
-                return serverMessage(res, "PRODUCT_NOT_FOUND");
+                return res.status(404).json({ error: true, message: "Product not found" });
             }
 
-            // 2. Récupérer tous les prix associés au produit
-            const prices = await stripe.prices.list({
-                product: productId,
-                limit: 100, // Augmenter si nécessaire
-            });
+            const prices = await stripe.prices.list({ product: productId, limit: 100 });
 
-            // 3. Mettre à jour le produit pour supprimer le prix par défaut
-            await stripe.products.update(productId, {
-                default_price: null,
-            });
+            await stripe.products.update(productId, { default_price: null });
 
-            // 4. Archiver tous les prix associés
             const archivePromises = prices.data.map((price) =>
                 stripe.prices.update(price.id, { active: false })
             );
             await Promise.all(archivePromises);
 
-            // 5. Supprimer les prix qui peuvent être supprimés
-            // Note: Stripe ne permet de supprimer que les prix qui n'ont jamais été utilisés
-            const deletePromises = prices.data.map(async (price) => {
-                try {
-                    await stripe.prices.del(price.id);
-                    return { id: price.id, deleted: true };
-                } catch (error) {
-                    return {
-                        id: price.id,
-                        deleted: false,
-                        error: error.message,
-                    };
-                }
-            });
-            const deleteResults = await Promise.all(deletePromises);
-
-            // 6. Supprimer le produit
-            // Si le produit a été utilisé dans des transactions, il ne sera que "archivé" et non supprimé
             let productDeleted = false;
             try {
                 await stripe.products.del(productId);
                 productDeleted = true;
             } catch (error) {
-                // Si la suppression échoue, on archive simplement le produit
                 await stripe.products.update(productId, { active: false });
                 productDeleted = false;
             }
 
-            // Suppression de la base de données si existant
             if (dbProduct) {
                 await Plans.destroy({ where: { product_id: productId } });
-
-                // Suppression des abonnements associés si nécessaire
-                // await Subscriptions.destroy({ where: { plan_id: productId } });
             }
 
-            return serverMessage(
-                res,
-                "PRODUCT_DELETED"
-                //      {
-                //     product_id: productId,
-                //     product_deleted: productDeleted,
-                //     product_archived: !productDeleted,
-                //     prices_processed: deleteResults.length,
-                //     prices_deleted: deleteResults.filter((r) => r.deleted).length,
-                //     prices_archived: deleteResults.filter((r) => !r.deleted).length,
-                // }
-            );
+            return res.status(200).json({ error: false, message: "Product deleted" });
         } catch (error) {
-            console.error("Erreur lors de la suppression du produit:", error);
-            const message = stripeErrorCode(error, "PRODUCT_DELETION_FAILED");
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Product deletion failed");
         }
     },
-    /*********************************
-     * CHECKOUT SESSION CONTROLLERS
-     *********************************/
 
-    // Create a Stripe checkou session
     createCheckoutSession: async (req, res) => {
         try {
             const { price_id } = req.params;
             const { quantity = 1, customer_email, metadata = {} } = req.body;
 
-            // Validate price_id
             if (!price_id) {
-                return serverMessage(res, "MISSING_PRICE_ID");
+                return res.status(400).json({ error: true, message: "Missing price ID" });
             }
 
-            // Base URL from environment or config
             const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
-            // Create a checkout session for subscription
             const session = await stripe.checkout.sessions.create({
-                payment_method_types: ["card"], // You can add more payment methods here
+                payment_method_types: ["card"],
                 line_items: [
                     {
                         price: price_id,
@@ -483,38 +383,28 @@ module.exports = {
                 mode: "subscription",
                 success_url: `${baseUrl}/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${baseUrl}/stripe/cancel?session_id={CHECKOUT_SESSION_ID}`,
-                customer_email: customer_email, // Pre-fill the email field if provided
+                customer_email: customer_email,
                 metadata: {
                     ...metadata,
-                    created_by: "api", // Tracking info
+                    created_by: "api",
                     created_at: new Date().toISOString(),
                 },
             });
 
-            // Return the session ID and URL
-            return serverMessage(res, "CHECKOUT_SESSION_CREATED", {
-                sessionId: session.id,
-                url: session.url,
-            });
+            return res.status(201).json({ error: false, message: "Checkout session created", data: { sessionId: session.id, url: session.url } });
         } catch (error) {
-            console.error("Error creating checkout session:", error);
-            const errorMessage =
-                error.message || "Failed to create checkout session";
-            return serverMessage(res, "CHECKOUT_SESSION_FAILED");
+            return handleStripeError(res, error, "Failed to create checkout session");
         }
     },
 
-    // Get checkout session details
     getCheckoutSessionDetails: async (req, res) => {
         try {
             const { session_id } = req.params;
 
-            // Validate session_id
             if (!session_id) {
-                return serverMessage(res, "MISSING_SESSION_ID");
+                return res.status(400).json({ error: true, message: "Missing session ID" });
             }
 
-            // Retrieve the checkout session with expanded objects
             const session = await stripe.checkout.sessions.retrieve(
                 session_id,
                 {
@@ -528,7 +418,6 @@ module.exports = {
                 }
             );
 
-            // Format the response data
             const formattedData = {
                 id: session.id,
                 status: session.status,
@@ -585,23 +474,12 @@ module.exports = {
                 metadata: session.metadata,
             };
 
-            return serverMessage(
-                res,
-                "SESSION_DETAILS_RETRIEVED",
-                formattedData
-            );
+            return res.status(200).json({ error: false, message: "Session details retrieved", data: formattedData });
         } catch (error) {
-            console.error("Error retrieving checkout session:", error);
-            const errorMessage =
-                error.message || "Failed to retrieve session details";
-            return serverMessage(res, "SESSION_RETRIEVAL_FAILED");
+            return handleStripeError(res, error, "Failed to retrieve session details");
         }
     },
 
-    /*********************************
-     * SUBSCRIPTION CONTROLLERS
-     *********************************/
-    // Create a checkout session for subscription
     createSubscription: async (req, res) => {
         try {
             const {
@@ -612,7 +490,7 @@ module.exports = {
             } = req.body;
 
             if (!price_id) {
-                return serverMessage(res, "MISSING_PRICE_ID");
+                return res.status(400).json({ error: true, message: "Missing price ID" });
             }
 
             const session = await stripe.checkout.sessions.create({
@@ -634,38 +512,29 @@ module.exports = {
                 client_reference_id: req.user?.id || null,
             });
 
-            return serverMessage(res, "SUBSCRIPTION_CHECKOUT_CREATED", {
-                sessionId: session.id,
-                url: session.url,
-            });
+            return res.status(201).json({ error: false, message: "Subscription checkout created", data: { sessionId: session.id, url: session.url } });
         } catch (error) {
-            console.error("Subscription creation error:", error);
-            return serverMessage(res, "SUBSCRIPTION_CREATION_ERROR");
+            return handleStripeError(res, error, "Subscription creation error");
         }
     },
 
-    // Get subscription transations
     getSubscriptionTransactions: async (req, res) => {
         try {
             const { subscription_id } = req.params;
 
-            // Validate subscription_id
             if (!subscription_id) {
-                return serverMessage(res, "MISSING_SUBSCRIPTION_ID");
+                return res.status(400).json({ error: true, message: "Missing subscription ID" });
             }
 
-            // First, retrieve the subscription to get related invoice IDs
             const subscription = await stripe.subscriptions.retrieve(
                 subscription_id
             );
 
-            // Then, list all invoices for this subscription
             const invoices = await stripe.invoices.list({
                 subscription: subscription_id,
                 limit: 100,
             });
 
-            // Format the response data
             const formattedData = {
                 subscription: {
                     id: subscription.id,
@@ -692,27 +561,19 @@ module.exports = {
                 })),
             };
 
-            return serverMessage(
-                res,
-                "SUBSCRIPTION_TRANSACTIONS_RETRIEVED",
-                formattedData
-            );
+            return res.status(200).json({ error: false, message: "Subscription transactions retrieved", data: formattedData });
         } catch (error) {
-            console.error("Error retrieving subscription transactions:", error);
-            const errorMessage =
-                error.message || "Failed to retrieve subscription transactions";
-            return serverMessage(res, "SUBSCRIPTION_TRANSACTIONS_FAILED");
+            return handleStripeError(res, error, "Failed to retrieve subscription transactions");
         }
     },
 
-    // List all subscriptions for a customer
     listCustomerSubscriptions: async (req, res) => {
         try {
             const { customer_id } = req.params;
             const { limit = 10, status = "all" } = req.query;
 
             if (!customer_id) {
-                return serverMessage(res, "MISSING_CUSTOMER_ID");
+                return res.status(400).json({ error: true, message: "Missing customer ID" });
             }
 
             const queryParams = {
@@ -755,18 +616,12 @@ module.exports = {
                     : null,
             }));
 
-            return serverMessage(res, "SUBSCRIPTIONS_RETRIEVED", {
-                subscriptions: formattedSubscriptions,
-                has_more: subscriptions.has_more,
-                total_count: subscriptions.data.length,
-            });
+            return res.status(200).json({ error: false, message: "Subscriptions retrieved", data: { subscriptions: formattedSubscriptions, has_more: subscriptions.has_more, total_count: subscriptions.data.length } });
         } catch (error) {
-            console.error("List subscriptions error:", error);
-            return serverMessage(res, "LIST_SUBSCRIPTIONS_ERROR");
+            return handleStripeError(res, error, "List subscriptions error");
         }
     },
 
-    // Update a subscription (change plan, quantity, etc.)
     updateSubscription: async (req, res) => {
         try {
             const { subscription_id } = req.params;
@@ -777,7 +632,7 @@ module.exports = {
             } = req.body;
 
             if (!subscription_id) {
-                return serverMessage(res, "MISSING_SUBSCRIPTION_ID");
+                return res.status(400).json({ error: true, message: "Missing subscription ID" });
             }
 
             const currentSubscription = await stripe.subscriptions.retrieve(
@@ -799,36 +654,19 @@ module.exports = {
                 }
             );
 
-            return serverMessage(res, "SUBSCRIPTION_UPDATED", {
-                id: updatedSubscription.id,
-                status: updatedSubscription.status,
-                current_period_end: new Date(
-                    updatedSubscription.current_period_end * 1000
-                ).toISOString(),
-                items: updatedSubscription.items.data.map((item) => ({
-                    id: item.id,
-                    price: {
-                        id: item.price.id,
-                        product: item.price.product,
-                        unit_amount: item.price.unit_amount,
-                        currency: item.price.currency,
-                    },
-                    quantity: item.quantity,
-                })),
-            });
+            return res.status(200).json({ error: false, message: "Subscription updated", data: updatedSubscription });
         } catch (error) {
-            console.error("Subscription update error:", error);
-            return serverMessage(res, "SUBSCRIPTION_UPDATE_ERROR");
+            return handleStripeError(res, error, "Subscription update error");
         }
     },
-    // Cancel a subscription
+
     cancelSubscription: async (req, res) => {
         try {
             const { subscription_id } = req.params;
             const { cancel_immediately = false } = req.body;
 
             if (!subscription_id) {
-                return serverMessage(res, "MISSING_SUBSCRIPTION_ID");
+                return res.status(400).json({ error: true, message: "Missing subscription ID" });
             }
 
             let subscription;
@@ -845,36 +683,13 @@ module.exports = {
                 );
             }
 
-            return serverMessage(
-                res,
-                cancel_immediately
-                    ? "SUBSCRIPTION_CANCELLED_IMMEDIATELY"
-                    : "SUBSCRIPTION_CANCELLED_AT_PERIOD_END",
-                {
-                    id: subscription.id,
-                    status: subscription.status,
-                    cancel_at_period_end: subscription.cancel_at_period_end,
-                    current_period_end: new Date(
-                        subscription.current_period_end * 1000
-                    ).toISOString(),
-                    canceled_at: subscription.canceled_at
-                        ? new Date(
-                              subscription.canceled_at * 1000
-                          ).toISOString()
-                        : null,
-                }
-            );
+            const message = cancel_immediately ? "Subscription cancelled immediately" : "Subscription cancelled at period end";
+            return res.status(200).json({ error: false, message, data: subscription });
         } catch (error) {
-            console.error("Subscription cancellation error:", error);
-            return serverMessage(res, "SUBSCRIPTION_CANCEL_ERROR");
+            return handleStripeError(res, error, "Subscription cancel error");
         }
     },
 
-    /*********************************
-     * PAYOUT CONTROLLERS
-     *********************************/
-
-    // Create a new payout to your bank account
     createPayout: async (req, res) => {
         try {
             const {
@@ -886,18 +701,15 @@ module.exports = {
                 metadata = {},
             } = req.body;
 
-            // Validate amount
             if (!amount || amount <= 0) {
-                return serverMessage(res, "INVALID_AMOUNT");
+                return res.status(400).json({ error: true, message: "Invalid amount" });
             }
 
-            // Prepare payout parameters
             const payoutParams = {
-                amount: Math.round(amount), // Amount in cents, must be an integer
+                amount: Math.round(amount),
                 currency: currency,
             };
 
-            // Add optional parameters if provided
             if (description) payoutParams.description = description;
             if (statement_descriptor)
                 payoutParams.statement_descriptor = statement_descriptor;
@@ -905,77 +717,30 @@ module.exports = {
             if (Object.keys(metadata).length > 0)
                 payoutParams.metadata = metadata;
 
-            // Create the payout
             const payout = await stripe.payouts.create(payoutParams);
 
-            return serverMessage(res, "PAYOUT_CREATED", {
-                id: payout.id,
-                amount: payout.amount,
-                currency: payout.currency,
-                arrival_date: new Date(
-                    payout.arrival_date * 1000
-                ).toISOString(),
-                description: payout.description,
-                status: payout.status,
-                method: payout.method,
-                source_type: payout.source_type,
-            });
+            return res.status(201).json({ error: false, message: "Payout created", data: payout });
         } catch (error) {
-            // console.error("Error creating payout:", error);
-            const errorMessage = error.message || "Failed to create payout";
-            const message = stripeErrorCode(
-                error.type,
-                "PAYOUT_CREATION_FAILED"
-            );
-            console.log("error.type: ", error.type);
-            return serverMessage(res, message);
+            return handleStripeError(res, error, "Payout creation failed");
         }
     },
-    // Get a specific payout Details
+
     getPayoutDetails: async (req, res) => {
         try {
             const { payout_id } = req.params;
 
-            // Validate payout_id
             if (!payout_id) {
-                return serverMessage(res, "MISSING_PAYOUT_ID");
+                return res.status(400).json({ error: true, message: "Missing payout ID" });
             }
 
-            // Retrieve the payout
             const payout = await stripe.payouts.retrieve(payout_id);
 
-            // Format the response data
-            const formattedData = {
-                id: payout.id,
-                amount: payout.amount,
-                currency: payout.currency,
-                arrival_date: new Date(
-                    payout.arrival_date * 1000
-                ).toISOString(),
-                created: new Date(payout.created * 1000).toISOString(),
-                description: payout.description,
-                destination: payout.destination,
-                method: payout.method,
-                source_type: payout.source_type,
-                status: payout.status,
-                type: payout.type,
-                metadata: payout.metadata,
-            };
-
-            return serverMessage(
-                res,
-                "PAYOUT_DETAILS_RETRIEVED",
-                formattedData
-            );
+            return res.status(200).json({ error: false, message: "Payout details retrieved", data: payout });
         } catch (error) {
-            console.error("Error retrieving payout:", error);
-            const errorMessage =
-                error.message || "Failed to retrieve payout details";
-            return serverMessage(res, "PAYOUT_RETRIEVAL_FAILED");
+            return handleStripeError(res, error, "Failed to retrieve payout details");
         }
     },
 
-    // List payouts with pagination
     listPayouts: async (req, res) => {
         try {
             const {
@@ -992,11 +757,9 @@ module.exports = {
                 expand: ["data.destination"],
             };
 
-            // Add pagination parameters if provided
             if (starting_after) params.starting_after = starting_after;
             if (ending_before) params.ending_before = ending_before;
 
-            // Add date filters if provided
             if (created_after || created_before) {
                 params.created = {};
                 if (created_after)
@@ -1009,155 +772,81 @@ module.exports = {
                     );
             }
 
-            // Add status filter if provided
             if (status) params.status = status;
 
             const payouts = await stripe.payouts.list(params);
 
-            const formattedPayouts = payouts.data.map((payout) => ({
-                id: payout.id,
-                amount: payout.amount,
-                currency: payout.currency,
-                arrival_date: new Date(
-                    payout.arrival_date * 1000
-                ).toISOString(),
-                created: new Date(payout.created * 1000).toISOString(),
-                description: payout.description,
-                destination: payout.destination,
-                status: payout.status,
-                method: payout.method,
-            }));
-
-            return serverMessage(res, "PAYOUTS_RETRIEVED", {
-                payouts: formattedPayouts,
-                has_more: payouts.has_more,
-                total_count: payouts.data.length,
-                url: payouts.url,
-            });
+            return res.status(200).json({ error: false, message: "Payouts retrieved", data: payouts });
         } catch (error) {
-            console.error("Error listing payouts:", error);
-            const errorMessage = error.message || "Failed to list payouts";
-            console.log("ERROR IN LIST PAYOUTS: ", errorMessage);
-            return serverMessage(res, "PAYOUTS_LISTING_FAILED");
+            return handleStripeError(res, error, "Failed to list payouts");
         }
     },
-    // Cancel a pending payout
+
     cancelPayout: async (req, res) => {
         try {
             const { payout_id } = req.params;
 
             if (!payout_id) {
-                return serverMessage(res, "MISSING_PAYOUT_ID");
+                return res.status(400).json({ error: true, message: "Missing payout ID" });
             }
 
             const payout = await stripe.payouts.cancel(payout_id);
 
-            return serverMessage(res, "PAYOUT_CANCELLED", {
-                id: payout.id,
-                status: payout.status,
-                amount: payout.amount,
-                currency: payout.currency,
-                arrival_date: new Date(
-                    payout.arrival_date * 1000
-                ).toISOString(),
-            });
+            return res.status(200).json({ error: false, message: "Payout cancelled", data: payout });
         } catch (error) {
-            console.error("Error cancelling payout:", error);
-            // Handle specific error cases
             if (error.code === "payout_cancel_not_allowed") {
-                return serverMessage(res, "PAYOUT_CANCEL_NOT_ALLOWED", {
-                    error: "This payout cannot be cancelled. Only pending payouts can be cancelled.",
-                });
+                return res.status(400).json({ error: true, message: "This payout cannot be cancelled. Only pending payouts can be cancelled." });
             }
-
-            const errorMessage = error.message || "Failed to cancel payout";
-            return serverMessage(res, "PAYOUT_CANCELLATION_FAILED");
+            return handleStripeError(res, error, "Failed to cancel payout");
         }
     },
-    // Update a payout's metadata
+
     updatePayoutMetadata: async (req, res) => {
         try {
             const { payout_id } = req.params;
             const { metadata } = req.body;
 
             if (!payout_id) {
-                return serverMessage(res, "MISSING_PAYOUT_ID");
+                return res.status(400).json({ error: true, message: "Missing payout ID" });
             }
 
             if (!metadata || Object.keys(metadata).length === 0) {
-                return serverMessage(res, "MISSING_METADATA");
+                return res.status(400).json({ error: true, message: "Missing metadata" });
             }
 
             const payout = await stripe.payouts.update(payout_id, { metadata });
 
-            return serverMessage(res, "PAYOUT_UPDATED", {
-                id: payout.id,
-                metadata: payout.metadata,
-            });
+            return res.status(200).json({ error: false, message: "Payout updated", data: payout });
         } catch (error) {
-            console.error("Error updating payout metadata:", error);
-            const errorMessage =
-                error.message || "Failed to update payout metadata";
-            return serverMessage(res, "PAYOUT_UPDATE_FAILED");
+            return handleStripeError(res, error, "Failed to update payout metadata");
         }
     },
 
-    // Get all transactions (balance transactions) related to a specific payout
     getPayoutTransactions: async (req, res) => {
         try {
             const { payout_id } = req.params;
             const { id } = req.user;
             const admin = Users.findByPk(id);
             if (!admin && !isAdminOrSuperAdmin(admin)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return res.status(403).json({ error: true, message: "Insufficient permissions" });
             }
 
             if (!payout_id) {
-                return serverMessage(res, "MISSING_PAYOUT_ID");
+                return res.status(400).json({ error: true, message: "Missing payout ID" });
             }
 
-            // List balance transactions associated with this payout
             const balanceTransactions = await stripe.balanceTransactions.list({
                 payout: payout_id,
                 limit: 100,
                 expand: ["data.source"],
             });
 
-            const formattedTransactions = balanceTransactions.data.map(
-                (transaction) => ({
-                    id: transaction.id,
-                    amount: transaction.amount,
-                    currency: transaction.currency,
-                    description: transaction.description,
-                    fee: transaction.fee,
-                    net: transaction.net,
-                    status: transaction.status,
-                    type: transaction.type,
-                    created: new Date(transaction.created * 1000).toISOString(),
-                    source_type: transaction.source
-                        ? transaction.source.object
-                        : null,
-                    source_id: transaction.source
-                        ? transaction.source.id
-                        : null,
-                })
-            );
-
-            return serverMessage(res, "PAYOUT_TRANSACTIONS_RETRIEVED", {
-                payout_id: payout_id,
-                transactions: formattedTransactions,
-                has_more: balanceTransactions.has_more,
-                total_count: balanceTransactions.data.length,
-            });
+            return res.status(200).json({ error: false, message: "Payout transactions retrieved", data: balanceTransactions });
         } catch (error) {
-            console.error("Error retrieving payout transactions:", error);
-            const errorMessage =
-                error.message || "Failed to retrieve payout transactions";
-            return serverMessage(res, "PAYOUT_TRANSACTIONS_FAILED");
+            return handleStripeError(res, error, "Failed to retrieve payout transactions");
         }
     },
 
-    // Create an instant payout (if eligible)
     createInstantPayout: async (req, res) => {
         try {
             const {
@@ -1172,21 +861,19 @@ module.exports = {
             const { id } = req.user;
             const admin = Users.findByPk(id);
             if (!admin && !isAdminOrSuperAdmin(admin)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
-            }
-            // Validate amount
-            if (!amount || amount <= 0) {
-                return serverMessage(res, "INVALID_AMOUNT");
+                return res.status(403).json({ error: true, message: "Insufficient permissions" });
             }
 
-            // Prepare payout parameters for instant payout
+            if (!amount || amount <= 0) {
+                return res.status(400).json({ error: true, message: "Invalid amount" });
+            }
+
             const payoutParams = {
-                amount: Math.round(amount), // Amount in cents, must be an integer
+                amount: Math.round(amount),
                 currency: currency,
-                method: "instant", // This specifies an instant payout
+                method: "instant",
             };
 
-            // Add optional parameters if provided
             if (description) payoutParams.description = description;
             if (statement_descriptor)
                 payoutParams.statement_descriptor = statement_descriptor;
@@ -1194,82 +881,50 @@ module.exports = {
             if (Object.keys(metadata).length > 0)
                 payoutParams.metadata = metadata;
 
-            // Create the instant payout
             const payout = await stripe.payouts.create(payoutParams);
 
-            return serverMessage(res, "INSTANT_PAYOUT_CREATED", {
-                id: payout.id,
-                amount: payout.amount,
-                currency: payout.currency,
-                arrival_date: new Date(
-                    payout.arrival_date * 1000
-                ).toISOString(),
-                description: payout.description,
-                status: payout.status,
-                method: payout.method,
-                source_type: payout.source_type,
-            });
+            return res.status(201).json({ error: false, message: "Instant payout created", data: payout });
         } catch (error) {
-            console.error("Error creating instant payout:", error);
-
-            // Handle specific error cases for instant payouts
-            if (
-                error.code === "bank_account_not_eligible_for_instant_payouts"
-            ) {
-                return serverMessage(res, "BANK_ACCOUNT_NOT_ELIGIBLE");
+            if (error.code === "bank_account_not_eligible_for_instant_payouts") {
+                return res.status(400).json({ error: true, message: "Bank account not eligible for instant payouts" });
             }
 
             if (error.code === "insufficient_funds") {
-                return serverMessage(res, "INSUFFICIENT_FUNDS");
+                return res.status(400).json({ error: true, message: "Insufficient funds" });
             }
 
             if (error.code === "instant_payout_disabled") {
-                return serverMessage(res, "INSTANT_PAYOUT_DISABLED");
+                return res.status(400).json({ error: true, message: "Instant payout disabled" });
             }
 
-            const errorMessage =
-                error.message || "Failed to create instant payout";
-            return serverMessage(res, "INSTANT_PAYOUT_FAILED");
+            return handleStripeError(res, error, "Failed to create instant payout");
         }
     },
 
-    /*********************************
-     * BALANCE CONTROLLERS
-     *********************************/
-    // Get your available payout balance
     getAvailableBalance: async (req, res) => {
         try {
             const { id } = req.user;
             const admin = Users.findByPk(id);
             if (!admin && !isAdminOrSuperAdmin(admin)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return res.status(403).json({ error: true, message: "Insufficient permissions" });
             }
             const balance = await stripe.balance.retrieve();
 
-            // Format the available balances by currency
             const availableBalances = balance.available.map((bal) => ({
                 currency: bal.currency,
-                amount: bal.amount / 100, //Convert the amount to a centime value
+                amount: bal.amount / 100,
                 source_types: bal.source_types,
             }));
 
-            // Format the pending balances by currency
             const pendingBalances = balance.pending.map((bal) => ({
                 currency: bal.currency,
-                amount: bal.amount / 100, //Convert the amount to a centime value
+                amount: bal.amount / 100,
                 source_types: bal.source_types,
             }));
 
-            return serverMessage(res, "BALANCE_RETRIEVED", {
-                available: availableBalances,
-                pending: pendingBalances,
-                connect_reserved: balance.connect_reserved || [],
-                instant_available: balance.instant_available || [],
-            });
+            return res.status(200).json({ error: false, message: "Balance retrieved", data: { available: availableBalances, pending: pendingBalances, connect_reserved: balance.connect_reserved || [], instant_available: balance.instant_available || [] } });
         } catch (error) {
-            console.error("Error retrieving balance:", error);
-            const errorMessage = error.message || "Failed to retrieve balance";
-            return serverMessage(res, "BALANCE_RETRIEVAL_FAILED");
+            return handleStripeError(res, error, "Failed to retrieve balance");
         }
     },
 };

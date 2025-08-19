@@ -156,7 +156,6 @@ const defaultCredits = {
 };
 
 const seedPlans = async () => {
-    await db.sequelize.sync({ alter: true });
 
     // Vérifier si des plans existent déjà
     const existingCount = await Plans.count();

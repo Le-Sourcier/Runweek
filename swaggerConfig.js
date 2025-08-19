@@ -688,6 +688,58 @@ const options = {
           required: ["id", "user_id", "type", "title", "date"],
         },
 
+        // Goal Schemas (NEW)
+        GoalInput: {
+          type: "object",
+          properties: {
+            type: { type: "string", example: "Running" },
+            description: { type: "string", example: "Run 5 days in a week" },
+            target: {
+              type: "object",
+              properties: {
+                value: { type: "number", example: 5 },
+                unit: { type: "string", example: "days/week" },
+              },
+              nullable: true,
+            },
+            status: { type: "string", enum: ["active", "completed", "suggested", "archived"], example: "active" },
+            startDate: { type: "string", format: "date-time", nullable: true },
+            endDate: { type: "string", format: "date-time", nullable: true },
+          },
+          required: ["type", "description"],
+        },
+        Goal: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            user_id: { type: "string", format: "uuid" },
+            type: { type: "string", example: "Running" },
+            description: { type: "string", example: "Run 5 days in a week" },
+            target: {
+              type: "object",
+              properties: {
+                value: { type: "number", example: 5 },
+                unit: { type: "string", example: "days/week" },
+              },
+              nullable: true,
+            },
+            status: { type: "string", enum: ["active", "completed", "suggested", "archived"], example: "active" },
+            startDate: { type: "string", format: "date-time", nullable: true },
+            endDate: { type: "string", format: "date-time", nullable: true },
+            progress: {
+              type: "object",
+              properties: {
+                current: { type: "number", example: 3 },
+                unit: { type: "string", example: "days/week" },
+              },
+              nullable: true,
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+          required: ["id", "user_id", "type", "description", "status"],
+        },
+
         // Google Fit Schemas
         GoogleFitStepDataPointValue: {
           type: "object",

@@ -25,11 +25,11 @@ module.exports = (sequelize) => {
             allowNull: true,
         },
         distance: {
-            type: DataTypes.FLOAT, // in kilometers
+            type: DataTypes.FLOAT,
             allowNull: true,
         },
         duration: {
-            type: DataTypes.INTEGER, // in minutes
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         date: {
@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
         },
         scheduledAt: {
             type: DataTypes.DATE,
-            allowNull: true, // Activities can be created without being scheduled
+            allowNull: true, 
         },
         metadata: {
             type: DataTypes.JSONB, // For any extra data, e.g., heart rate, calories

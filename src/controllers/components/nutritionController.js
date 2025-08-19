@@ -1,17 +1,12 @@
-
 const { Profiles, NutritionGoals, MealEntry, FoodItem, DailyNutrition, DietAnalysis, NutritionRecommendation, sequelize } = require('../../models');
 const { askAI } = require('../../services/askAI');
-const serverMessage = require('../../utils/components/serverMessage');
 const { Op } = require('sequelize');
 const { getAge } = require('../../utils/components/utils');
-
-
 
 const getRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get user's profile, goals, and recent stats
     const profile = await Profiles.findOne({ where: { user_id: userId } });
     const goals = await NutritionGoals.findOne({ where: { user_id: userId } });
     const sevenDaysAgo = new Date();
@@ -27,10 +22,9 @@ const getRecommendations = async (req, res) => {
     });
 
     if (!profile || !goals) {
-      return serverMessage(res, 404, { error: 'Profile or nutrition goals not found. Please set them up first.' });
+      return res.status(404).json({ error: true, message: 'Profile or nutrition goals not found. Please set them up first.' });
     }
 
-    // Construct the prompt for the AI
     const prompt = `
       A user wants personalized nutrition recommendations.
       Generate a detailed meal plan for one day (Breakfast, Lunch, Dinner, Snacks) and provide general advice.
@@ -63,24 +57,20 @@ const getRecommendations = async (req, res) => {
       Based on all this information, provide a tailored meal plan and actionable recommendations to help the user reach their goals.
     `;
 
-    // Call the AI service
     const recommendationText = await askAI(prompt);
 
-    // Save the recommendation
     const recommendation = await NutritionRecommendation.create({
       user_id: userId,
       recommendation_text: recommendationText,
     });
 
-    serverMessage(res, 200, 'Nutrition recommendation generated successfully', { recommendation });
+    return res.status(200).json({ error: false, message: 'Nutrition recommendation generated successfully', data: { recommendation } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while generating nutrition recommendations' });
+    return res.status(500).json({ error: true, message: 'An error occurred while generating nutrition recommendations' });
   }
 };
-
-
 
 const setNutritionGoals = async (req, res) => {
   try {
@@ -88,10 +78,9 @@ const setNutritionGoals = async (req, res) => {
     const { target_calories, target_protein, target_carbs, target_fat } = req.body;
 
     if (!target_calories || !target_protein || !target_carbs || !target_fat) {
-      return serverMessage(res, 400, { error: 'Missing required fields' });
+      return res.status(400).json({ error: true, message: 'Missing required fields' });
     }
 
-    // Create or update nutrition goals
     const [goals, created] = await NutritionGoals.upsert({
       user_id: userId,
       target_calories,
@@ -101,11 +90,11 @@ const setNutritionGoals = async (req, res) => {
     });
 
     const message = created ? 'Nutrition goals created successfully' : 'Nutrition goals updated successfully';
-    serverMessage(res, 200, message, { goals });
+    return res.status(200).json({ error: false, message, data: { goals } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while setting nutrition goals' });
+    return res.status(500).json({ error: true, message: 'An error occurred while setting nutrition goals' });
   }
 };
 
@@ -115,14 +104,13 @@ const logMeal = async (req, res) => {
     const { meal_type, food_items } = req.body;
 
     if (!meal_type || !food_items || !Array.isArray(food_items) || food_items.length === 0) {
-      return serverMessage(res, 400, { error: 'Missing or invalid required fields' });
+      return res.status(400).json({ error: true, message: 'Missing or invalid required fields' });
     }
 
-    // Optional: Validate that the food items exist in the database
     const foodItemIds = food_items.map(item => item.food_item_id);
     const existingFoodItems = await FoodItem.findAll({ where: { id: foodItemIds } });
     if (existingFoodItems.length !== foodItemIds.length) {
-      return serverMessage(res, 400, { error: 'One or more food items not found' });
+      return res.status(400).json({ error: true, message: 'One or more food items not found' });
     }
 
     const meal = await MealEntry.create({
@@ -131,11 +119,11 @@ const logMeal = async (req, res) => {
       food_items,
     });
 
-    serverMessage(res, 201, 'Meal logged successfully', { meal });
+    return res.status(201).json({ error: false, message: 'Meal logged successfully', data: { meal } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while logging the meal' });
+    return res.status(500).json({ error: true, message: 'An error occurred while logging the meal' });
   }
 };
 
@@ -147,7 +135,6 @@ const getDailyStats = async (req, res) => {
     const queryDate = date ? new Date(date) : new Date();
     queryDate.setHours(0, 0, 0, 0);
 
-    // Check if stats for this date already exist
     let dailyStats = await DailyNutrition.findOne({
       where: {
         user_id: userId,
@@ -156,10 +143,9 @@ const getDailyStats = async (req, res) => {
     });
 
     if (dailyStats) {
-      return serverMessage(res, 200, 'Daily stats retrieved successfully', { dailyStats });
+      return res.status(200).json({ error: false, message: 'Daily stats retrieved successfully', data: { dailyStats } });
     }
 
-    // If not, calculate them
     const meals = await MealEntry.findAll({
       where: {
         user_id: userId,
@@ -171,7 +157,7 @@ const getDailyStats = async (req, res) => {
     });
 
     if (meals.length === 0) {
-      return serverMessage(res, 404, { error: 'No meals found for this date' });
+      return res.status(404).json({ error: true, message: 'No meals found for this date' });
     }
 
     let total_calories = 0;
@@ -200,11 +186,11 @@ const getDailyStats = async (req, res) => {
       total_fat,
     });
 
-    serverMessage(res, 200, 'Daily stats calculated and retrieved successfully', { dailyStats });
+    return res.status(200).json({ error: false, message: 'Daily stats calculated and retrieved successfully', data: { dailyStats } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while retrieving daily stats' });
+    return res.status(500).json({ error: true, message: 'An error occurred while retrieving daily stats' });
   }
 };
 
@@ -212,13 +198,11 @@ const analyzeDiet = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get user's nutrition goals
     const goals = await NutritionGoals.findOne({ where: { user_id: userId } });
     if (!goals) {
-      return serverMessage(res, 404, { error: 'Nutrition goals not found. Please set your goals first.' });
+      return res.status(404).json({ error: true, message: 'Nutrition goals not found. Please set your goals first.' });
     }
 
-    // Get user's daily nutrition stats for the last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const dailyStats = await DailyNutrition.findAll({
@@ -232,10 +216,9 @@ const analyzeDiet = async (req, res) => {
     });
 
     if (dailyStats.length === 0) {
-      return serverMessage(res, 404, { error: 'Not enough daily nutrition data to analyze. Please log your meals for a few days.' });
+      return res.status(404).json({ error: true, message: 'Not enough daily nutrition data to analyze. Please log your meals for a few days.' });
     }
 
-    // Construct the prompt for the AI
     const prompt = `
       A user wants an analysis of their diet over the last ${dailyStats.length} days.
       Provide a constructive and encouraging analysis based on their goals and their actual consumption.
@@ -259,20 +242,18 @@ const analyzeDiet = async (req, res) => {
       Please analyze the user's adherence to their goals, identify trends, and provide actionable advice for improvement.
     `;
 
-    // Call the AI service
     const analysisText = await askAI(prompt);
 
-    // Save the analysis
     const dietAnalysis = await DietAnalysis.create({
       user_id: userId,
       analysis_text: analysisText,
     });
 
-    serverMessage(res, 200, 'Diet analysis generated successfully', { dietAnalysis });
+    return res.status(200).json({ error: false, message: 'Diet analysis generated successfully', data: { dietAnalysis } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while analyzing the diet' });
+    return res.status(500).json({ error: true, message: 'An error occurred while analyzing the diet' });
   }
 };
 

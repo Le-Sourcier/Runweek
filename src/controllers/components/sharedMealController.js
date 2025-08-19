@@ -1,5 +1,4 @@
 const { SharedMeal, Comment, Friend, Users, MealEntry } = require('../../models');
-const serverMessage = require('../../utils/components/serverMessage');
 const { Op } = require('sequelize');
 
 const shareMeal = async (req, res) => {
@@ -7,10 +6,9 @@ const shareMeal = async (req, res) => {
     const userId = req.user.id;
     const { mealId } = req.params;
 
-    // Check if the meal exists and belongs to the user
     const meal = await MealEntry.findOne({ where: { id: mealId, user_id: userId } });
     if (!meal) {
-        return serverMessage(res, 404, { error: 'Meal not found or does not belong to the user.' });
+        return res.status(404).json({ error: true, message: 'Meal not found or does not belong to the user.' });
     }
 
     const sharedMeal = await SharedMeal.create({
@@ -18,11 +16,11 @@ const shareMeal = async (req, res) => {
       meal_entry_id: mealId,
     });
 
-    serverMessage(res, 201, 'Meal shared successfully', { sharedMeal });
+    return res.status(201).json({ error: false, message: 'Meal shared successfully', data: { sharedMeal } });
 
   } catch (error) {
     console.error(error);
-    serverMessage(res, 500, { error: 'An error occurred while sharing the meal' });
+    return res.status(500).json({ error: true, message: 'An error occurred while sharing the meal' });
   }
 };
 
@@ -33,16 +31,14 @@ const commentOnSharedMeal = async (req, res) => {
         const { text } = req.body;
 
         if (!text) {
-            return serverMessage(res, 400, { error: 'Comment text is required.' });
+            return res.status(400).json({ error: true, message: 'Comment text is required.' });
         }
 
-        // Check if the shared meal exists
         const sharedMeal = await SharedMeal.findByPk(sharedMealId);
         if (!sharedMeal) {
-            return serverMessage(res, 404, { error: 'Shared meal not found.' });
+            return res.status(404).json({ error: true, message: 'Shared meal not found.' });
         }
 
-        // Check if the user is friends with the person who shared the meal
         const friend = await Friend.findOne({
             where: {
                 status: 'accepted',
@@ -54,7 +50,7 @@ const commentOnSharedMeal = async (req, res) => {
         });
 
         if (!friend && userId !== sharedMeal.user_id) {
-            return serverMessage(res, 403, { error: 'You can only comment on meals shared by your friends.' });
+            return res.status(403).json({ error: true, message: 'You can only comment on meals shared by your friends.' });
         }
 
         const comment = await Comment.create({
@@ -63,11 +59,11 @@ const commentOnSharedMeal = async (req, res) => {
             text,
         });
 
-        serverMessage(res, 201, 'Comment posted successfully', { comment });
+        return res.status(201).json({ error: false, message: 'Comment posted successfully', data: { comment } });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while posting the comment' });
+        return res.status(500).json({ error: true, message: 'An error occurred while posting the comment' });
     }
 };
 
@@ -75,7 +71,6 @@ const getSharedMealsFeed = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Get the user's friends
         const friends = await Friend.findAll({
             where: {
                 status: 'accepted',
@@ -87,7 +82,6 @@ const getSharedMealsFeed = async (req, res) => {
             return friendship.user_id === userId ? friendship.friend_id : friendship.user_id;
         });
 
-        // Get shared meals from friends
         const sharedMeals = await SharedMeal.findAll({
             where: {
                 user_id: {
@@ -102,11 +96,11 @@ const getSharedMealsFeed = async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        serverMessage(res, 200, 'Shared meals feed retrieved successfully', { sharedMeals });
+        return res.status(200).json({ error: false, message: 'Shared meals feed retrieved successfully', data: { sharedMeals } });
 
     } catch (error) {
         console.error(error);
-        serverMessage(res, 500, { error: 'An error occurred while retrieving the shared meals feed' });
+        return res.status(500).json({ error: true, message: 'An error occurred while retrieving the shared meals feed' });
     }
 };
 

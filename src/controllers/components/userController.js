@@ -1,4 +1,3 @@
-// Refactored version of userController.js
 const dayjs = require("dayjs");
 const bcrypt = require("bcrypt");
 const db = require("../../models");
@@ -20,7 +19,6 @@ const sendMail = require("../../functions/components/sendMail");
 const MailInvitationTemplate = require("../../../lib/MailInvitationTemplate");
 const mailVerificationTemplate = require("../../../lib/mailVerificationTemplate");
 const {
-    serverMessage,
     isAdminOrSuperAdmin,
     generateRandomPassword,
     createNotification,
@@ -28,6 +26,10 @@ const {
     getGeoLocation,
 } = require("../../utils");
 const PasswordResetTemplate = require("../../../lib/PasswordResetTemplate");
+
+const jsonResponse = (res, status, message, data) => {
+    return res.status(status).json({ error: status >= 400, message, data });
+}
 
 module.exports = {
     register: async (req, res) => {
@@ -44,20 +46,14 @@ module.exports = {
                 referral_code,
             } = req.body;
 
-            // Vérifications de doublons
             if (await Users.findOne({ where: { email } }))
-                return serverMessage(res, "ACCOUNT_ALREADY_EXISTS");
+                return jsonResponse(res, 400, "Account already exists");
 
-            // if (await Profiles.findOne({ where: { phone } }))
-            //     return serverMessage(res, "PHONE_ALREADY_EXISTS");
-
-            // Création utilisateur
             const user = await Users.create(
                 { email, password },
                 { transaction }
             );
 
-            // Création profil
             await Profiles.create(
                 {
                     user_id: user.id,
@@ -70,7 +66,6 @@ module.exports = {
                 { transaction }
             );
 
-            // Traitement parrainage si code fourni
             if (referral_code) {
                 const sponsorCode = await UserRelations.findOne({
                     where: {
@@ -83,7 +78,6 @@ module.exports = {
                 if (sponsorCode) {
                     const sponsorId = sponsorCode.related_by;
 
-                    // Créer une nouvelle ligne pour la relation filleul → parrain
                     await UserRelations.create(
                         {
                             user_id: user.id,
@@ -95,7 +89,6 @@ module.exports = {
                         { transaction }
                     );
 
-                    // Vérifie si le sponsor atteint 5 filleuls acceptés
                     const sponsoredCount = await UserRelations.count({
                         where: {
                             related_by: sponsorId,
@@ -117,22 +110,19 @@ module.exports = {
 
                         const sponsorSub = sponsor?.subscriptions?.[0];
                         if (sponsorSub) {
-                            sponsorSub.credit_allocated += 500; // bonus palier
+                            sponsorSub.credit_allocated += 500;
                             await sponsorSub.save({ transaction });
                         }
                     }
                 }
-                // Sinon : code invalide → on ignore simplement
             }
 
-            // Génère et sauvegarde le token de vérification
             const verificationToken = user.generateVerificationToken();
             user.token = verificationToken;
             await user.save({ transaction });
 
             await transaction.commit();
 
-            // Email de vérification
             const link = `${process.env.ORIGINE_URL}/verify-mail?pk=${user.token}`;
             const html = mailVerificationTemplate(link);
 
@@ -142,11 +132,11 @@ module.exports = {
                 html,
             });
 
-            return serverMessage(res, "ACCOUNT_CREATED");
+            return jsonResponse(res, 201, "Account created successfully");
         } catch (error) {
             await transaction.rollback();
             console.error("REGISTER_ERROR", error);
-            return serverMessage(res, "REGISTER_ERROR");
+            return jsonResponse(res, 500, "Registration failed");
         }
     },
 
@@ -156,14 +146,12 @@ module.exports = {
             const { id: admin_id } = req.user;
             const { fname, lname, phone, email, role, credit = 0 } = req.body;
             if (!fname || !lname || !email || !role) {
-                return serverMessage(res, "REQUIRED_FIELDS_MISSING");
+                return jsonResponse(res, 400, "Required fields are missing");
             }
 
             const existingUser = await Users.findOne({ where: { email } });
             if (existingUser)
-                return serverMessage(res, "ACCOUNT_ALREADY_EXISTS");
-
-            
+                return jsonResponse(res, 400, "Account already exists");
 
             const admin = await Users.findByPk(admin_id, {
                 include: [
@@ -178,26 +166,22 @@ module.exports = {
             });
 
             if (!admin || admin.role !== "ADMIN")
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return jsonResponse(res, 403, "Insufficient permissions");
 
             const company = admin.profile?.company || null;
             const website = admin.profile?.website || null;
             const currentSubscription = admin?.subscriptions?.[0];
             const adminPlan = currentSubscription?.plan;
 
-            if (!adminPlan) return serverMessage(res, "PLAN_NOT_FOUND");
+            if (!adminPlan) return jsonResponse(res, 404, "Plan not found");
 
-            // Vérification du crédit disponible
             let adminAvailableCredit =
                 admin.subscriptions?.[0]?.credit_allocated || 0;
             if (credit > adminAvailableCredit)
-                return serverMessage(res, "NOT_ENOUGH_CREDIT", {
-                    available: adminAvailableCredit,
-                });
+                return jsonResponse(res, 403, "Not enough credit", { available: adminAvailableCredit });
 
             const password = generateRandomPassword();
 
-            // Création du user
             const user = await Users.create(
                 {
                     email,
@@ -206,7 +190,6 @@ module.exports = {
                 { transaction }
             );
 
-            // Création du profil
             await Profiles.create(
                 {
                     user_id: user.id,
@@ -219,8 +202,7 @@ module.exports = {
                 { transaction }
             );
 
-            // Création du rôle
-            const roleInstance = await Roles.create(
+            await Roles.create(
                 {
                     user_id: user.id,
                     account_type: role || "USER",
@@ -228,7 +210,6 @@ module.exports = {
                 { transaction }
             );
 
-            // Lien de relation d'équipe
             await UserRelations.create(
                 {
                     user_id: user.id,
@@ -244,24 +225,18 @@ module.exports = {
             user.token = token;
             await user.save({ transaction });
 
-            // Vérification du crédit disponible
             adminAvailableCredit = currentSubscription?.credit_allocated || 0;
             if (credit > adminAvailableCredit)
-                return serverMessage(res, "NOT_ENOUGH_CREDIT", {
-                    available: adminAvailableCredit,
-                });
+                return jsonResponse(res, 403, "Not enough credit", { available: adminAvailableCredit });
 
-            // Mise à jour du crédit
             currentSubscription.credit_allocated =
                 adminAvailableCredit - credit;
             await currentSubscription.save({ transaction });
 
-            // Abonnement hérité du plan admin
             await Subscriptions.create(
                 {
                     user_id: user.id,
                     plan_id: adminPlan.id,
-                    // billing_type: adminPlan.prices.billing_type,
                 },
                 { transaction }
             );
@@ -277,14 +252,11 @@ module.exports = {
                 html,
             });
 
-            return serverMessage(res, "ACCOUNT_CREATED", {
-                email,
-                password,
-            });
+            return jsonResponse(res, 201, "Account created successfully", { email, password });
         } catch (error) {
             await transaction.rollback();
             console.error("INVITE_MEMBER_ERROR:", error);
-            return serverMessage(res, "INVITE_MEMBER_ERROR");
+            return jsonResponse(res, 500, "Invite member error");
         }
     },
 
@@ -297,40 +269,30 @@ module.exports = {
                 include: ["profile"],
             });
 
-            if (!user) return serverMessage(res, "PROFILE_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Profile not found");
 
             if (!(await user.verifyPassword(password))) {
-                return serverMessage(res, "INVALID_CREDENTIALS");
+                return jsonResponse(res, 400, "Invalid credentials");
             }
 
             if (user.status !== "VERIFIED") {
-                return serverMessage(res, `ACCOUNT_${user.status}`);
+                return jsonResponse(res, 400, `Account ${user.status}`);
             }
 
-            // Vérifie si une session active existe déjà
             const existingSession = await Sessions.findOne({
                 where: {
                     user_id: user.id,
                     expires_at: {
-                        [Op.gt]: new Date(), // session non expirée
+                        [Op.gt]: new Date(),
                     },
                 },
             });
 
             let refreshToken, accessToken;
 
-            //  simulate session expiration (only for testing purposes)
-            // if (existingSession) {
-            //     existingSession.expires_at = dayjs(existingSession.expires_at)
-            //         .subtract(8, "days")
-            //         .toDate();
-            //     await existingSession.save();
-            // }
-
             if (existingSession) {
                 refreshToken = existingSession.token;
             } else {
-                // Sinon, créer un nouveau refreshToken
                 const tokens = user.generateTokens();
                 accessToken = tokens.accessToken;
                 refreshToken = tokens.refreshToken;
@@ -348,23 +310,8 @@ module.exports = {
                 });
             }
 
-            // Génère ou réutilise accessToken
             accessToken = accessToken || user.generateTokens().accessToken;
 
-            // Update user plan
-            const subc = await Subscriptions.findOne({
-                where: { user_id: user.id, is_active: true },
-                include: [{ model: Plans, as: "plan" }],
-            });
-            // user.role = "ADMIN";
-            // subc.plan.name = "EXPERT";
-            // subc.credit_allocated = 1800000600;
-
-            // await user.save();
-            // await subc.save();
-            // await subc.plan.save();
-
-            // Update le token de vérification (email) → accessToken actif
             user.token = accessToken;
             await user.save();
 
@@ -373,17 +320,14 @@ module.exports = {
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "Strict",
                 maxAge: rememberMe
-                    ? 30 * 24 * 60 * 60 * 1000 // 30 jours
-                    : 7 * 24 * 60 * 60 * 1000, // 7 jours
+                    ? 30 * 24 * 60 * 60 * 1000
+                    : 7 * 24 * 60 * 60 * 1000,
             });
 
-            return serverMessage(res, "LOGIN_SUCCESS", {
-                accessToken,
-                refreshToken,
-            });
+            return jsonResponse(res, 200, "Login successful", { accessToken, refreshToken });
         } catch (error) {
             console.error(error);
-            return serverMessage(res, "LOGIN_ERROR");
+            return jsonResponse(res, 500, "Login error");
         }
     },
     getMe: async (req, res) => {
@@ -420,14 +364,13 @@ module.exports = {
                 ],
             });
 
-            if (!user) return serverMessage(res, "PROFILE_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Profile not found");
 
             const subc = await Subscriptions.findOne({
                 where: { user_id: user.id },
                 include: [{ model: Plans, as: "plan" }],
             });
 
-            // const subscription = user.subscriptions?.[0]; // s'il y a une seule active
             const planName = subc?.plan?.name || "FREE";
             const currentCredits = subc?.credit_allocated ?? 0;
 
@@ -435,61 +378,47 @@ module.exports = {
                 id: user.id,
                 email: user.email,
                 role: user.role,
-
-                // Profile info
                 fname: user.profile?.fname,
                 lname: user.profile?.lname,
                 phone: user.profile?.phone,
                 address: user.profile.address ?? null,
                 image: user.profile?.image ?? null,
                 bio: user.profile?.bio ?? null,
-
-                // Company info
                 company: user.profile?.company,
                 website: user.profile?.website,
-
-                // Subscription info
                 plan: planName,
                 credits: currentCredits,
-
-                // Date
                 updatedAt: user.updatedAt,
             };
 
-            return serverMessage(res, "SUCCESS", data);
+            return jsonResponse(res, 200, "Success", data);
         } catch (error) {
             console.error("getMe error:", error);
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     refresh: async (req, res) => {
         try {
             const token = req.body.refreshToken;
-            if (!token) return serverMessage(res, "UNAUTHORIZED_ACCESS");
+            if (!token) return jsonResponse(res, 401, "Unauthorized access");
 
-            // 1. Vérification du token JWT
             const { id } = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
-            // 2. Validation en base (Sessions)
             const session = await Sessions.findOne({ where: { token } });
             if (!session || dayjs(session.expires_at).isBefore(dayjs())) {
-                return serverMessage(res, "TOKEN_EXPIRED");
+                return jsonResponse(res, 401, "Token expired");
             }
 
-            // 3. Chargement de l'utilisateur
             const user = await Users.findByPk(id);
-            if (!user) return serverMessage(res, "PROFILE_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Profile not found");
 
-            // 4. Rotation des tokens
             const { accessToken, refreshToken: newRefreshToken } =
                 user.generateTokens();
 
-            // Mise à jour de la session
             session.token = newRefreshToken;
-            session.expires_at = dayjs().add(7, "days").toDate(); // ou autre durée
+            session.expires_at = dayjs().add(7, "days").toDate();
             await session.save();
 
-            // (optionnel) Réécriture du cookie
             res.cookie("refreshToken", newRefreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
@@ -497,20 +426,17 @@ module.exports = {
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
 
-            return serverMessage(res, "SUCCESS", {
-                accessToken,
-                refreshToken: newRefreshToken,
-            });
+            return jsonResponse(res, 200, "Success", { accessToken, refreshToken: newRefreshToken });
         } catch (error) {
             console.error("Refresh error:", error);
-            return serverMessage(res, "TOKEN_INVALID");
+            return jsonResponse(res, 401, "Token invalid");
         }
     },
     updateUser: async (req, res) => {
         const transaction = await db.sequelize.transaction();
         try {
             const userId = req.user?.id;
-            if (!userId) return serverMessage(res, "UNAUTHORIZED", 401);
+            if (!userId) return jsonResponse(res, 401, "Unauthorized");
 
             const { fname, lname, phone, company, website, address, bio } =
                 req.body;
@@ -522,7 +448,7 @@ module.exports = {
 
             if (!profile) {
                 await transaction.rollback();
-                return serverMessage(res, "PROFILE_NOT_FOUND", 404);
+                return jsonResponse(res, 404, "Profile not found");
             }
 
             const updatableFields = {
@@ -544,11 +470,11 @@ module.exports = {
             await profile.save({ transaction });
             await transaction.commit();
 
-            return serverMessage(res, "PROFILE_UPDATED");
+            return jsonResponse(res, 200, "Profile updated");
         } catch (error) {
             await transaction.rollback();
             console.error("Error updating profile:", error);
-            return serverMessage(res, "INTERNAL_SERVER_ERROR", 500);
+            return jsonResponse(res, 500, "Internal server error");
         }
     },
 
@@ -560,54 +486,45 @@ module.exports = {
 
             const user = await Users.findByPk(id);
             if (!user || !(await user.verifyPassword(oldPassword)))
-                return serverMessage(res, "OLD_PASSWORD_INVALID");
+                return jsonResponse(res, 400, "Old password invalid");
 
             user.password = await bcrypt.hash(newPassword, 10);
             await user.save({ transaction });
             await transaction.commit();
 
-            return serverMessage(res, "PASSWORD_RESET_SUCCESS");
+            return jsonResponse(res, 200, "Password reset successfully");
         } catch (error) {
             await transaction.rollback();
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
 
     verifyMail: async (req, res) => {
-        // const transaction = await db.sequelize.transaction();
-
         try {
             const { token } = req.body;
 
             if (!token) {
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
+                return jsonResponse(res, 400, "Invalid or expired token");
             }
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await Users.findOne({
                 where: { id: decoded.id },
-                // transaction,
                 include: ["profile"],
             });
-            // console.log("TOKEN: ", user.token);
 
             if (!user || user.status === "VERIFIED") {
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
+                return jsonResponse(res, 400, "Invalid or expired token");
             }
 
-            // Vérifie si token est trop vieux
             const lastUpdate = new Date(user.updatedAt).getTime();
             const isExpired = Date.now() - lastUpdate > 15 * 60 * 1000;
             if (isExpired) {
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN", {
-                    email: user.email,
-                });
+                return jsonResponse(res, 400, "Invalid or expired token", { email: user.email });
             }
 
-            //Souscrire automatiquement au plan FREE
             const freePlan = await Plans.findOne({
                 where: { name: "FREE" },
-                // transaction,
             });
 
             await Subscriptions.create(
@@ -615,15 +532,13 @@ module.exports = {
                     user_id: user.id,
                     plan_id: freePlan.id,
                     billing_type: "FREE",
-                    credit_allocated: 1000, // 1 million de crédits gratuits
+                    credit_allocated: 1000,
                     is_active: true,
                 }
-                // { transaction }
             );
 
-            // Validation de l’email
             user.status = "VERIFIED";
-            user.token = null; // Désactivation du token de vérif
+            user.token = null;
 
             await user.save();
 
@@ -631,51 +546,42 @@ module.exports = {
                 user_id: user.id,
                 type: "ACCOUNT_VALIDATED",
                 content: `Félicitations ${user.profile.fname} ${user.profile.lname}, votre compte a été validé avec succès et votre abonnement au plan ${freePlan.name} a été activé avec ${freePlan.monthly_credits} crédits gratuits.`,
-                // metadata: { user_id: user.id, status: "credited" },
             });
 
-            // await transaction.commit();
-
-            return serverMessage(res, "ACCOUNT_VALIDATED_SUCCESS");
+            return jsonResponse(res, 200, "Account validated successfully");
         } catch (error) {
             console.log("ERROR IN MAIL VERIFICATION: ", error);
-            // await transaction.rollback();
 
             if (
                 ["TokenExpiredError", "JsonWebTokenError"].includes(error.name)
             ) {
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
+                return jsonResponse(res, 400, "Invalid or expired token");
             }
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     resendMail: async (req, res) => {
         try {
             const { email } = req.body;
 
-            // Vérifie que l'email est fourni
             if (!email || typeof email !== "string") {
-                return serverMessage(res, "INVALID_EMAIL_FORMAT");
+                return jsonResponse(res, 400, "Invalid email format");
             }
 
-            // Recherche de l'utilisateur
             const user = await Users.findOne({ where: { email } });
 
             if (!user) {
-                return serverMessage(res, "ACCOUNT_NOT_FOUND");
+                return jsonResponse(res, 404, "Account not found");
             }
 
-            // Si le compte est déjà vérifié
             if (user.status === "VERIFIED") {
-                return serverMessage(res, "ACCOUNT_ALREADY_VERIFIED");
+                return jsonResponse(res, 400, "Account already verified");
             }
 
-            // 🔐 Génére un token de vérification temporaire (15 min)
             const token = user.generateVerificationToken();
             user.token = token;
             await user.save();
 
-            // Récupère le profil pour personnaliser le message
             const profile = await Profiles.findOne({
                 where: { user_id: user.id },
             });
@@ -685,7 +591,6 @@ module.exports = {
             const verificationUrl = `${process.env.ORIGINE_URL}/verify-mail?pk=${token}`;
             const html = mailVerificationTemplate(verificationUrl);
 
-            // Envoie de l'email
             const result = await sendMail({
                 to: email,
                 subject: `👋 Hi ${fullName}, confirm your email`,
@@ -693,14 +598,13 @@ module.exports = {
             });
 
             if (result?.accepted?.length) {
-                return serverMessage(res, "EMAIL_SENDING_SUCCESS");
+                return jsonResponse(res, 200, "Email sent successfully");
             } else {
-                // console.error("Mail not accepted:", result);
-                return serverMessage(res, "EMAIL_SENDING_FAILED");
+                return jsonResponse(res, 500, "Email sending failed");
             }
         } catch (error) {
             console.error("Error in resendMail:", error);
-            return serverMessage(res, "EMAIL_SENDING_FAILED");
+            return jsonResponse(res, 500, "Email sending failed");
         }
     },
 
@@ -709,23 +613,21 @@ module.exports = {
             const { token } = req.body;
             const user = await Users.findOne({ where: { reset_token: token } });
             if (!user || dayjs(user.reset_token_expires_at).isBefore(dayjs()))
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
+                return jsonResponse(res, 400, "Invalid or expired token");
 
             const profile = await Profiles.findOne({
                 where: { user_id: user.id },
             });
-            return serverMessage(res, "NEXT_STEP", {
-                firstName: profile?.fname,
-            });
+            return jsonResponse(res, 200, "Next step", { firstName: profile?.fname });
         } catch (error) {
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     forgetPassword: async (req, res) => {
         try {
             const { email } = req.body;
             const user = await Users.findOne({ where: { email } });
-            if (!user) return serverMessage(res, "PROFILE_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Profile not found");
 
             const token = user.generateVerificationToken();
             const expiresAt = dayjs().add(15, "minutes").toDate();
@@ -748,10 +650,10 @@ module.exports = {
             });
 
             return result?.accepted?.length
-                ? serverMessage(res, "EMAIL_SINDING_SUCCESS")
-                : serverMessage(res, "EMAIL_SENDING_FAILED");
+                ? jsonResponse(res, 200, "Email sent successfully")
+                : jsonResponse(res, 500, "Email sending failed");
         } catch (error) {
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
 
@@ -761,11 +663,9 @@ module.exports = {
             const { token, password } = req.body;
             const user = await Users.findOne({ where: { reset_token: token } });
 
-            if (!user) return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
+            if (!user) return jsonResponse(res, 400, "Invalid or expired token");
             else if (dayjs(user.reset_token_expires_at).isBefore(dayjs()))
-                return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN", {
-                    email: user.email,
-                });
+                return jsonResponse(res, 400, "Invalid or expired token", { email: user.email });
 
             Object.assign(user, {
                 password: await bcrypt.hash(password, 10),
@@ -775,10 +675,10 @@ module.exports = {
             await user.save({ transaction });
             await transaction.commit();
 
-            return serverMessage(res, "PASSWORD_RECOVERED_SUCCESS");
+            return jsonResponse(res, 200, "Password recovered successfully");
         } catch (error) {
             await transaction.rollback();
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
 
@@ -791,39 +691,31 @@ module.exports = {
                 include: ["subscriptions", "sessions", "profile"],
                 transaction,
             });
-            if (!user) return serverMessage(res, "ACCOUNT_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Account not found");
 
-            // Supprimer manuellement les éléments liés à cause des contraintes de FK
-            await Subscriptions.destroy({
-                where: { user_id: id },
-                transaction,
-            });
+            await Subscriptions.destroy({ where: { user_id: id }, transaction });
             await Sessions.destroy({ where: { user_id: id }, transaction });
             await Profiles.destroy({ where: { user_id: id }, transaction });
-            await Notifications.destroy({
-                where: { user_id: id },
-                transaction,
-            });
+            await Notifications.destroy({ where: { user_id: id }, transaction });
 
-            // Ensuite on peut supprimer l'utilisateur
             await user.destroy({ transaction });
 
             await transaction.commit();
-            return serverMessage(res, "USER_DELETED");
+            return jsonResponse(res, 200, "User deleted");
         } catch (error) {
             console.error("ERROR during user deletion:", error);
             await transaction.rollback();
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     getAllUsers: async (req, res) => {
         try {
             const { id } = req.user;
-            if (!id) return serverMessage(res, "ACCESS_DENIED");
+            if (!id) return jsonResponse(res, 403, "Access denied");
 
             const currentUser = await Users.findByPk(id);
             if (!isAdminOrSuperAdmin(currentUser)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return jsonResponse(res, 403, "Insufficient permissions");
             }
             const users = await Users.findAll({
                 include: [
@@ -845,7 +737,7 @@ module.exports = {
             });
 
             if (!users || users.length === 0)
-                return serverMessage(res, "RECORDED_USERS_NOT_FOUND");
+                return jsonResponse(res, 404, "Recorded users not found");
 
             const formatted = users.map((user) => {
                 const currentSubscription = user.subscriptions?.[0];
@@ -856,43 +748,35 @@ module.exports = {
                     id: user.id,
                     email: user.email,
                     role: user.role,
-
-                    // Profile info
                     fname: user.profile?.fname,
                     lname: user.profile?.lname,
                     phone: user.profile?.phone,
                     address: user.profile?.address ?? null,
                     image: user.profile?.image ?? null,
                     bio: user.profile?.bio ?? null,
-
-                    // Company info
                     company: user.profile?.company,
                     website: user.profile?.website,
-
-                    // Subscription info
                     plan: planName,
                     credits: currentCredits,
-
-                    // Date
                     updatedAt: user.updatedAt,
                     createdAt: user.createdAt,
                 };
             });
 
-            return serverMessage(res, "SUCCESS", formatted);
+            return jsonResponse(res, 200, "Success", formatted);
         } catch (error) {
             console.error("getAllUsers error:", error);
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     getUserWithDetails: async (req, res) => {
         try {
             const { id } = req.user;
-            if (!id) return serverMessage(res, "ACCESS_DENIED");
+            if (!id) return jsonResponse(res, 403, "Access denied");
 
             const currentUser = await Users.findByPk(id);
             if (!isAdminOrSuperAdmin(currentUser)) {
-                return serverMessage(res, "INSUFFICIENT_PERMISSIONS");
+                return jsonResponse(res, 403, "Insufficient permissions");
             }
             const user = await Users.findByPk(req.params.id, {
                 include: [
@@ -913,7 +797,7 @@ module.exports = {
                 ],
             });
 
-            if (!user) return serverMessage(res, "ACCOUNT_NOT_FOUND");
+            if (!user) return jsonResponse(res, 404, "Account not found");
             const currentSubscription = user.subscriptions?.[0];
             const planName = currentSubscription.plan.name;
             const currentCredits = currentSubscription.credit_allocated;
@@ -922,32 +806,24 @@ module.exports = {
                 id: user.id,
                 email: user.email,
                 role: user.role,
-
-                // Profile info
                 fname: user.profile?.fname,
                 lname: user.profile?.lname,
                 phone: user.profile?.phone,
                 address: user.profile?.address ?? null,
                 image: user.profile?.image ?? null,
                 bio: user.profile?.bio ?? null,
-
-                // Company info
                 company: user.profile?.company,
                 website: user.profile?.website,
-
-                // Subscription info
                 plan: planName,
                 credits: currentCredits,
-
-                // Date
                 updatedAt: user.updatedAt,
                 createdAt: user.createdAt,
             };
 
-            return serverMessage(res, "SUCCESS", formatted);
+            return jsonResponse(res, 200, "Success", formatted);
         } catch (error) {
             console.error("getAllUsers error:", error);
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     getAllSessions: async (req, res) => {
@@ -959,7 +835,7 @@ module.exports = {
             });
 
             if (!sessions || sessions.length === 0)
-                return serverMessage(res, "NO_SESSIONS_FOUNDED");
+                return jsonResponse(res, 404, "No sessions found");
 
             const formatted = await Promise.all(
                 sessions.map(async (session) => {
@@ -977,10 +853,10 @@ module.exports = {
                 })
             );
 
-            return serverMessage(res, "SUCCESS", formatted);
+            return jsonResponse(res, 200, "Success", formatted);
         } catch (error) {
             console.error("getAllSessions error:", error);
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     getUserSponsorships: async (req, res) => {
@@ -1009,20 +885,16 @@ module.exports = {
                 ],
             });
 
-            return serverMessage(res, "SUCCESS", {
-                sponsoredUsers,
-                sponsors,
-            });
+            return jsonResponse(res, 200, "Success", { sponsoredUsers, sponsors });
         } catch (error) {
             console.error("getUserSponsorships error:", error);
-            return serverMessage(res);
+            return jsonResponse(res, 500, "Internal Server Error");
         }
     },
     generateReferralCode: async (req, res) => {
         try {
             const userId = req.user.id;
 
-            // Chercher s'il existe déjà un code de parrainage actif pour cet utilisateur
             let relation = await UserRelations.findOne({
                 where: {
                     related_by: userId,
@@ -1032,9 +904,8 @@ module.exports = {
                 },
             });
 
-            // Si aucun, créer un nouveau token
             if (!relation) {
-                const token = uuidv4().slice(0, 8).toUpperCase(); // ex : 'A1B2C3D4'
+                const token = uuidv4().slice(0, 8).toUpperCase();
 
                 relation = await UserRelations.create({
                     related_by: userId,
@@ -1042,16 +913,14 @@ module.exports = {
                     type: "SPONSOR",
                     status: "PENDING",
                     relation_token: token,
-                    expires_at: null, // ou une date d'expiration si souhaité
+                    expires_at: null,
                 });
             }
 
-            return serverMessage(res, "REFERRAL_CODE_GENERATED", {
-                referral_code: relation.relation_token,
-            });
+            return jsonResponse(res, 200, "Referral code generated", { referral_code: relation.relation_token });
         } catch (error) {
             console.error("Generate referral code error:", error);
-            return serverMessage(res, "REFERRAL_CODE_GENERATION_FAILED");
+            return jsonResponse(res, 500, "Referral code generation failed");
         }
     },
     checkReferralCode: async (req, res) => {
@@ -1059,7 +928,7 @@ module.exports = {
             const { referral_code } = req.params;
 
             if (!referral_code) {
-                return serverMessage(res, "INVALID_REFERRAL_CODE");
+                return jsonResponse(res, 400, "Invalid referral code");
             }
 
             const sponsorRelation = await UserRelations.findOne({
@@ -1075,10 +944,10 @@ module.exports = {
             });
 
             if (!sponsorRelation) {
-                return serverMessage(res, "REFERRAL_CODE_NOT_FOUND");
+                return jsonResponse(res, 404, "Referral code not found");
             }
 
-            return serverMessage(res, "REFERRAL_CODE_VALID", {
+            return jsonResponse(res, 200, "Referral code valid", {
                 inviter: {
                     id: sponsorRelation.inviter.id,
                     email: sponsorRelation.inviter.email,
@@ -1087,7 +956,7 @@ module.exports = {
             });
         } catch (error) {
             console.error("CHECK_REFERRAL_CODE_ERROR", error);
-            return serverMessage(res, "CHECK_REFERRAL_CODE_ERROR");
+            return jsonResponse(res, 500, "Check referral code error");
         }
     },
 };

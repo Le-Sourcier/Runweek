@@ -1,9 +1,8 @@
-// controllers/components/activityController.js
 const db = require("../../models");
 const { createNotification } = require("../../utils");
 
 exports.createActivity = async (req, res) => {
-    const { type, title, description, distance, duration, date, scheduledAt, metadata } = req.body; // Added scheduledAt
+    const { type, title, description, distance, duration, date, scheduledAt, metadata } = req.body; 
     const userId = req.user.id;
 
     if (!req.body) {
@@ -20,7 +19,7 @@ exports.createActivity = async (req, res) => {
         });
     }
 
-    // Validation des types de données
+
     if (distance && typeof distance !== 'number') {
         return res.status(400).json({
             error: true,
@@ -59,7 +58,7 @@ exports.createActivity = async (req, res) => {
             distance,
             duration,
             date,
-            scheduledAt, // Added scheduledAt
+            scheduledAt, 
             metadata,
         });
 
@@ -67,7 +66,7 @@ exports.createActivity = async (req, res) => {
         await createNotification({
             user_id: userId,
             type: "NEW_ACTIVITY",
-            content: `Votre activité \'${title}\' a bien été enregistrée.`, // Corrected escaping for single quotes within template literal
+            content: `Votre activité \'${title}\' a bien été enregistrée.`,
             metadata: {
                 activity_id: activity.id,
             },
@@ -88,7 +87,7 @@ exports.createActivity = async (req, res) => {
 };
 
 exports.updateActivity = async (req, res) => {
-    const { id } = req.params; // Assuming activity ID is passed in params
+    const { id } = req.params; 
     const { type, title, description, distance, duration, date, scheduledAt, metadata } = req.body;
     const userId = req.user.id;
 
@@ -117,7 +116,7 @@ exports.updateActivity = async (req, res) => {
             distance,
             duration,
             date,
-            scheduledAt, // Add scheduledAt here
+            scheduledAt,
             metadata,
         });
 

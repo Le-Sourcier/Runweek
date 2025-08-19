@@ -1,17 +1,11 @@
 const dayjs = require("dayjs");
-
 const { Notifications } = require("../../models");
-
-const { serverMessage } = require("../../utils");
 const { Op } = require("sequelize");
 
 module.exports = {
-  // Get all recent notif
-
   getAllNotif: async (req, res) => {
     try {
       const { id } = req.user;
-      // if (!userId) return serverMessage(res, "UNAUTHORIZED", 401);
 
       const notifications = await Notifications.findAll({
         where: { user_id: id },
@@ -19,7 +13,7 @@ module.exports = {
       });
 
       if (!notifications || notifications.length === 0) {
-        return serverMessage(res, "NOTIF_NOT_FOUND");
+        return res.status(404).json({ error: true, message: "Notifications not found" });
       }
 
       const sanitizedNotifications = notifications.map((notif) => {
@@ -28,14 +22,13 @@ module.exports = {
         return plain;
       });
 
-      return serverMessage(res, "SUCCESS", sanitizedNotifications);
+      return res.status(200).json({ error: false, message: "Success", data: sanitizedNotifications });
     } catch (error) {
       console.error("getUserNotifications error:", error);
-      return serverMessage(res);
+      return res.status(500).json({ error: true, message: "Internal Server Error" });
     }
   },
 
-  // GET /api/notif/notif/:id
   readNotifDetails: async (req, res) => {
     const notifId = req.params.id;
     const userId = req.user.id;
@@ -45,16 +38,17 @@ module.exports = {
         where: { id: notifId, user_id: userId },
       });
 
-      if (!notif) return serverMessage(res, "NOTIF_NOT_FOUND", null, 404);
+      if (!notif) {
+        return res.status(404).json({ error: true, message: "Notification not found" });
+      }
 
-      return serverMessage(res, "SUCCESS", notif);
+      return res.status(200).json({ error: false, message: "Success", data: notif });
     } catch (err) {
       console.error("readNotifDetails error", err);
-      return serverMessage(res);
+      return res.status(500).json({ error: true, message: "Internal Server Error" });
     }
   },
 
-  // PUT /api/notif/update-notif
   markAsRead: async (req, res) => {
     const { is_read = true } = req.body;
     const { id: notification_id } = req.params;
@@ -65,24 +59,24 @@ module.exports = {
         where: { id: notification_id, user_id: id },
       });
 
-      if (!notif) return serverMessage(res, "NOTIF_NOT_FOUND");
+      if (!notif) {
+        return res.status(404).json({ error: true, message: "Notification not found" });
+      }
 
-      // Pas besoin de mettre à jour si la valeur est déjà celle demandée
       if (notif.is_read === is_read) {
-        return serverMessage(res, "NO_CHANGE", notif);
+        return res.status(200).json({ error: false, message: "No change", data: notif });
       }
 
       await notif.update({ is_read });
 
-      const message = is_read ? "MARKED_AS_READ" : "MARKED_AS_UNREAD";
-      return serverMessage(res, message, notif);
+      const message = is_read ? "Marked as read" : "Marked as unread";
+      return res.status(200).json({ error: false, message, data: notif });
     } catch (err) {
       console.error("markAsRead error", err);
-      return serverMessage(res);
+      return res.status(500).json({ error: true, message: "Internal Server Error" });
     }
   },
 
-  // POST /api/notif/recent
   getRecentNotifications: async (req, res) => {
     const userId = req.user.id;
 
@@ -90,7 +84,7 @@ module.exports = {
       const notifications = await Notifications.findAll({
         where: { user_id: userId },
         order: [["createdAt", "DESC"]],
-        limit: 50, // ou + selon tes besoins
+        limit: 50,
       });
 
       const data = notifications.map((notif) => ({
@@ -102,10 +96,10 @@ module.exports = {
         metadata: notif.metadata,
       }));
 
-      return serverMessage(res, "SUCCESS", data);
+      return res.status(200).json({ error: false, message: "Success", data });
     } catch (err) {
       console.error("getRecentNotifications error", err);
-      return serverMessage(res);
+      return res.status(500).json({ error: true, message: "Internal Server Error" });
     }
   },
 };

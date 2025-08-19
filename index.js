@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./db");
 const express = require("express");
 const http = require("http");
 const socketManager = require("./src/socket/socketManager");
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(config.cors));
 app.set("trust proxy", 1);
+
 
 // Routes HTTP
 /**
@@ -57,6 +59,13 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+
+if (process.env.NODE_ENV === "development") {
+  logger = require("./src/utils/components/logger");
+}
+require("./db"); //initialize db instance
+require("./src/events/dbDownloader"); //Auto download database
 
 // Gestion des connexions Socket.IO
 io.on("connection", (socket) => {
