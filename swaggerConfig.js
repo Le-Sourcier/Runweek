@@ -654,6 +654,40 @@ const options = {
           },
         },
 
+        // Activity Schemas (NEW)
+        ActivityInput: {
+          type: "object",
+          properties: {
+            type: { type: "string", example: "Course à pied" },
+            title: { type: "string", example: "Jogging du matin" },
+            description: { type: "string", example: "Petit footing avant le travail", nullable: true },
+            distance: { type: "number", format: "float", example: 5, nullable: true },
+            duration: { type: "integer", example: 45, nullable: true },
+            date: { type: "string", format: "date-time", example: "2025-08-14T06:30:00Z" },
+            scheduledAt: { type: "string", format: "date-time", example: "2025-08-15T07:00:00Z", nullable: true },
+            metadata: { type: "object", additionalProperties: true, example: { terrain: "asphalte" }, nullable: true },
+          },
+          required: ["type", "title"],
+        },
+        Activity: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid", example: "3fa85f64-5717-4562-b3fc-2c963f66afa6" },
+            user_id: { type: "string", format: "uuid", example: "b2c3d4e5-f6a7-8901-2345-67890abcdef0" },
+            type: { type: "string", example: "Course à pied" },
+            title: { type: "string", example: "Jogging du matin" },
+            description: { type: "string", example: "Petit footing avant le travail", nullable: true },
+            distance: { type: "number", format: "float", example: 5, nullable: true },
+            duration: { type: "integer", example: 45, nullable: true },
+            date: { type: "string", format: "date-time", example: "2025-08-14T06:30:00Z" },
+            scheduledAt: { type: "string", format: "date-time", example: "2025-08-15T07:00:00Z", nullable: true },
+            metadata: { type: "object", additionalProperties: true, example: { terrain: "asphalte" }, nullable: true },
+            createdAt: { type: "string", format: "date-time", example: "2025-08-14T06:00:00Z" },
+            updatedAt: { type: "string", format: "date-time", example: "2025-08-14T06:00:00Z" },
+          },
+          required: ["id", "user_id", "type", "title", "date"],
+        },
+
         // Google Fit Schemas
         GoogleFitStepDataPointValue: {
           type: "object",

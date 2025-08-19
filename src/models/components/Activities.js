@@ -37,6 +37,10 @@ module.exports = (sequelize) => {
             defaultValue: DataTypes.NOW,
             allowNull: false,
         },
+        scheduledAt: {
+            type: DataTypes.DATE,
+            allowNull: true, // Activities can be created without being scheduled
+        },
         metadata: {
             type: DataTypes.JSONB, // For any extra data, e.g., heart rate, calories
             allowNull: true,
