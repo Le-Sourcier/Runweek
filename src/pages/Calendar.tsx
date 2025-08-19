@@ -17,7 +17,7 @@ import {
 import { motion } from "framer-motion";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
-import { Link } from "react-router-dom";
+import Spiner from "../components/ui/Spiner";
 
 // Event type (can be moved to types.ts if shared)
 interface CalendarEventType {
@@ -96,6 +96,7 @@ export default function Calendar() {
 
   // Modal and Form States
   const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
+  const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [newWorkoutTitle, setNewWorkoutTitle] = useState("");
   const [newWorkoutDate, setNewWorkoutDate] = useState(selectedDate);
   const [newWorkoutTime, setNewWorkoutTime] = useState("");
@@ -195,22 +196,25 @@ export default function Calendar() {
       alert("Please fill in Title, Date, and Type."); // Basic validation
       return;
     }
-    const newWorkout: CalendarEventType = {
-      id: `e${Date.now()}`,
-      title: newWorkoutTitle,
-      date: newWorkoutDate,
-      time: newWorkoutTime || undefined,
-      type: newWorkoutType,
-      distance:
-        newWorkoutDistance === "" ? undefined : Number(newWorkoutDistance),
-      duration: newWorkoutDuration || undefined,
-      location: newWorkoutLocation || undefined,
-      notes: newWorkoutNotes || undefined,
-    };
-    setEvents((prevEvents) => [newWorkout, ...prevEvents]);
-    setIsAddWorkoutModalOpen(false);
-  };
-
+    setIsSavingWorkout(true);
+    setTimeout(() => {
+      const newWorkout: CalendarEventType = {
+        id: `e${Date.now()}`,
+        title: newWorkoutTitle,
+        date: newWorkoutDate,
+        time: newWorkoutTime || undefined,
+        type: newWorkoutType,
+        distance:
+          newWorkoutDistance === "" ? undefined : Number(newWorkoutDistance),
+        duration: newWorkoutDuration || undefined,
+        location: newWorkoutLocation || undefined,
+        notes: newWorkoutNotes || undefined,
+      };
+      setEvents((prevEvents) => [newWorkout, ...prevEvents]);
+      setIsAddWorkoutModalOpen(false);
+      setIsSavingWorkout(false);
+    }, 1000); // Delay the execution to allow the modal to close first
+  }
   const handleDeleteWorkout = (eventId: string) => {
     if (window.confirm("Are you sure you want to delete this workout?")) {
       setEvents((prevEvents) =>
@@ -288,37 +292,32 @@ export default function Calendar() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.01 }}
-                className={`aspect-square p-1 ${
-                  !day.isCurrentMonth ? "opacity-30" : ""
-                }`}
+                className={`aspect-square p-1 ${!day.isCurrentMonth ? "opacity-30" : ""
+                  }`}
                 onClick={() => day.date && setSelectedDate(day.date)}
               >
                 {day.day && (
                   <div
                     className={`h-full w-full rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all text-sm
-                      ${
-                        day.isToday
-                          ? "bg-primary text-primary-foreground font-bold"
-                          : ""
+                      ${day.isToday
+                        ? "bg-primary text-primary-foreground font-bold"
+                        : ""
                       }
-                      ${
-                        selectedDate === day.date && !day.isToday
-                          ? "bg-primary/20 dark:bg-primary/30 text-primary font-semibold"
-                          : "text-foreground"
+                      ${selectedDate === day.date && !day.isToday
+                        ? "bg-primary/20 dark:bg-primary/30 text-primary font-semibold"
+                        : "text-foreground"
                       }
-                      ${
-                        !day.isToday && selectedDate !== day.date
-                          ? "hover:bg-muted dark:hover:bg-muted/50"
-                          : ""
+                      ${!day.isToday && selectedDate !== day.date
+                        ? "hover:bg-muted dark:hover:bg-muted/50"
+                        : ""
                       }
                     `}
                   >
                     <span>{day.day}</span>
                     {day.hasEvent && (
                       <div
-                        className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
-                          day.isToday ? "bg-primary-foreground" : "bg-primary"
-                        }`}
+                        className={`w-1.5 h-1.5 rounded-full mt-0.5 ${day.isToday ? "bg-primary-foreground" : "bg-primary"
+                          }`}
                       ></div>
                     )}
                   </div>
@@ -492,9 +491,8 @@ export default function Calendar() {
       {/* Add Workout Modal */}
       <Modal
         isOpen={isAddWorkoutModalOpen}
-        onClose={() => setIsAddWorkoutModalOpen(false)}
-        title="Add New Workout"
         size="lg"
+        onClose={() => setIsAddWorkoutModalOpen(false)}
       >
         <form onSubmit={handleSaveNewWorkout} className="space-y-4">
           <div>
@@ -643,7 +641,9 @@ export default function Calendar() {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Save Workout
+              {
+                isSavingWorkout ? <div className="flex items-center"><Spiner /> Saving...</div> : "Save workout"
+              }
             </button>
           </div>
         </form>
