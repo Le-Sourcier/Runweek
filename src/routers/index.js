@@ -13,5 +13,8 @@ router.use("/auth/google", require("./components/googleAuthRouter"));
 router.use("/google/fit", authorize, require("./components/googleFitRouter"));
 
 router.use("/aicoach", authorize, require("./components/aiCoachRouter"));
+router.use("/nutrition", authorize, require("./components/nutritionRouter"));
+router.use("/friends", authorize, require("./components/friendRouter"));
+router.use("/shared-meals", authorize, require("./components/sharedMealRouter"));
 
 module.exports = router;

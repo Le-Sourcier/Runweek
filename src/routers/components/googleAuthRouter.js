@@ -13,6 +13,12 @@ const authController = require("../../controllers/components/authController");
  *     responses:
  *       302:
  *         description: Redirection vers l'URL d'authentification Google.
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
  */
 router.get("/login", authController.googleLogin);
 
@@ -82,6 +88,12 @@ router.get("/login", authController.googleLogin);
  *                 message:
  *                   type: string
  *                   example: "Paramètres requis manquants : code et userId"
+ *       401:
+ *         description: Unauthorized (e.g., invalid or expired code).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error401'
  *       500:
  *         description: Erreur d'authentification Google
  *         content:

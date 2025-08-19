@@ -394,22 +394,6 @@ router
    *                         next_starting_after:
    *                           type: string
    *                           example: "prod_DEF456"
-   *       404:
-   *         description: No products found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: "PRODUCTS_NOT_FOUND"
    *       500:
    *         description: Server error
    *         content:
@@ -560,22 +544,6 @@ router
    *                 message:
    *                   type: string
    *                   example: "PRODUCT_ID_REQUIRED"
-   *       404:
-   *         description: Product not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: "PRODUCT_NOT_FOUND"
    *       500:
    *         description: Server error
    *         content:
@@ -686,10 +654,10 @@ router
    *                           properties:
    *                             id:
    *                               type: string
-   *                               example: "price_monthly_789"
+   *                               example: "price_monthly_123"
    *                             amount:
    *                               type: number
-   *                               example: 24.99
+   *                               example: 19.99
    *                             currency:
    *                               type: string
    *                               example: "eur"
@@ -709,10 +677,10 @@ router
    *                           properties:
    *                             id:
    *                               type: string
-   *                               example: "price_yearly_789"
+   *                               example: "price_yearly_456"
    *                             amount:
    *                               type: number
-   *                               example: 224.91
+   *                               example: 191.90
    *                             currency:
    *                               type: string
    *                               example: "eur"
@@ -845,7 +813,7 @@ router
    *                   type: string
    *                   example: "PRODUCT_DELETED"
    *       400:
-   *         description: Invalid request
+   *         description: Bad request
    *         content:
    *           application/json:
    *             schema:
@@ -879,22 +847,6 @@ router
    *                     - "INSUFFICIENT_PERMISSIONS"
    *                     - "CANNOT_DELETE_FREE_PLAN"
    *                     - "PRODUCT_HAS_ACTIVE_SUBSCRIPTIONS"
-   *       404:
-   *         description: Product not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: "PRODUCT_NOT_FOUND"
    *       500:
    *         description: Server error
    *         content:
@@ -990,22 +942,6 @@ router
    *                     - STRIPE_INVALID_REQUEST
    *                     - STRIPE_PRODUCT_NOT_ACTIVE
    *                     - STRIPE_INVALID_LINE_ITEM
-   *       402:
-   *         description: Payment required
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 402
-   *                 message:
-   *                   type: string
-   *                   example: STRIPE_CARD_DECLINED
    *       500:
    *         description: Internal server error
    *         content:
@@ -1132,22 +1068,6 @@ router
    *                 message:
    *                   type: string
    *                   example: MISSING_SESSION_ID
-   *       404:
-   *         description: Session not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:
@@ -1356,22 +1276,6 @@ router
    *                 message:
    *                   type: string
    *                   example: MISSING_SUBSCRIPTION_ID
-   *       404:
-   *         description: Subscription not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:
@@ -1838,22 +1742,6 @@ router
    *                 message:
    *                   type: string
    *                   example: INVALID_AMOUNT
-   *       402:
-   *         description: Payment required
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 402
-   *                 message:
-   *                   type: string
-   *                   example: INSUFFICIENT_FUNDS
    *       500:
    *         description: Internal server error
    *         content:
@@ -1952,22 +1840,6 @@ router
    *                 message:
    *                   type: string
    *                   example: MISSING_PAYOUT_ID
-   *       404:
-   *         description: Payout not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:
@@ -2184,22 +2056,6 @@ router
    *                 message:
    *                   type: string
    *                   example: PAYOUT_CANCEL_NOT_ALLOWED
-   *       404:
-   *         description: Payout not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:
@@ -2291,22 +2147,6 @@ router
    *                   enum:
    *                     - MISSING_PAYOUT_ID
    *                     - MISSING_METADATA
-   *       404:
-   *         description: Payout not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:
@@ -2414,22 +2254,6 @@ router
    *                 message:
    *                   type: string
    *                   example: MISSING_PAYOUT_ID
-   *       404:
-   *         description: Payout not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 404
-   *                 message:
-   *                   type: string
-   *                   example: RESOURCE_NOT_FOUND
    *       500:
    *         description: Internal server error
    *         content:

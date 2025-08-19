@@ -2,6 +2,17 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const socketManager = require("./src/socket/socketManager");
+const config = require("./src/config");
+const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swaggerConfig");
+
+let logger;
+if (process.env.NODE_ENV === "development") {
+  logger = require("./src/utils/components/logger");
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -10,8 +21,8 @@ const io = socketManager.init(server, { cors: config.cors });
 
 // Sécurité & middlewares
 app.use(helmet());
-// app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cookieParser());
 app.use(cors(config.cors));
 app.set("trust proxy", 1);
@@ -49,9 +60,7 @@ app.use((req, res, next) => {
 
 // Gestion des connexions Socket.IO
 io.on("connection", (socket) => {
-  let logger;
   if (process.env.NODE_ENV === "development") {
-    logger = require("./src/utils/components/logger");
     logger.info(`Un utilisateur est connecté: ${socket.id}`);
   } else {
     console.log(`Un utilisateur est connecté: ${socket.id}`);

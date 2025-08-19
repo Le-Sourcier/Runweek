@@ -4,36 +4,7 @@ const askAI = require("../../services/askAI");
 const db = require("../../models");
 const { createNotification } = require("../../utils");
 
-/**
- * @openapi
- * components:
- *   schemas:
- *     MessageCoachIA:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: Identifiant unique du message
- *         type:
- *           type: string
- *           enum: [text, recommandation, conseil]
- *           description: |
- *             Type de message :
- *             - text : Échange texte simple
- *             - recommandation : Recommandation personnalisée
- *             - conseil : Conseil d'entraînement
- *         message:
- *           type: string
- *           description: Contenu du message
- *         sender:
- *           type: string
- *           enum: [bot, user]
- *           description: Expéditeur du message
- *       required:
- *         - type
- *         - message
- *         - sender
- */
+
 
 
 /**

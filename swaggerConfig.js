@@ -871,6 +871,396 @@ const options = {
             },
           },
         },
+        FriendRequest: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the friend request.",
+              example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+            },
+            sender_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user who sent the request.",
+              example: "b2c3d4e5-f6a7-8901-2345-67890abcdef0"
+            },
+            receiver_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user who received the request.",
+              example: "c3d4e5f6-a7b8-9012-3456-7890abcdef01"
+            },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "declined"],
+              description: "Current status of the friend request.",
+              example: "pending"
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "Timestamp when the request was created."
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "Timestamp when the request was last updated."
+            },
+          },
+          required: [
+            "sender_id",
+            "receiver_id"
+          ]
+        },
+        Friend: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the friendship.",
+              example: "d4e5f6a7-b8c9-0123-4567-890abcdef012"
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the first user in the friendship.",
+              example: "e5f6a7b8-c9d0-1234-5678-90abcdef0123"
+            },
+            friend_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the second user in the friendship.",
+              example: "f6a7b8c9-d0e1-2345-6789-0abcdef01234"
+            },
+            status: {
+              type: "string",
+              enum: ["accepted"],
+              description: "Status of the friendship (always 'accepted' for active friends).",
+              example: "accepted"
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "Timestamp when the friendship was established."
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "Timestamp when the friendship was last updated."
+            },
+          },
+          required: [
+            "user_id",
+            "friend_id"
+          ]
+        },
+        NutritionGoalsInput: {
+          type: "object",
+          properties: {
+            target_calories: {
+              type: "number",
+              description: "Daily target calories.",
+              example: 2000
+            },
+            target_protein: {
+              type: "number",
+              description: "Daily target protein in grams.",
+              example: 150
+            },
+            target_carbs: {
+              type: "number",
+              description: "Daily target carbohydrates in grams.",
+              example: 200
+            },
+            target_fat: {
+              type: "number",
+              description: "Daily target fat in grams.",
+              example: 60
+            }
+          },
+          required: [
+            "target_calories",
+            "target_protein",
+            "target_carbs",
+            "target_fat"
+          ]
+        },
+
+        NutritionGoals: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the nutrition goals."
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user these goals belong to."
+            },
+            target_calories: {
+              type: "number",
+              description: "Daily target calories."
+            },
+            target_protein: {
+              type: "number",
+              description: "Daily target protein in grams."
+            },
+            target_carbs: {
+              type: "number",
+              description: "Daily target carbohydrates in grams."
+            },
+            target_fat: {
+              type: "number",
+              description: "Daily target fat in grams."
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        },
+
+        FoodItem: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the food item."
+            },
+            name: {
+              type: "string",
+              description: "Name of the food item.",
+              example: "Apple"
+            },
+            calories: {
+              type: "number",
+              description: "Calories per unit/serving.",
+              example: 95
+            },
+            protein: {
+              type: "number",
+              description: "Protein in grams per unit/serving.",
+              example: 0.5
+            },
+            carbs: {
+              type: "number",
+              description: "Carbohydrates in grams per unit/serving.",
+              example: 25
+            },
+            fat: {
+              type: "number",
+              description: "Fat in grams per unit/serving.",
+              example: 0.3
+            }
+          },
+          required: [
+            "name",
+            "calories",
+            "protein",
+            "carbs",
+            "fat"
+          ]
+        },
+
+        MealEntryInput: {
+          type: "object",
+          properties: {
+            meal_type: {
+              type: "string",
+              enum: ["breakfast", "lunch", "dinner", "snack"],
+              description: "Type of meal.",
+              example: "lunch"
+            },
+            food_items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  food_item_id: {
+                    type: "string",
+                    format: "uuid",
+                    description: "ID of the food item."
+                  },
+                  quantity: {
+                    type: "number",
+                    description: "Quantity of the food item consumed.",
+                    example: 1
+                  }
+                },
+                required: [
+                  "food_item_id",
+                  "quantity"
+                ]
+              }
+            }
+          },
+          required: [
+            "meal_type",
+            "food_items"
+          ]
+        },
+
+        MealEntry: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the meal entry."
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user who logged the meal."
+            },
+            meal_type: {
+              type: "string",
+              enum: ["breakfast", "lunch", "dinner", "snack"],
+              description: "Type of meal."
+            },
+            food_items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  food_item_id: {
+                    type: "string",
+                    format: "uuid"
+                  },
+                  quantity: {
+                    type: "number"
+                  }
+                }
+              }
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        },
+
+        DailyNutrition: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the daily nutrition summary."
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user."
+            },
+            date: {
+              type: "string",
+              format: "date",
+              description: "Date for which the nutrition data is summarized.",
+              example: "2025-08-19"
+            },
+            total_calories: {
+              type: "number",
+              description: "Total calories consumed for the day.",
+              example: 1850
+            },
+            total_protein: {
+              type: "number",
+              description: "Total protein consumed for the day in grams.",
+              example: 120
+            },
+            total_carbs: {
+              type: "number",
+              description: "Total carbohydrates consumed for the day in grams.",
+              example: 180
+            },
+            total_fat: {
+              type: "number",
+              description: "Total fat consumed for the day in grams.",
+              example: 55
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        },
+
+        DietAnalysis: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the diet analysis."
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user."
+            },
+            analysis_text: {
+              type: "string",
+              description: "The AI-generated diet analysis in markdown format.",
+              example: "Based on your recent intake, you are doing great..."
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        },
+
+        NutritionRecommendation: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Unique identifier for the nutrition recommendation."
+            },
+            user_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the user."
+            },
+            recommendation_text: {
+              type: "string",
+              description: "The AI-generated nutrition recommendation in markdown format.",
+              example: "Here is a sample meal plan for your goals..."
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time"
+            }
+          }
+        }
       },
     },
     security: [

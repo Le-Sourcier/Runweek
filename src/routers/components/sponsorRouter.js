@@ -49,17 +49,7 @@ router
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 401
-   *                 message:
-   *                   type: string
-   *                   example: FORBIDDEN_RESOURCE
+   *               $ref: '#/components/schemas/Error401'
    *       '500':
    *         description: Internal server error or failure during code generation.
    *         content:

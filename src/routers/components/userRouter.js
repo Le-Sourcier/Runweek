@@ -97,6 +97,12 @@ router
    *                 message:
    *                   type: string
    *                   example: ACCOUNT_ALREADY_EXISTS
+   *       '429':
+   *         description: Too many registration attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       '500':
    *         description: Server error (e.g., database or email error).
    *         content:
@@ -249,6 +255,12 @@ router
    *           application/json:
    *             schema:
    *               $ref: '#/components/schemas/Error401'
+   *       '429':
+   *         description: Too many verification attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       '500':
    *         description: Server error.
    *         content:
@@ -296,6 +308,12 @@ router
    *                 message:
    *                   type: string
    *                   example: EMAIL_SENDING_SUCCESS
+   *       '400':
+   *         description: Invalid email format.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error400'
    *       '401':
    *         description: The account is already verified.
    *         content:
@@ -313,7 +331,7 @@ router
    *                   type: string
    *                   example: ACCOUNT_ALREADY_VERIFIED
    *       '404':
-   *         description: Account not found or already verified.
+   *         description: Account not found.
    *         content:
    *           application/json:
    *             schema:
@@ -328,6 +346,12 @@ router
    *                 message:
    *                   type: string
    *                   example: ACCOUNT_NOT_FOUND
+   *       '429':
+   *         description: Too many resend attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       '500':
    *         description: Server error or failed to send email.
    *         content:
@@ -435,6 +459,12 @@ router
    *           application/json:
    *             schema:
    *               $ref: '#/components/schemas/Error401'
+   *       '429':
+   *         description: Too many token verification attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       '500':
    *         description: Server error.
    *         content:
@@ -520,22 +550,18 @@ router
    *                         email:
    *                           type: string
    *                           example: user@example.com
+   *       429:
+   *         description: Too many password reset attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       500:
    *         description: Internal server error.
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   type: boolean
-   *                   example: true
-   *                 status:
-   *                   type: integer
-   *                   example: 500
-   *                 message:
-   *                   type: string
-   *                   example: Internal Server Error
+   *               $ref: '#/components/schemas/Error500'
    */
   .put("/reset-password", loginLimiter, ctr.resetPassword) // Reset user password by id
   /**
@@ -612,6 +638,12 @@ router
    *           application/json:
    *             schema:
    *               $ref: '#/components/schemas/Error404'
+   *       '429':
+   *         description: Too many update attempts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error429'
    *       '500':
    *         description: Server error.
    *         content:
@@ -724,6 +756,12 @@ router
    *                 message:
    *                   type: string
    *                   example: INSUFFICIENT_PERMISSIONS
+   *       '404':
+   *         description: Admin plan not found.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error404'
    *       '409':
    *         description: Email or phone already in use.
    *         content:
