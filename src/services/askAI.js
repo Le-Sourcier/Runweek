@@ -59,7 +59,7 @@ async function askAI(userMessage, userContext, messagesHistory = []) {
 
       3. Salutations :
       "Bonjour ${
-        profile.fname || ""
+        profile.fname || profile.lname || "athlète"
       } ! Prêt(e) à repousser vos limites aujourd'hui ? 🏃‍♂️"
 
       4. Hors-sujet flagrant :
