@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 export const NotificationTab: FC = () => {
 
   const { user, updateUserPreferences } = useUserContext();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [notificationForm, setNotificationForm] = useState({
     email: user!.preferences?.notificationSettings?.email || true,
