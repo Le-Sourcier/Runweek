@@ -11,9 +11,11 @@ import {
   X,
   Activity,
   Utensils,
+  Settings,
 } from "lucide-react";
 import { useUserContext } from "../../hooks/useUser";
 import { motion } from "framer-motion";
+import { ROUTES } from "../../hooks/useAppNavigation";
 
 type SidebarProps = {
   className?: string;
@@ -32,31 +34,31 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
     {
       icon: <BarChart2 size={20} />,
       label: "Statistiques",
-      path: "/statistics",
+      path: ROUTES.STATISTICS,
     },
     { icon: <Brain size={20} />, label: "Coach IA", path: "/coach" },
     {
       icon: <CalendarIcon size={20} />,
       label: "Calendrier",
-      path: "/calendar",
+      path: ROUTES.CALENDAR,
     },
     { icon: <Target size={20} />, label: "Objectifs", path: "/goals" },
     { icon: <Award size={20} />, label: "Réalisations", path: "/achievements" },
     {
       icon: <Award size={20} />,
       label: "Records Perso",
-      path: "/personal-records",
+      path: ROUTES.PERSONAL_RECORDS,
     },
     {
       icon: <Utensils size={20} />,
       label: "Nutrition",
-      path: "/diet",
+      path: ROUTES.DIET,
     },
     { icon: <User size={20} />, label: "Profil", path: "/profile" },
     {
       icon: <HelpCircle size={20} />,
       label: "Aide & Support",
-      path: "/support",
+      path: ROUTES.SUPPORT,
     },
   ];
 
@@ -118,10 +120,9 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
                 to={item.path}
                 className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
-                  ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+                  ${isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
                   }
                 `}
                 end={item.path === "/"}
@@ -136,17 +137,18 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
         {/* Settings */}
         <div className="p-3 border-t dark:border-gray-700">
           <NavLink
-            to="/settings"
+            to={ROUTES.SETTINGS}
             className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
-                  ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
-                  }
-                `}
+              flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
+              ${isActive
+              ? "bg-primary/10 text-primary"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+              }
+            `}
           >
-            <span>Paramètres</span>
+            <span className="flex items-center gap-2">
+             <Settings size={20} /> Paramètres
+            </span>
           </NavLink>
         </div>
       </nav>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useUserContext } from "../hooks/useUser";
-import { useTheme } from "../context/ThemeContext";
-import Card from "../components/ui/Card";
-import ThemePreview from "../components/ui/ThemePreview";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import { useUserContext } from "../../hooks/useUser";
+import { useTheme } from "../../context/ThemeContext";
+import Card from "../../components/ui/Card";
+import ThemePreview from "../../components/ui/ThemePreview";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
 import {
   User,
   Bell,
@@ -60,17 +60,19 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
+import { ToggleSwitch } from "../../components/ui/ToggleSwitch";
+import { AccountTab } from "./tabs/Account";
 
 export default function Settings() {
   const { user, updateUserPreferences, logout, deleteUser } = useUserContext();
   const { theme, setTheme, colorPalette, setColorPalette } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   // Get initial tab and section from URL params
   const initialTab = searchParams.get('tab') || 'account';
   const initialSection = searchParams.get('section');
-  
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [expandedSection, setExpandedSection] = useState<string | null>(initialSection);
 
@@ -79,8 +81,8 @@ export default function Settings() {
     firstName: user?.fname || '',
     lastName: user?.lname || '',
     email: user?.email || '',
-    phone: '',
-    bio: '',
+    phone: user?.phone || '',
+    bio: user?.bio || '',
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -145,7 +147,7 @@ export default function Settings() {
         phone: user.phone || '',
         bio: user.bio || '',
       });
-      
+
       setNotificationForm({
         email: user.preferences?.notificationSettings?.email || true,
         push: user.preferences?.notificationSettings?.push || true,
@@ -169,7 +171,7 @@ export default function Settings() {
 
   const handleDataSharingToggle = (key: keyof typeof dataSharing, value: boolean) => {
     const newDataSharing = { ...dataSharing, [key]: value };
-    
+
     // If disabling main sharing, disable all sub-options
     if (key === 'enabled' && !value) {
       newDataSharing.shareNutrition = false;
@@ -247,12 +249,12 @@ export default function Settings() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       updateUserPreferences({
         ...user?.preferences,
         personalInfo: accountForm,
       });
-      
+
       toast.success('Informations personnelles mises à jour');
     } catch (error) {
       toast.error('Erreur lors de la mise à jour');
@@ -276,13 +278,13 @@ export default function Settings() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
-      
+
       toast.success('Mot de passe modifié avec succès');
     } catch (error) {
       toast.error('Erreur lors du changement de mot de passe');
@@ -312,11 +314,11 @@ export default function Settings() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       if (deleteUser) {
         deleteUser();
       }
-      
+
       toast.success('Compte supprimé avec succès');
       navigate('/login');
     } catch (error) {
@@ -430,41 +432,6 @@ export default function Settings() {
     },
   ];
 
-  const ToggleSwitch = ({ 
-    checked, 
-    onChange, 
-    disabled = false 
-  }: { 
-    checked: boolean; 
-    onChange: (value: boolean) => void;
-    disabled?: boolean;
-  }) => (
-    <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={disabled}
-      />
-      <label
-        className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${
-          disabled 
-            ? 'bg-gray-300 cursor-not-allowed' 
-            : checked 
-              ? "bg-primary" 
-              : "bg-muted"
-        }`}
-      >
-        <span
-          className={`block h-6 w-6 rounded-full bg-card shadow transform transition-transform duration-200 ease-in-out ${
-            checked ? "translate-x-6" : ""
-          }`}
-        ></span>
-      </label>
-    </div>
-  );
-
   return (
     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
       <div className="space-y-6">
@@ -481,11 +448,10 @@ export default function Settings() {
             <button
               key={section.id}
               onClick={() => handleTabChange(section.id)}
-              className={`px-4 py-2 font-medium transition-colors border-b-2 whitespace-nowrap ${
-                activeTab === section.id
+              className={`px-4 py-2 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === section.id
                   ? "text-primary border-primary"
                   : "text-muted-foreground border-transparent hover:text-foreground hover:border-muted"
-              }`}
+                }`}
             >
               <span className="flex items-center gap-2">
                 {section.icon}
@@ -499,222 +465,231 @@ export default function Settings() {
         <div className="space-y-6">
           {/* Account Settings */}
           {activeTab === "account" && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              {/* Personal Information */}
-              <Card title="Informations personnelles" className="bg-card text-card-foreground border-border">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 mb-6">
-                    <img
-                      src={user?.image}
-                      alt={user?.fname}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-border"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">{user?.fname} {user?.lname}</h3>
-                      <p className="text-muted-foreground">{user?.email}</p>
-                      <p className="text-sm text-muted-foreground">Membre depuis {new Date(user?.createdAt || '').toLocaleDateString()}</p>
-                    </div>
-                  </div>
+            // <motion.div
+            //   initial={{ opacity: 0, y: 20 }}
+            //   animate={{ opacity: 1, y: 0 }}
+            //   transition={{ duration: 0.3 }}
+            //   className="space-y-6"
+            // >
+            //   {/* Personal Information */}
+            //   <Card title="Informations personnelles" className="bg-card text-card-foreground border-border">
+            //     <div className="space-y-4">
+            //       <div className="flex items-center gap-4 mb-6">
+            //         {(user!.image) ? (
+            //           <img
+            //             src={user!.image}
+            //             alt={user!.fname + " " + user!.lname}
+            //             className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-sm"
+            //           />
+            //         ) : (
+            //           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-700 shadow-sm bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            //             <span className="text-white text-2xl font-semibold">
+            //               {user!.fname?.charAt(0)?.toUpperCase() || ""}{user!.lname?.charAt(0)?.toUpperCase() || ""}
+            //             </span>
+            //           </div>
+            //         )}
+            //         <div>
+            //           <h3 className="font-semibold text-foreground text-lg">{user?.fname} {user?.lname}</h3>
+            //           <p className="text-muted-foreground">{user?.email}</p>
+            //           <p className="text-sm text-muted-foreground">Membre depuis {new Date(user?.createdAt || '').toLocaleDateString()}</p>
+            //         </div>
+            //       </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Prénom</label>
-                      <Input
-                        value={accountForm.firstName}
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, firstName: e.target.value }))}
-                        placeholder="Votre prénom"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Nom</label>
-                      <Input
-                        value={accountForm.lastName}
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, lastName: e.target.value }))}
-                        placeholder="Votre nom"
-                      />
-                    </div>
-                  </div>
+            //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            //         <div>
+            //           <label className="block text-sm font-medium text-foreground mb-2">Prénom</label>
+            //           <Input
+            //             value={accountForm.firstName}
+            //             onChange={(e) => setAccountForm(prev => ({ ...prev, firstName: e.target.value }))}
+            //             placeholder="Votre prénom"
+            //           />
+            //         </div>
+            //         <div>
+            //           <label className="block text-sm font-medium text-foreground mb-2">Nom</label>
+            //           <Input
+            //             value={accountForm.lastName}
+            //             onChange={(e) => setAccountForm(prev => ({ ...prev, lastName: e.target.value }))}
+            //             placeholder="Votre nom"
+            //           />
+            //         </div>
+            //       </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Email</label>
-                    <Input
-                      type="email"
-                      value={accountForm.email}
-                      onChange={(e) => setAccountForm(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="votre@email.com"
-                    />
-                  </div>
+            //       <div>
+            //         <label className="block text-sm font-medium text-foreground mb-2">Email</label>
+            //         <Input
+            //           type="email"
+            //           value={accountForm.email}
+            //           onChange={(e) => setAccountForm(prev => ({ ...prev, email: e.target.value }))}
+            //           placeholder="votre@email.com"
+            //         />
+            //       </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Téléphone</label>
-                    <Input
-                      type="tel"
-                      value={accountForm.phone}
-                      onChange={(e) => setAccountForm(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="+33 6 12 34 56 78"
-                    />
-                  </div>
+            //       <div>
+            //         <label className="block text-sm font-medium text-foreground mb-2">Téléphone</label>
+            //         <Input
+            //           type="tel"
+            //           value={accountForm.phone}
+            //           onChange={(e) => setAccountForm(prev => ({ ...prev, phone: e.target.value }))}
+            //           placeholder="+33 6 12 34 56 78"
+            //         />
+            //       </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Bio</label>
-                    <textarea
-                      value={accountForm.bio}
-                      onChange={(e) => setAccountForm(prev => ({ ...prev, bio: e.target.value }))}
-                      placeholder="Parlez-nous de vous et de vos objectifs de course..."
-                      className="input w-full h-24 resize-none"
-                      maxLength={200}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{accountForm.bio.length}/200 caractères</p>
-                  </div>
+            //       <div>
+            //         <label className="block text-sm font-medium text-foreground mb-2">Bio</label>
+            //         <textarea
+            //           value={accountForm.bio}
+            //           onChange={(e) => setAccountForm(prev => ({ ...prev, bio: e.target.value }))}
+            //           placeholder="Parlez-nous de vous et de vos objectifs de course..."
+            //           className="input w-full h-24 resize-none"
+            //           maxLength={200}
+            //         />
+            //         <p className="text-xs text-muted-foreground mt-1">{accountForm.bio.length}/200 caractères</p>
+            //       </div>
 
-                  <Button onClick={handleAccountUpdate} isLoading={isLoading} className="w-full md:w-auto">
-                    <Save size={16} className="mr-2" />
-                    Sauvegarder les modifications
-                  </Button>
-                </div>
-              </Card>
+            //       <Button onClick={handleAccountUpdate} isLoading={isLoading} className="w-full md:w-auto">
+            //         <Save size={16} className="mr-2" />
+            //         Sauvegarder les modifications
+            //       </Button>
+            //     </div>
+            //   </Card>
 
-              {/* Security Settings */}
-              <Card title="Sécurité" className="bg-card text-card-foreground border-border">
-                <div className="space-y-6">
-                  {/* Password Change */}
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                      <Key size={18} />
-                      Changer le mot de passe
-                    </h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Mot de passe actuel</label>
-                        <Input
-                          type="password"
-                          value={passwordForm.currentPassword}
-                          onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                          placeholder="Votre mot de passe actuel"
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">Nouveau mot de passe</label>
-                          <Input
-                            type="password"
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                            placeholder="Nouveau mot de passe"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">Confirmer le mot de passe</label>
-                          <Input
-                            type="password"
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            placeholder="Confirmer le mot de passe"
-                          />
-                        </div>
-                      </div>
-                      <Button onClick={handlePasswordChange} isLoading={isLoading} variant="outline">
-                        <Lock size={16} className="mr-2" />
-                        Changer le mot de passe
-                      </Button>
-                    </div>
-                  </div>
+            //   {/* Security Settings */}
+            //   <Card title="Sécurité" className="bg-card text-card-foreground border-border">
+            //     <div className="space-y-6">
+            //       {/* Password Change */}
+            //       <div>
+            //         <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            //           <Key size={18} />
+            //           Changer le mot de passe
+            //         </h4>
+            //         <div className="space-y-4">
+            //           <div>
+            //             <label className="block text-sm font-medium text-foreground mb-2">Mot de passe actuel</label>
+            //             <Input
+            //               type="password"
+            //               value={passwordForm.currentPassword}
+            //               onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+            //               placeholder="Votre mot de passe actuel"
+            //             />
+            //           </div>
+            //           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            //             <div>
+            //               <label className="block text-sm font-medium text-foreground mb-2">Nouveau mot de passe</label>
+            //               <Input
+            //                 type="password"
+            //                 value={passwordForm.newPassword}
+            //                 onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+            //                 placeholder="Nouveau mot de passe"
+            //               />
+            //             </div>
+            //             <div>
+            //               <label className="block text-sm font-medium text-foreground mb-2">Confirmer le mot de passe</label>
+            //               <Input
+            //                 type="password"
+            //                 value={passwordForm.confirmPassword}
+            //                 onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+            //                 placeholder="Confirmer le mot de passe"
+            //               />
+            //             </div>
+            //           </div>
+            //           <Button onClick={handlePasswordChange} isLoading={isLoading} variant="outline">
+            //             <Lock size={16} className="mr-2" />
+            //             Changer le mot de passe
+            //           </Button>
+            //         </div>
+            //       </div>
 
-                  {/* Two-Factor Authentication */}
-                  <div className="border-t border-border pt-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-semibold text-foreground flex items-center gap-2">
-                          <Shield size={18} />
-                          Authentification à deux facteurs
-                        </h4>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Ajoutez une couche de sécurité supplémentaire à votre compte
-                        </p>
-                      </div>
-                      <ToggleSwitch
-                        checked={user?.preferences?.isTwoFactorEnabled || false}
-                        onChange={(value) =>
-                          updateUserPreferences({
-                            ...user?.preferences,
-                            isTwoFactorEnabled: value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
+            //       {/* Two-Factor Authentication */}
+            //       <div className="border-t border-border pt-6">
+            //         <div className="flex justify-between items-center">
+            //           <div>
+            //             <h4 className="font-semibold text-foreground flex items-center gap-2">
+            //               <Shield size={18} />
+            //               Authentification à deux facteurs
+            //             </h4>
+            //             <p className="text-sm text-muted-foreground mt-1">
+            //               Ajoutez une couche de sécurité supplémentaire à votre compte
+            //             </p>
+            //           </div>
+            //           <ToggleSwitch
+            //             checked={user?.preferences?.isTwoFactorEnabled || false}
+            //             onChange={(value) =>
+            //               updateUserPreferences({
+            //                 ...user?.preferences,
+            //                 isTwoFactorEnabled: value,
+            //               })
+            //             }
+            //           />
+            //         </div>
+            //       </div>
 
-                  {/* Session Management */}
-                  <div className="border-t border-border pt-6">
-                    <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                      <Activity size={18} />
-                      Sessions actives
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-background rounded-lg border border-border">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-foreground">Session actuelle</p>
-                            <p className="text-sm text-muted-foreground">Chrome sur Windows • Paris, France</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">Maintenant</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-background rounded-lg border border-border">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-foreground">iPhone App</p>
-                            <p className="text-sm text-muted-foreground">iOS • Paris, France</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Il y a 2h</span>
-                          <Button variant="outline" size="sm">Déconnecter</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+            //       {/* Session Management */}
+            //       <div className="border-t border-border pt-6">
+            //         <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            //           <Activity size={18} />
+            //           Sessions actives
+            //         </h4>
+            //         <div className="space-y-3">
+            //           <div className="flex justify-between items-center p-3 bg-background rounded-lg border border-border">
+            //             <div className="flex items-center gap-3">
+            //               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            //               <div>
+            //                 <p className="font-medium text-foreground">Session actuelle</p>
+            //                 <p className="text-sm text-muted-foreground">Chrome sur Windows • Paris, France</p>
+            //               </div>
+            //             </div>
+            //             <span className="text-xs text-muted-foreground">Maintenant</span>
+            //           </div>
+            //           <div className="flex justify-between items-center p-3 bg-background rounded-lg border border-border">
+            //             <div className="flex items-center gap-3">
+            //               <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            //               <div>
+            //                 <p className="font-medium text-foreground">iPhone App</p>
+            //                 <p className="text-sm text-muted-foreground">iOS • Paris, France</p>
+            //               </div>
+            //             </div>
+            //             <div className="flex items-center gap-2">
+            //               <span className="text-xs text-muted-foreground">Il y a 2h</span>
+            //               <Button variant="outline" size="sm">Déconnecter</Button>
+            //             </div>
+            //           </div>
+            //         </div>
+            //       </div>
+            //     </div>
+            //   </Card>
 
-              {/* Danger Zone */}
-              <Card title="Zone de danger" className="bg-card text-card-foreground border-destructive">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
-                    <AlertTriangle size={20} className="text-destructive mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-destructive">Supprimer le compte</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Cette action est irréversible. Toutes vos données seront définitivement supprimées.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <UserX size={16} />
-                        Supprimer mon compte
-                      </Button>
-                    </div>
-                    <Button variant="outline" onClick={logout} className="flex items-center gap-2">
-                      <LogOut size={16} />
-                      Se déconnecter
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+            //   {/* Danger Zone */}
+            //   <Card title="Zone de danger" className="bg-card text-card-foreground border-destructive">
+            //     <div className="space-y-4">
+            //       <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+            //         <AlertTriangle size={20} className="text-destructive mt-0.5" />
+            //         <div>
+            //           <h4 className="font-semibold text-destructive">Supprimer le compte</h4>
+            //           <p className="text-sm text-muted-foreground mt-1">
+            //             Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+            //           </p>
+            //         </div>
+            //       </div>
+            //       <div className="flex justify-between items-center">
+            //         <div>
+            //           <Button
+            //             variant="destructive"
+            //             onClick={() => setShowDeleteConfirm(true)}
+            //             className="flex items-center gap-2"
+            //           >
+            //             <UserX size={16} />
+            //             Supprimer mon compte
+            //           </Button>
+            //         </div>
+            //         <Button variant="outline" onClick={logout} className="flex items-center gap-2">
+            //           <LogOut size={16} />
+            //           Se déconnecter
+            //         </Button>
+            //       </div>
+            //     </div>
+            //   </Card>
+            // </motion.div>
+            <AccountTab />
           )}
 
           {/* Notifications Settings */}
@@ -840,12 +815,11 @@ export default function Settings() {
               <Card title="Partage de données" className="bg-card text-card-foreground border-border">
                 <div className="space-y-6">
                   {/* Main data sharing toggle */}
-                  <div 
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      expandedSection === 'dataSharing' 
-                        ? 'border-primary bg-primary/5' 
+                  <div
+                    className={`p-4 rounded-lg border-2 transition-all ${expandedSection === 'dataSharing'
+                        ? 'border-primary bg-primary/5'
                         : 'border-border'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -878,7 +852,7 @@ export default function Settings() {
                               })
                             };
                             setDataSharing(newDataSharing);
-                            
+
                             // Sauvegarder immédiatement
                             if (user && updateUserPreferences) {
                               updateUserPreferences({
@@ -888,12 +862,10 @@ export default function Settings() {
                             }
                           }}
                         />
-                        <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
-                          dataSharing?.enabled ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
-                        }`}>
-                          <div className={`absolute top-0.5 left-0.5 bg-white rounded-full h-5 w-5 transition-transform duration-200 ease-in-out ${
-                            dataSharing?.enabled ? 'translate-x-5' : 'translate-x-0'
-                          }`}></div>
+                        <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${dataSharing?.enabled ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
+                          }`}>
+                          <div className={`absolute top-0.5 left-0.5 bg-white rounded-full h-5 w-5 transition-transform duration-200 ease-in-out ${dataSharing?.enabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}></div>
                         </div>
                       </label>
                     </div>
@@ -1187,22 +1159,20 @@ export default function Settings() {
                     <div className="grid grid-cols-3 gap-3">
                       <button
                         onClick={() => setTheme("light")}
-                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 transition-all ${
-                          theme === "light"
+                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 transition-all ${theme === "light"
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border hover:border-primary/50"
-                        }`}
+                          }`}
                       >
                         <Sun size={24} />
                         <span className="text-sm font-medium">Clair</span>
                       </button>
                       <button
                         onClick={() => setTheme("dark")}
-                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 transition-all ${
-                          theme === "dark"
+                        className={`p-4 rounded-lg border flex flex-col items-center gap-2 transition-all ${theme === "dark"
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border hover:border-primary/50"
-                        }`}
+                          }`}
                       >
                         <Moon size={24} />
                         <span className="text-sm font-medium">Sombre</span>
@@ -1224,11 +1194,10 @@ export default function Settings() {
                           key={palette.id}
                           onClick={() => setColorPalette(palette.id)}
                           data-testid={`palette-option-${palette.id}`}
-                          className={`p-4 rounded-lg border transition-all ${
-                            colorPalette === palette.id
+                          className={`p-4 rounded-lg border transition-all ${colorPalette === palette.id
                               ? "ring-2 ring-offset-2 dark:ring-offset-gray-800 ring-primary"
                               : "border-border hover:border-primary/50"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-3 mb-2">
                             <div
@@ -1308,11 +1277,10 @@ export default function Settings() {
                           <button
                             key={lang.code}
                             onClick={() => setLanguageForm(prev => ({ ...prev, language: lang.code }))}
-                            className={`w-full p-3 rounded-lg border text-left flex items-center gap-3 transition-all ${
-                              languageForm.language === lang.code
+                            className={`w-full p-3 rounded-lg border text-left flex items-center gap-3 transition-all ${languageForm.language === lang.code
                                 ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-border hover:border-primary/50'
-                            }`}
+                              }`}
                           >
                             <span className="text-xl">{lang.flag}</span>
                             <span className="font-medium">{lang.name}</span>
@@ -1331,11 +1299,10 @@ export default function Settings() {
                           <button
                             key={region.code}
                             onClick={() => setLanguageForm(prev => ({ ...prev, region: region.code }))}
-                            className={`w-full p-3 rounded-lg border text-left flex items-center justify-between transition-all ${
-                              languageForm.region === region.code
+                            className={`w-full p-3 rounded-lg border text-left flex items-center justify-between transition-all ${languageForm.region === region.code
                                 ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-border hover:border-primary/50'
-                            }`}
+                              }`}
                           >
                             <span className="font-medium">{region.name}</span>
                             <div className="flex items-center gap-2">
@@ -1414,22 +1381,20 @@ export default function Settings() {
                   {connectedDevices.map((device) => (
                     <div key={device.id} className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          device.status === 'connected' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {device.type === 'Smartphone' ? <Smartphone size={20} /> : 
-                           device.type === 'Smartwatch' ? <Clock size={20} /> : 
-                           <Activity size={20} />}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${device.status === 'connected' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                          {device.type === 'Smartphone' ? <Smartphone size={20} /> :
+                            device.type === 'Smartwatch' ? <Clock size={20} /> :
+                              <Activity size={20} />}
                         </div>
                         <div>
                           <h4 className="font-semibold text-foreground">{device.name}</h4>
                           <p className="text-sm text-muted-foreground">{device.type}</p>
                           <div className="flex items-center gap-4 mt-1">
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              device.status === 'connected' 
-                                ? 'bg-green-100 text-green-700' 
+                            <span className={`text-xs px-2 py-1 rounded-full ${device.status === 'connected'
+                                ? 'bg-green-100 text-green-700'
                                 : 'bg-gray-100 text-gray-700'
-                            }`}>
+                              }`}>
                               {device.status === 'connected' ? 'Connecté' : 'Déconnecté'}
                             </span>
                             {device.battery && (
@@ -1450,7 +1415,7 @@ export default function Settings() {
                       </div>
                     </div>
                   ))}
-                  
+
                   <div className="border-t border-border pt-4">
                     <Button className="w-full flex items-center justify-center gap-2">
                       <Wifi size={16} />
@@ -1738,7 +1703,7 @@ export default function Settings() {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">Supprimer le compte</h3>
                     <p className="text-muted-foreground mt-2">
-                      Êtes-vous sûr de vouloir supprimer définitivement votre compte ? 
+                      Êtes-vous sûr de vouloir supprimer définitivement votre compte ?
                       Cette action ne peut pas être annulée.
                     </p>
                   </div>
@@ -1755,17 +1720,17 @@ export default function Settings() {
                     </ul>
                   </div>
                   <div className="flex gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setShowDeleteConfirm(false)}
                       className="flex-1"
                     >
                       Annuler
                     </Button>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       onClick={handleAccountDeletion}
-                      isLoading={isLoading}
+                      // isLoading={isLoading}
                       className="flex-1"
                     >
                       {isLoading ? 'Suppression...' : 'Supprimer définitivement'}

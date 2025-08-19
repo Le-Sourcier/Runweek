@@ -6,9 +6,11 @@ export const ApiUrl = {
   ME: "/user/me",
   UPDATE_PROFILE: "/user/update",
   RESEND_VERIFICATION_MAIL: "/user/resend-mail",
+  UPDATE_PASSWORD: "/user/update-password",
 
   GET_AI_COACH_MESSAGES: "/aicoach/history",
   SEND_AI_COACH_MESSAGES: "/aicoach",
+
 
   /**
  * Fonction pour les url à paramètres sous la forme url/:id

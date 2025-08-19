@@ -11,7 +11,7 @@ import Goals from "./pages/Goals";
 import Achievements from "./pages/Achievements";
 import Profile from "./pages/Profile";
 import Support from "./pages/Support";
-import Settings from "./pages/Settings";
+import Settings from "./pages/settings/Settings";
 import PersonalRecords from "./pages/PersonalRecords";
 import Diet from "./pages/Diet";
 import TrainingPlan from "./pages/TrainingPlan";

@@ -328,7 +328,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });     
+      await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });
     } catch (error) {
       console.error("Erreur lors de l'envoie du mail de confirmation:", error);
       throw error;
@@ -352,6 +352,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       await apiUtils.put<User>(ApiUrl.UPDATE_PROFILE, updatedProfileData);
       await fetchUser();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updatePassword = async (updatePasswordData: { currentPassword: string, newPassword: string }) => {
+    try {
+      await apiUtils.put<User>(ApiUrl.UPDATE_PASSWORD, updatePasswordData);
     } catch (error) {
       throw error;
     }
@@ -447,40 +455,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const changePassword = async (
-    currentPassword: string,
-    newPassword: string
-  ): Promise<{ success: boolean; message: string }> => {
-    console.log("UserContext: Attempting to change password.");
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 700));
-
-    // Mock validation: In a real app, verify currentPassword against the stored one.
-    // For this mock, let's assume 'password123' is the "current" password for the sampleUser if a user is logged in.
-    // This check should ideally be against the actual current user's password hash.
-    if (user && currentPassword === "password123") {
-      // Simple mock check
-      console.log(
-        "UserContext: Password change successful (mocked). New password would be:",
-        newPassword
-      );
-      // In a real app, you might update a lastPasswordChangedAt field in user state,
-      // and the backend would handle storing the new hashed password.
-      return {
-        success: true,
-        message: "Password changed successfully! (This is a mock response)",
-      };
-    } else {
-      console.warn(
-        "UserContext: Password change failed - incorrect current password or no user (mocked)."
-      );
-      return {
-        success: false,
-        message: "Incorrect current password. (This is a mock response)",
-      };
-    }
-  };
-
   const unlockSpecificAchievement = () => {
     setUser((prevUser) => {
       if (!prevUser) return null;
@@ -526,8 +500,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         resendVerificationMail,
         logout,
         updateUserProfile,
+        updatePassword,
         updateUserPreferences,
-        changePassword,
         unlockSpecificAchievement,
         addGoal,
         updateGoal,

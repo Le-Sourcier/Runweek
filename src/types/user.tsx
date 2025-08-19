@@ -31,11 +31,12 @@ export type UserAchievement = {
 
 export type User = {
   id: string;
+  bio?: string;
   fname: string;
   lname: string;
-  email: string;
-  phone: string;
-  image: string;
+  email?: string;
+  phone?: string;
+  image?: string;
   createdAt: string;
   stats: UserStats;
   goals: UserGoal[];
@@ -155,16 +156,11 @@ export type UserContextType = {
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   register: (auth: UserRegistration) => Promise<void>; // Made async to mimic API call
   verifyMail: (token: string) => Promise<void>;
-  resendVerificationMail: (
-    email: string
-  ) => Promise<{ message: string | null; resent: boolean }>;
+  resendVerificationMail: (email: string) => Promise<void>;
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => Promise<void>;
   updateUserPreferences: (preferences: UserPreferences) => void;
-  changePassword: (
-    currentPassword: string,
-    newPassword: string
-  ) => Promise<{ success: boolean; message: string }>; // Added changePassword
+  updatePassword: (updatePasswordData: { currentPassword: string, newPassword: string }) => Promise<void>;
   unlockSpecificAchievement: () => void; // Added for new achievement simulation
   addGoal: (goalData: Omit<UserGoal, "id" | "current" | "completed">) => void;
   updateGoal: (

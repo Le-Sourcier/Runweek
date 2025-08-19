@@ -225,10 +225,6 @@ export const ROUTES = {
   HOME: "/home",
   WELCOME: "/",
   DASHBOARD: "/dashboard",
-  BLOG: "/blog",
-  BILLING: "/billing",
-  BILLING_SUCCESS: "/billing/success",
-  BILLING_CANCEL: "/billing/cancel",
 
   LOGIN: "/login",
   REGISTER: "/register",
@@ -236,8 +232,14 @@ export const ROUTES = {
   RESET_PASSWORD: "/reset-password/:token",
   FORGOT_PASSWORD: "/forgot-password",
   PROFILE: "/profile",
-
-
+  
+  SETTINGS: "/settings",
+  STATISTICS: "/statistics",
+  CALENDAR: "/calendar",
+  ACHIEVEMENTS: "/achievements",
+  PERSONAL_RECORDS: "/personal-records",
+  DIET: "/diet",
+  SUPPORT: "/support",
+  COACH: "/coach",
   TRAINING_PLAN: "/training-plan",
-
 } as const;

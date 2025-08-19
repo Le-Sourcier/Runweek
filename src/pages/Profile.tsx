@@ -18,6 +18,7 @@ import {
   Link as LinkIcon,
   ChevronRight,
   Phone,
+  AlertTriangle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUserContext } from "../hooks/useUser";
@@ -144,8 +145,8 @@ export default function Profile() {
       // Entering edit mode, initialize with current user data
       setEditedFname(user.fname);
       setEditedLname(user.lname);
-      setEditedEmail(user.email);
-      setEditedProfileImage(user.image);
+      setEditedEmail(user.email || "");
+      setEditedProfileImage(user.image || "");
     }
     setIsEditing(!isEditing);
   };
@@ -175,9 +176,9 @@ export default function Profile() {
     // Revert changes to original user data
     setEditedFname(user.fname);
     setEditedLname(user.lname);
-    setEditedEmail(user.email);
-    setEditedPhone(user.phone);
-    setEditedProfileImage(user.image); // Add this line
+    setEditedEmail(user.email || "");
+    setEditedPhone(user.phone || "");
+    setEditedProfileImage(user.image || ""); // Add this line
     setIsEditing(false);
   };
 
@@ -338,7 +339,7 @@ export default function Profile() {
                       aria-label="User email"
                     />
                   ) : (
-                    <span>{user.email}</span>
+                    <span>{user.email || "--"}</span>
                   )}
                 </div>
 
@@ -353,7 +354,7 @@ export default function Profile() {
                       aria-label="User phone"
                     />
                   ) : (
-                    <span>{user.phone}</span>
+                    <span>{user.phone || "--"}</span>
                   )}
                 </div>
 
@@ -742,7 +743,7 @@ export default function Profile() {
                     </div>
 
                     {dataSharing.enabled && (
-                      <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                      <div className="space-y-3 pl-4 border-l border-2 border-primary/20">
                         {/* Nutrition Sharing */}
                         <div className="flex items-center justify-between">
                           <div>
@@ -909,8 +910,8 @@ export default function Profile() {
 
                     {!dataSharing.enabled && (
                       <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                        <p className="text-sm text-amber-700 dark:text-amber-300">
-                          ⚠️ Le partage de données est désactivé. Vous ne pourrez pas partager de contenu ou être trouvé par d'autres utilisateurs.
+                        <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center">
+                          <AlertTriangle size={16} className="mr-2" /> Le partage de données est désactivé. Vous ne pourrez pas partager de contenu ou être trouvé par d'autres utilisateurs.
                         </p>
                       </div>
                     )}
