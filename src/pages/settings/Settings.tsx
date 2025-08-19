@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useUserContext } from "../../hooks/useUser";
-import { useTheme } from "../../context/ThemeContext";
 import Card from "../../components/ui/Card";
-import ThemePreview from "../../components/ui/ThemePreview";
 import Button from "../../components/ui/Button";
 import {
   User,
@@ -14,9 +12,6 @@ import {
   Smartphone,
   CreditCard,
   HelpCircle,
-  Moon,
-  Sun,
-  Monitor,
   AlertTriangle,
   Activity,
   Clock,
