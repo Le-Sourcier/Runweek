@@ -79,7 +79,7 @@ const ctr = require("./../../controllers/components/chatController");
  *                   $ref: '#/components/schemas/MessageCoachIA'
  */
 router
-  .post("/", ctr.sentMessage)
+  .post("/", ctr.sendMessage)
 
   /**
    * @openapi

@@ -1,5 +1,6 @@
 const Joi = require("joi");
-const { Goal } = require("../models");
+const { Goal } = require("../../models");
+const { serverMessage } = require("../../utils");
 
 // Schémas de validation
 const createGoalSchema = Joi.object({
@@ -44,7 +45,7 @@ module.exports = {
     try {
       const { completed, category, sort = "deadline" } = req.query;
 
-      const filter = { userId: req.user._id, isActive: true };
+      const filter = { user_id: req.user.id, isActive: true };
 
       if (completed !== undefined) {
         filter.completed = completed === "true";
@@ -65,17 +66,11 @@ module.exports = {
         .sort(sortOptions[sort] || sortOptions.deadline)
         .lean();
 
-      res.json({
-        error: false,
-        message: "Objectifs récupérés avec succès",
-        data: goals,
-      });
+      return serverMessage(res, "GOALS_RETRIEVED", goals);
     } catch (error) {
       console.error("Erreur lors de la récupération des objectifs:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des objectifs",
-      });
+
+      return serverMessage(res, "GOALS_RETRIEVAL_FAILED", error.message);
     }
   },
 
@@ -83,29 +78,19 @@ module.exports = {
   getGoalById: async (req, res) => {
     try {
       const goal = await Goal.findOne({
-        _id: req.params.id,
-        userId: req.user._id,
+        id: req.params.id,
+        user_id: req.user.id,
         isActive: true,
       });
 
       if (!goal) {
-        return res.status(404).json({
-          error: true,
-          message: "Objectif non trouvé",
-        });
+        return serverMessage(res, "GOAL_NOT_FOUND");
       }
 
-      res.json({
-        error: false,
-        message: "Objectif récupéré avec succès",
-        data: goal,
-      });
+      return serverMessage(res, "GOAL_RETRIEVED", goal);
     } catch (error) {
       console.error("Erreur lors de la récupération de l'objectif:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération de l'objectif",
-      });
+      return serverMessage(res, "GOAL_RETRIEVAL_FAILED");
     }
   },
 
@@ -115,31 +100,21 @@ module.exports = {
       const { error, value } = createGoalSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.log("INVALID_GOAL_DATA", error.details[0].message);
+        return serverMessage(res, "INVALID_GOAL_DATA");
       }
 
       const goal = new Goal({
         ...value,
-        userId: req.user._id,
+        user_id: req.user.id,
       });
 
       await goal.save();
 
-      res.status(201).json({
-        error: false,
-        message: "Objectif créé avec succès",
-        data: goal,
-      });
+      return serverMessage(res, "GOAL_CREATED", goal);
     } catch (error) {
       console.error("Erreur lors de la création de l'objectif:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la création de l'objectif",
-      });
+      return serverMessage(res, "GOAL_CREATION_FAILED");
     }
   },
 
@@ -149,24 +124,23 @@ module.exports = {
       const { error, value } = updateGoalSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
+        res.status(400).json({
           error: true,
           message: "Données invalides",
           details: error.details[0].message,
         });
+
+        return serverMessage(res, "INVALID_GOAL_DATA");
       }
 
       const goal = await Goal.findOne({
-        _id: req.params.id,
-        userId: req.user._id,
+        id: req.params.id,
+        user_id: req.user.id,
         isActive: true,
       });
 
       if (!goal) {
-        return res.status(404).json({
-          error: true,
-          message: "Objectif non trouvé",
-        });
+        return serverMessage(res, "GOAL_NOT_FOUND");
       }
 
       // Vérifier si l'objectif est complété automatiquement
@@ -182,17 +156,10 @@ module.exports = {
       Object.assign(goal, value);
       await goal.save();
 
-      res.json({
-        error: false,
-        message: "Objectif mis à jour avec succès",
-        data: goal,
-      });
+      return serverMessage(res, "GOAL_UPDATED", goal);
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'objectif:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la mise à jour de l'objectif",
-      });
+      return serverMessage(res, "GOAL_UPDATE_FAILED");
     }
   },
 
@@ -202,24 +169,18 @@ module.exports = {
       const { error, value } = progressSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.log("Données invalides details: ", error.details[0].message);
+        return serverMessage(res, "INVALID_RECORD_DATA");
       }
 
       const goal = await Goal.findOne({
-        _id: req.params.id,
-        userId: req.user._id,
+        id: req.params.id,
+        user_id: req.user.id,
         isActive: true,
       });
 
       if (!goal) {
-        return res.status(404).json({
-          error: true,
-          message: "Objectif non trouvé",
-        });
+        return serverMessage(res, "GOAL_NOT_FOUND");
       }
 
       // Ajouter la progression
@@ -234,17 +195,10 @@ module.exports = {
 
       await goal.save();
 
-      res.json({
-        error: false,
-        message: "Progression ajoutée avec succès",
-        data: goal,
-      });
+      return serverMessage(res, "GOAL_UPDATED", goal);
     } catch (error) {
       console.error("Erreur lors de l'ajout de progression:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de l'ajout de progression",
-      });
+      return serverMessage(res, "GOAL_UPDATE_FAILED", error.message);
     }
   },
 
@@ -252,41 +206,32 @@ module.exports = {
   deleteGoal: async (req, res) => {
     try {
       const goal = await Goal.findOne({
-        _id: req.params.id,
-        userId: req.user._id,
+        id: req.params.id,
+        user_id: req.user.id,
         isActive: true,
       });
 
       if (!goal) {
-        return res.status(404).json({
-          error: true,
-          message: "Objectif non trouvé",
-        });
+        return serverMessage(res, "GOAL_NOT_FOUND");
       }
 
       goal.isActive = false;
       await goal.save();
 
-      res.json({
-        error: false,
-        message: "Objectif supprimé avec succès",
-      });
+      return serverMessage(res, "GOAL_DELETED");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'objectif:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la suppression de l'objectif",
-      });
+      return serverMessage(res, "GOAL_DELETION_FAILED", error.message);
     }
   },
 
   // GET /api/goals/stats - Statistiques des objectifs
   getGoalsStats: async (req, res) => {
     try {
-      const userId = req.user._id;
+      const user_id = req.user.id;
 
       const stats = await Goal.aggregate([
-        { $match: { userId: userId, isActive: true } },
+        { $match: { user_id: user_id, isActive: true } },
         {
           $group: {
             _id: null,
@@ -332,17 +277,14 @@ module.exports = {
         averageProgress: 0,
       };
 
-      res.json({
-        error: false,
-        message: "Statistiques récupérées avec succès",
-        data: result,
-      });
+      if (!result) {
+        return serverMessage(res, "NO_STATS_FOR_GOALS_FOUND");
+      }
+
+      return serverMessage(res, "GOALS_STATS_RETRIEVED", result);
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des statistiques",
-      });
+      return serverMessage(res, "GOALS_STATS_RETRIEVAL_FAILED");
     }
   },
 };

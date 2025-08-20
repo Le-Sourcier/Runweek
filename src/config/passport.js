@@ -47,7 +47,7 @@ passport.use(
               "",
             email: profile.emails[0].value,
             password: "google_auth_" + Math.random().toString(36), // Mot de passe temporaire
-            profileImage:
+            profile_image:
               profile.photos[0]?.value ||
               "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150",
             isEmailVerified: true, // Google emails sont déjà vérifiés

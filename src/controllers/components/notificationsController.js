@@ -11,7 +11,7 @@ module.exports = {
   getAllNotif: async (req, res) => {
     try {
       const { id } = req.user;
-      // if (!userId) return serverMessage(res, "UNAUTHORIZED", 401);
+      // if (!user_id) return serverMessage(res, "UNAUTHORIZED", 401);
 
       const notifications = await Notifications.findAll({
         where: { user_id: id },
@@ -38,11 +38,11 @@ module.exports = {
   // GET /api/notif/notif/:id
   readNotifDetails: async (req, res) => {
     const notifId = req.params.id;
-    const userId = req.user.id;
+    const user_id = req.user.id;
 
     try {
       const notif = await Notifications.findOne({
-        where: { id: notifId, user_id: userId },
+        where: { id: notifId, user_id: user_id },
       });
 
       if (!notif) return serverMessage(res, "NOTIF_NOT_FOUND", null, 404);
@@ -84,11 +84,11 @@ module.exports = {
 
   // POST /api/notif/recent
   getRecentNotifications: async (req, res) => {
-    const userId = req.user.id;
+    const user_id = req.user.id;
 
     try {
       const notifications = await Notifications.findAll({
-        where: { user_id: userId },
+        where: { user_id: user_id },
         order: [["createdAt", "DESC"]],
         limit: 50, // ou + selon tes besoins
       });

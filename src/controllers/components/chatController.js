@@ -92,7 +92,7 @@ module.exports = {
 
   // Modifiez votre fonction sentMessage pour inclure l'historique
 
-  sentMessage: async (req, res) => {
+  sendMessage: async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
 

@@ -9,6 +9,7 @@ const {
 const googleFitService = require("../../services/googleFitService");
 const axios = require("axios");
 const { Op } = require("sequelize");
+const { serverMessage } = require("../../utils");
 
 // Validation schemas
 const syncRequestSchema = Joi.object({
@@ -52,7 +53,7 @@ module.exports = {
       // Vérifier s'il y a déjà une synchronisation en cours
       const ongoingSync = await DataSync.findOne({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           status: ["pending", "in_progress"],
         },
       });
@@ -72,7 +73,7 @@ module.exports = {
 
       // Créer un enregistrement de synchronisation
       const syncRecord = await DataSync.create({
-        userId: req.user.id,
+        user_id: req.user.id,
         syncType: "manual",
         dataTypes: dataTypes,
         startDate: startDate,
@@ -92,7 +93,7 @@ module.exports = {
           if (dataTypes.includes("activity") && syncedData.activity) {
             for (const dayData of syncedData.activity.steps) {
               await ActivityData.upsert({
-                userId: req.user.id,
+                user_id: req.user.id,
                 date: dayData.date,
                 steps: dayData.steps,
                 distance:
@@ -113,7 +114,7 @@ module.exports = {
             for (const hrData of syncedData.heartRate) {
               if (hrData.average > 0) {
                 await HeartRateData.create({
-                  userId: req.user.id,
+                  user_id: req.user.id,
                   timestamp: hrData.timestamp,
                   heartRate: Math.round(hrData.average),
                   context: "active",
@@ -127,7 +128,7 @@ module.exports = {
           if (dataTypes.includes("sleep") && syncedData.sleep) {
             for (const sleepSession of syncedData.sleep) {
               await SleepData.upsert({
-                userId: req.user.id,
+                user_id: req.user.id,
                 date: sleepSession.date,
                 bedTime: sleepSession.startTime,
                 wakeTime: sleepSession.endTime,
@@ -145,7 +146,7 @@ module.exports = {
           if (dataTypes.includes("exercise") && syncedData.running) {
             for (const session of syncedData.running) {
               await ExerciseSession.upsert({
-                userId: req.user.id,
+                user_id: req.user.id,
                 googleSessionId: session.id,
                 name: session.name,
                 activityType: session.activityType,
@@ -196,29 +197,20 @@ module.exports = {
     try {
       const syncRecord = await DataSync.findOne({
         where: {
-          id: req.params.syncId,
-          userId: req.user.id,
+          id: req.params.sync_id,
+          user_id: req.user.id,
         },
       });
 
       if (!syncRecord) {
-        return res.status(404).json({
-          error: true,
-          message: "Synchronisation non trouvée",
-        });
+        console.log("Synchronisation non trouvée");
+        return serverMessage(res, "SYNC_NOT_FOUND");
       }
 
-      res.json({
-        error: false,
-        message: "Statut de synchronisation récupéré",
-        data: syncRecord,
-      });
+      return serverMessage(res, "SYNC_STATUS_RETRIEVED");
     } catch (error) {
       console.error("Erreur lors de la récupération du statut:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération du statut",
-      });
+      return serverMessage(res, "SYNC_STATUS_RETRIEVAL_FAILED");
     }
   },
 
@@ -228,18 +220,18 @@ module.exports = {
       const { error, value } = dateRangeSchema.validate(req.query);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Paramètres de date invalides",
-          details: error.details[0].message,
-        });
+        console.log(
+          "Paramètres de date invalides details: ",
+          error.details[0].message
+        );
+        return serverMessage(res, "INVALID_DATE_RANGE");
       }
 
       const { startDate, endDate } = value;
 
       const activityData = await ActivityData.findAll({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           date: {
             [Op.between]: [startDate, endDate],
           },
@@ -247,20 +239,13 @@ module.exports = {
         order: [["date", "ASC"]],
       });
 
-      res.json({
-        error: false,
-        message: "Données d'activité récupérées avec succès",
-        data: activityData,
-      });
+      return serverMessage(res, "ACTIVITY_DATA_RETRIEVED", activityData);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des données d'activité:",
         error
       );
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des données d'activité",
-      });
+      return serverMessage(res, "ACTIVITY_DATA_RETRIEVAL_FAILED");
     }
   },
 
@@ -270,18 +255,18 @@ module.exports = {
       const { error, value } = dateRangeSchema.validate(req.query);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Paramètres de date invalides",
-          details: error.details[0].message,
-        });
+        console.log(
+          "Paramètres de date invalides details: ",
+          error.details[0].message
+        );
+        return serverMessage(res, "INVALID_DATE_RANGE");
       }
 
       const { startDate, endDate } = value;
 
       const heartRateData = await HeartRateData.findAll({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           timestamp: {
             [Op.between]: [startDate, endDate],
           },
@@ -306,23 +291,16 @@ module.exports = {
         stats.max = Math.max(...rates);
       }
 
-      res.json({
-        error: false,
-        message: "Données de fréquence cardiaque récupérées avec succès",
-        data: {
-          readings: heartRateData,
-          stats: stats,
-        },
+      return serverMessage(res, "HEART_RATE_DATA_RETRIEVED", {
+        readings: heartRateData,
+        stats: stats,
       });
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de la fréquence cardiaque:",
         error
       );
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération de la fréquence cardiaque",
-      });
+      return serverMessage(res, "HEART_RATE_DATA_RETRIEVAL_FAILED");
     }
   },
 
@@ -332,18 +310,18 @@ module.exports = {
       const { error, value } = dateRangeSchema.validate(req.query);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Paramètres de date invalides",
-          details: error.details[0].message,
-        });
+        console.log(
+          "Paramètres de date invalides details: ",
+          error.details[0].message
+        );
+        return serverMessage(res, "INVALID_DATE_RANGE");
       }
 
       const { startDate, endDate } = value;
 
       const sleepData = await SleepData.findAll({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           date: {
             [Op.between]: [startDate, endDate],
           },
@@ -377,23 +355,16 @@ module.exports = {
         });
       }
 
-      res.json({
-        error: false,
-        message: "Données de sommeil récupérées avec succès",
-        data: {
-          sleepSessions: sleepData,
-          stats: stats,
-        },
+      return serverMessage(res, "SLEEP_DATA_RETRIEVED", {
+        sleepSessions: sleepData,
+        stats: stats,
       });
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des données de sommeil:",
         error
       );
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des données de sommeil",
-      });
+      return serverMessage(res, "SLEEP_DATA_RETRIEVAL_FAILED");
     }
   },
 
@@ -403,18 +374,18 @@ module.exports = {
       const { error, value } = dateRangeSchema.validate(req.query);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Paramètres de date invalides",
-          details: error.details[0].message,
-        });
+        console.log(
+          "Paramètres de date invalides details: ",
+          error.details[0].message
+        );
+        return serverMessage(res, "INVALID_DATE_RANGE");
       }
 
       const { startDate, endDate } = value;
       const { activityType } = req.query;
 
       const filter = {
-        userId: req.user.id,
+        user_id: req.user.id,
         startTime: {
           [Op.between]: [startDate, endDate],
         },
@@ -452,20 +423,13 @@ module.exports = {
         );
       }
 
-      res.json({
-        error: false,
-        message: "Sessions d'exercice récupérées avec succès",
-        data: {
-          sessions: exercises,
-          stats: stats,
-        },
+      return serverMessage(res, "EXERCISE_DATA_RETRIEVED", {
+        sessions: exercises,
+        stats: stats,
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des exercices:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des exercices",
-      });
+      return serverMessage(res, "EXERCISE_DATA_RETRIEVAL_FAILED");
     }
   },
 
@@ -479,7 +443,7 @@ module.exports = {
       // Données d'aujourd'hui
       const todayActivity = await ActivityData.findOne({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           date: today.toISOString().split("T")[0],
         },
       });
@@ -487,7 +451,7 @@ module.exports = {
       // Données de la semaine
       const weeklyActivity = await ActivityData.findAll({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           date: {
             [Op.gte]: weekAgo.toISOString().split("T")[0],
           },
@@ -496,14 +460,14 @@ module.exports = {
 
       // Dernière session d'exercice
       const lastExercise = await ExerciseSession.findOne({
-        where: { userId: req.user.id },
+        where: { user_id: req.user.id },
         order: [["startTime", "DESC"]],
       });
 
       // Données de sommeil récentes
       const recentSleep = await SleepData.findOne({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           date: {
             [Op.gte]: yesterday.toISOString().split("T")[0],
           },
@@ -514,7 +478,7 @@ module.exports = {
       // Fréquence cardiaque récente
       const recentHeartRate = await HeartRateData.findAll({
         where: {
-          userId: req.user.id,
+          user_id: req.user.id,
           timestamp: {
             [Op.gte]: yesterday,
           },
@@ -578,17 +542,10 @@ module.exports = {
             : null,
       };
 
-      res.json({
-        error: false,
-        message: "Dashboard santé récupéré avec succès",
-        data: dashboard,
-      });
+      return serverMessage(res, "DASHBOARD_RETRIEVED", dashboard);
     } catch (error) {
       console.error("Erreur lors de la récupération du dashboard:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération du dashboard",
-      });
+      return serverMessage(res, "DASHBOARD_RETRIEVAL_FAILED");
     }
   },
 
@@ -598,22 +555,20 @@ module.exports = {
       const { limit = 10 } = req.query;
 
       const syncHistory = await DataSync.findAll({
-        where: { userId: req.user.id },
+        where: { user_id: req.user.id },
         order: [["createdAt", "DESC"]],
         limit: parseInt(limit),
       });
 
-      res.json({
-        error: false,
-        message: "Historique de synchronisation récupéré",
-        data: syncHistory,
-      });
+      if (!syncHistory || syncHistory.length === 0) {
+        console.log("Aucun historique de synchronisation trouvé");
+        return serverMessage(res, "NO_SYNC_HISTORY_FOUND");
+      }
+
+      return serverMessage(res, "SYNC_HISTORY_RETRIEVED", syncHistory);
     } catch (error) {
       console.error("Erreur lors de la récupération de l'historique:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération de l'historique",
-      });
+      return serverMessage(res, "SYNC_HISTORY_RETRIEVAL_FAILED");
     }
   },
 
@@ -639,16 +594,10 @@ module.exports = {
         googleAuth: null,
       });
 
-      res.json({
-        error: false,
-        message: "Google Fit déconnecté avec succès",
-      });
+      return serverMessage(res, "GOOGLE_FIT_DISCONNECTED");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la déconnexion",
-      });
+      return serverMessage(res, "GOOGLE_FIT_DISCONNECT_FAILED");
     }
   },
 
@@ -662,35 +611,35 @@ module.exports = {
       let lastSync = null;
       if (isConnected) {
         const recentSync = await DataSync.findOne({
-          where: { userId: req.user.id },
+          where: { user_id: req.user.id },
           order: [["createdAt", "DESC"]],
         });
         lastSync = recentSync ? recentSync.createdAt : null;
       }
 
-      res.json({
-        error: false,
-        message: "Statut de connexion récupéré",
-        data: {
-          isConnected: isConnected,
-          connectedAt: req.user.googleAuth?.connectedAt || null,
-          lastSync: lastSync,
-          scopes: isConnected
-            ? [
-                "fitness.activity.read",
-                "fitness.heart_rate.read",
-                "fitness.sleep.read",
-                "fitness.location.read",
-              ]
-            : [],
-        },
-      });
+      if (!isConnected) {
+        return serverMessage(res, "GOOGLE_FIT_NOT_CONNECTED");
+      }
+      const data = {
+        isConnected: isConnected,
+        connectedAt: req.user.googleAuth?.connectedAt || null,
+        lastSync: lastSync,
+        scopes: isConnected
+          ? [
+              "fitness.activity.read",
+              "fitness.heart_rate.read",
+              "fitness.sleep.read",
+              "fitness.location.read",
+            ]
+          : [],
+      };
+      return serverMessage(res, "GOOGLE_FIT_CONNECTION_STATUS_RETRIEVED", data);
     } catch (error) {
       console.error("Erreur lors de la vérification du statut:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la vérification du statut",
-      });
+      return serverMessage(
+        res,
+        "GOOGLE_FIT_CONNECTION_STATUS_RETRIEVAL_FAILED"
+      );
     }
   },
 };

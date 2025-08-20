@@ -7,6 +7,8 @@ const {
   ActivityShare,
   Report,
 } = require("../../models");
+const { serve } = require("swagger-ui-express");
+const { serverMessage } = require("../../utils");
 
 // Validation schemas
 const sendFriendRequestSchema = Joi.object({
@@ -56,17 +58,17 @@ module.exports = {
     try {
       const { status = "online", sort = "name" } = req.query;
 
-      const friendships = await Friendship.getFriends(req.user._id);
+      const friendships = await Friendship.getFriends(req.user.id);
 
       let friends = friendships.map((friendship) => {
         const friend =
-          friendship.requester._id.toString() === req.user._id.toString()
+          friendship.requester.id.toString() === req.user.id.toString()
             ? friendship.recipient
             : friendship.requester;
 
         return {
           ...friend.toObject(),
-          friendshipId: friendship._id,
+          friendshipId: friendship.id,
           friendsSince: friendship.acceptedAt,
         };
       });
@@ -99,17 +101,14 @@ module.exports = {
         }
       });
 
-      res.json({
-        error: false,
-        message: "Liste des amis récupérée avec succès",
-        data: friends,
-      });
+      if (!friends.length) {
+        return serverMessage(res, "NO_FRIENDS_FOUND");
+      }
+
+      return serverMessage(res, "FRIENDS_RETRIEVED", friends);
     } catch (error) {
       console.error("Erreur lors de la récupération des amis:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des amis",
-      });
+      return serverMessage(res, "FRIENDS_RETRIEVAL_FAILED", error.message);
     }
   },
 
@@ -120,26 +119,25 @@ module.exports = {
 
       let filter = {};
       if (type === "received") {
-        filter = { recipient: req.user._id, status: "pending" };
+        filter = { recipient: req.user.id, status: "pending" };
       } else if (type === "sent") {
-        filter = { requester: req.user._id, status: "pending" };
+        filter = { requester: req.user.id, status: "pending" };
       }
 
       const requests = await Friendship.find(filter)
-        .populate("requester recipient", "fname lname email profileImage stats")
+        .populate(
+          "requester recipient",
+          "fname lname email profile_image stats"
+        )
         .sort({ createdAt: -1 });
 
-      res.json({
-        error: false,
-        message: "Demandes d'amis récupérées avec succès",
-        data: requests,
-      });
+      if (!requests.length) {
+        return serverMessage(res, "NO_FRIEND_REQUESTS_FOUND");
+      }
+      return serverMessage(res, "FRIENDS_RETRIEVED", requests);
     } catch (error) {
       console.error("Erreur lors de la récupération des demandes:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des demandes",
-      });
+      return serverMessage(res, "FRIEND_REQUESTS_RETRIEVAL_FAILED");
     }
   },
 
@@ -149,11 +147,8 @@ module.exports = {
       const { error, value } = sendFriendRequestSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.error("Validation error:", error.details[0].message);
+        return serverMessage(res, "BAD_REQUEST");
       }
 
       const { email, message } = value;
@@ -162,72 +157,52 @@ module.exports = {
       const recipient = await User.findOne({ email: email.toLowerCase() });
 
       if (!recipient) {
-        return res.status(404).json({
-          error: true,
-          message: "Utilisateur non trouvé avec cette adresse email",
-        });
+        return serverMessage(res, "USER_NOT_FOUND");
       }
 
-      if (recipient._id.toString() === req.user._id.toString()) {
-        return res.status(400).json({
-          error: true,
-          message: "Vous ne pouvez pas vous ajouter vous-même",
-        });
+      if (recipient.id.toString() === req.user.id.toString()) {
+        console.error("Tentative d'ajout de soi-même:", req.user.id);
+        return serverMessage(res, "CANNOT_ADD_SELF");
       }
 
       // Vérifier s'il y a déjà une relation
       const existingFriendship = await Friendship.findFriendship(
-        req.user._id,
-        recipient._id
+        req.user.id,
+        recipient.id
       );
 
       if (existingFriendship) {
         if (existingFriendship.status === "accepted") {
-          return res.status(409).json({
-            error: true,
-            message: "Vous êtes déjà amis avec cette personne",
-          });
+          return serverMessage(res, "ALREADY_FRIENDS");
         } else if (existingFriendship.status === "pending") {
-          return res.status(409).json({
-            error: true,
-            message: "Une demande d'ami est déjà en attente",
-          });
+          console.error("Demande d'ami déjà envoyée:", existingFriendship.id);
+
+          return serverMessage(res, "FRIEND_REQUEST_ALREADY_SENT");
         } else if (existingFriendship.status === "blocked") {
-          return res.status(403).json({
-            error: true,
-            message: "Impossible d'envoyer une demande à cette personne",
-          });
+          console.error("Amitié bloquée:", existingFriendship.id);
+          return serverMessage(res, "FRIENDSHIP_NOT_ALLOWED");
         }
       }
 
       // Vérifier les paramètres de confidentialité du destinataire
       if (!recipient.preferences?.dataSharing?.allowFriendRequests) {
-        return res.status(403).json({
-          error: true,
-          message: "Cette personne n'accepte pas les demandes d'amis",
-        });
+        console.error("Demande d'ami non autorisée:", recipient.id);
+        return serverMessage(res, "FRIENDSHIP_NOT_ALLOWED");
       }
 
       // Créer la demande d'ami
       const friendship = new Friendship({
-        requester: req.user._id,
-        recipient: recipient._id,
+        requester: req.user.id,
+        recipient: recipient.id,
         requestMessage: message,
       });
 
       await friendship.save();
 
-      res.status(201).json({
-        error: false,
-        message: "Demande d'ami envoyée avec succès",
-        data: friendship,
-      });
+      return serverMessage(res, "FRIEND_REQUEST_SENT", friendship);
     } catch (error) {
       console.error("Erreur lors de l'envoi de la demande:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de l'envoi de la demande",
-      });
+      return serverMessage(res, "FRIEND_REQUEST_FAILED", error.message);
     }
   },
 
@@ -235,33 +210,23 @@ module.exports = {
   acceptFriendRequest: async (req, res) => {
     try {
       const friendship = await Friendship.findOne({
-        _id: req.params.id,
-        recipient: req.user._id,
+        id: req.params.id,
+        recipient: req.user.id,
         status: "pending",
-      }).populate("requester", "fname lname email profileImage");
+      }).populate("requester", "fname lname email profile_image");
 
       if (!friendship) {
-        return res.status(404).json({
-          error: true,
-          message: "Demande d'ami non trouvée",
-        });
+        return serverMessage(res, "FRIEND_REQUEST_NOT_FOUND");
       }
 
       friendship.status = "accepted";
       friendship.acceptedAt = new Date();
       await friendship.save();
 
-      res.json({
-        error: false,
-        message: "Demande d'ami acceptée avec succès",
-        data: friendship,
-      });
+      return serverMessage(res, "FRIEND_REQUEST_ACCEPTED", friendship);
     } catch (error) {
       console.error("Erreur lors de l'acceptation de la demande:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de l'acceptation de la demande",
-      });
+      return serverMessage(res, "FRIEND_REQUEST_ACCEPT_FAILED", error.message);
     }
   },
 
@@ -269,32 +234,23 @@ module.exports = {
   declineFriendRequest: async (req, res) => {
     try {
       const friendship = await Friendship.findOne({
-        _id: req.params.id,
-        recipient: req.user._id,
+        id: req.params.id,
+        recipient: req.user.id,
         status: "pending",
       });
 
       if (!friendship) {
-        return res.status(404).json({
-          error: true,
-          message: "Demande d'ami non trouvée",
-        });
+        return serverMessage(res, "FRIEND_REQUEST_NOT_FOUND");
       }
 
       friendship.status = "declined";
       friendship.declinedAt = new Date();
       await friendship.save();
 
-      res.json({
-        error: false,
-        message: "Demande d'ami refusée",
-      });
+      return serverMessage(res, "FRIEND_REQUEST_DECLINED", friendship);
     } catch (error) {
       console.error("Erreur lors du refus de la demande:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du refus de la demande",
-      });
+      return serverMessage(res, "FRIEND_REQUEST_DECLINE_FAILED");
     }
   },
 
@@ -303,31 +259,22 @@ module.exports = {
     try {
       const friendship = await Friendship.findOne({
         $or: [
-          { requester: req.user._id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user._id },
+          { requester: req.user.id, recipient: req.params.id },
+          { requester: req.params.id, recipient: req.user.id },
         ],
         status: "accepted",
       });
 
       if (!friendship) {
-        return res.status(404).json({
-          error: true,
-          message: "Amitié non trouvée",
-        });
+        return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
       }
 
-      await Friendship.findByIdAndDelete(friendship._id);
+      await Friendship.findByIdAndDelete(friendship.id);
 
-      res.json({
-        error: false,
-        message: "Ami supprimé avec succès",
-      });
+      return serverMessage(res, "FRIEND_DELETED");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'ami:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la suppression de l'ami",
-      });
+      return serverMessage(res, "FRIEND_DELETION_FAILED", error.message);
     }
   },
 
@@ -337,30 +284,26 @@ module.exports = {
       const { q, limit = 10 } = req.query;
 
       if (!q || q.trim().length < 2) {
-        return res.status(400).json({
-          error: true,
-          message:
-            "La requête de recherche doit contenir au moins 2 caractères",
-        });
+        return serverMessage(res, "SEARCH_QUERY_TOO_SHORT");
       }
 
       const searchRegex = new RegExp(q.trim(), "i");
 
       // Récupérer les IDs des amis existants
       const friendships = await Friendship.find({
-        $or: [{ requester: req.user._id }, { recipient: req.user._id }],
+        $or: [{ requester: req.user.id }, { recipient: req.user.id }],
         status: { $in: ["accepted", "pending"] },
       });
 
       const excludeIds = friendships.map((f) =>
-        f.requester.toString() === req.user._id.toString()
+        f.requester.toString() === req.user.id.toString()
           ? f.recipient
           : f.requester
       );
-      excludeIds.push(req.user._id);
+      excludeIds.push(req.user.id);
 
       const users = await User.find({
-        _id: { $nin: excludeIds },
+        id: { $nin: excludeIds },
         $or: [
           { fname: searchRegex },
           { lname: searchRegex },
@@ -369,20 +312,13 @@ module.exports = {
         "preferences.dataSharing.showInSearch": true,
         isActive: true,
       })
-        .select("fname lname email profileImage stats preferences")
+        .select("fname lname email profile_image stats preferences")
         .limit(parseInt(limit));
 
-      res.json({
-        error: false,
-        message: "Utilisateurs trouvés avec succès",
-        data: users,
-      });
+      return serverMessage(res, "USERS_RETRIEVED", users);
     } catch (error) {
       console.error("Erreur lors de la recherche d'utilisateurs:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la recherche d'utilisateurs",
-      });
+      return serverMessage(res, "USER_SEARCH_FAILED");
     }
   },
 
@@ -390,24 +326,20 @@ module.exports = {
   getConversations: async (req, res) => {
     try {
       const conversations = await Conversation.find({
-        participants: req.user._id,
+        participants: req.user.id,
         isActive: true,
       })
-        .populate("participants", "fname lname email profileImage")
+        .populate("participants", "fname lname email profile_image")
         .populate("lastMessage")
         .sort({ lastActivity: -1 });
+      if (conversations.length === 0) {
+        return serverMessage(res, "NO_CONVERSATIONS_FOUND");
+      }
 
-      res.json({
-        error: false,
-        message: "Conversations récupérées avec succès",
-        data: conversations,
-      });
+      return serverMessage(res, "CONVERSATIONS_RETRIEVED", conversations);
     } catch (error) {
       console.error("Erreur lors de la récupération des conversations:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des conversations",
-      });
+      return serverMessage(res, "CONVERSATIONS_RETRIEVAL_FAILED");
     }
   },
 
@@ -418,34 +350,24 @@ module.exports = {
 
       // Vérifier que l'utilisateur fait partie de la conversation
       const conversation = await Conversation.findOne({
-        _id: req.params.id,
-        participants: req.user._id,
+        id: req.params.id,
+        participants: req.user.id,
       });
 
       if (!conversation) {
-        return res.status(404).json({
-          error: true,
-          message: "Conversation non trouvée",
-        });
+        return serverMessage(res, "NO_CONVERSATION_FOUND");
       }
 
       const messages = await Message.find({ conversation: req.params.id })
-        .populate("sender", "fname lname profileImage")
+        .populate("sender", "fname lname profile_image")
         .sort({ createdAt: -1 })
         .limit(parseInt(limit))
         .skip((parseInt(page) - 1) * parseInt(limit));
 
-      res.json({
-        error: false,
-        message: "Messages récupérés avec succès",
-        data: messages.reverse(),
-      });
+      return serverMessage(res, "MESSAGES_RETRIEVED", messages.reverse());
     } catch (error) {
       console.error("Erreur lors de la récupération des messages:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des messages",
-      });
+      return serverMessage(res, "MESSAGES_RETRIEVAL_FAILED", error.message);
     }
   },
 
@@ -455,45 +377,44 @@ module.exports = {
       const { error, value } = sendMessageSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.error("Validation error:", error.details[0].message);
+        return serverMessage(res, "BAD_REQUEST");
       }
 
       // Vérifier que les utilisateurs sont amis
       const friendship = await Friendship.findOne({
         $or: [
-          { requester: req.user._id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user._id },
+          { requester: req.user.id, recipient: req.params.id },
+          { requester: req.params.id, recipient: req.user.id },
         ],
         status: "accepted",
       });
 
       if (!friendship) {
-        return res.status(403).json({
-          error: true,
-          message: "Vous devez être amis pour envoyer des messages",
-        });
+        console.error(
+          "Amitié non trouvée pour l'envoi du message:",
+          req.user.id,
+          req.params.id
+        );
+        return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
       }
 
       // Trouver ou créer la conversation
       let conversation = await Conversation.findOne({
-        participants: { $all: [req.user._id, req.params.id] },
+        participants: { $all: [req.user.id, req.params.id] },
       });
 
       if (!conversation) {
         conversation = new Conversation({
-          participants: [req.user._id, req.params.id],
+          participants: [req.user.id, req.params.id],
         });
         await conversation.save();
       }
 
       // Créer le message
       const message = new Message({
-        conversation: conversation._id,
-        sender: req.user._id,
+        conversation: conversation.id,
+        sender: req.user.id,
         content: value.content,
         messageType: value.messageType,
       });
@@ -501,24 +422,17 @@ module.exports = {
       await message.save();
 
       // Mettre à jour la conversation
-      conversation.lastMessage = message._id;
+      conversation.lastMessage = message.id;
       conversation.lastActivity = new Date();
       await conversation.save();
 
       // Populer le message pour la réponse
-      await message.populate("sender", "fname lname profileImage");
+      await message.populate("sender", "fname lname profile_image");
 
-      res.status(201).json({
-        error: false,
-        message: "Message envoyé avec succès",
-        data: message,
-      });
+      return serverMessage(res, "MESSAGE_SENT", message);
     } catch (error) {
       console.error("Erreur lors de l'envoi du message:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de l'envoi du message",
-      });
+      return serverMessage(res, "MESSAGE_SEND_FAILED", error.message);
     }
   },
 
@@ -528,11 +442,11 @@ module.exports = {
       const { page = 1, limit = 20 } = req.query;
 
       // Récupérer les IDs des amis
-      const friendships = await Friendship.getFriends(req.user._id);
+      const friendships = await Friendship.getFriends(req.user.id);
       const friendIds = friendships.map((f) =>
-        f.requester._id.toString() === req.user._id.toString()
-          ? f.recipient._id
-          : f.requester._id
+        f.requester.id.toString() === req.user.id.toString()
+          ? f.recipient.id
+          : f.requester.id
       );
 
       const activities = await ActivityShare.find({
@@ -540,24 +454,21 @@ module.exports = {
         visibility: { $in: ["friends", "public"] },
         isActive: true,
       })
-        .populate("sharedBy", "fname lname profileImage")
-        .populate("likes.user", "fname lname profileImage")
-        .populate("comments.user", "fname lname profileImage")
+        .populate("sharedBy", "fname lname profile_image")
+        .populate("likes.user", "fname lname profile_image")
+        .populate("comments.user", "fname lname profile_image")
         .sort({ createdAt: -1 })
         .limit(parseInt(limit))
         .skip((parseInt(page) - 1) * parseInt(limit));
 
-      res.json({
-        error: false,
-        message: "Feed d'activités récupéré avec succès",
-        data: activities,
-      });
+      if (activities.length === 0) {
+        return serverMessage(res, "NO_ACTIVITIES_FOUND");
+      }
+
+      return serverMessage(res, "ACTIVITIES_RETRIEVED", activities);
     } catch (error) {
       console.error("Erreur lors de la récupération du feed:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération du feed",
-      });
+      return serverMessage(res, "ACTIVITY_FEED_RETRIEVAL_FAILED");
     }
   },
 
@@ -567,32 +478,23 @@ module.exports = {
       const { error, value } = shareActivitySchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.error("Validation error:", error.details[0].message);
+
+        return serverMessage(res, "BAD_REQUEST");
       }
 
       const activityShare = new ActivityShare({
         ...value,
-        sharedBy: req.user._id,
+        sharedBy: req.user.id,
       });
 
       await activityShare.save();
-      await activityShare.populate("sharedBy", "fname lname profileImage");
+      await activityShare.populate("sharedBy", "fname lname profile_image");
 
-      res.status(201).json({
-        error: false,
-        message: "Activité partagée avec succès",
-        data: activityShare,
-      });
+      return serverMessage(res, "ACTIVITY_SHARED", activityShare);
     } catch (error) {
       console.error("Erreur lors du partage de l'activité:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du partage de l'activité",
-      });
+      return serverMessage(res, "ACTIVITY_SHARE_FAILED", error.message);
     }
   },
 
@@ -602,39 +504,32 @@ module.exports = {
       const activity = await ActivityShare.findById(req.params.id);
 
       if (!activity) {
-        return res.status(404).json({
-          error: true,
-          message: "Activité non trouvée",
-        });
+        return serverMessage(res, "ACTIVITY_NOT_FOUND");
       }
 
       const existingLike = activity.likes.find(
-        (like) => like.user.toString() === req.user._id.toString()
+        (like) => like.user.toString() === req.user.id.toString()
       );
 
       if (existingLike) {
         // Retirer le like
         activity.likes = activity.likes.filter(
-          (like) => like.user.toString() !== req.user._id.toString()
+          (like) => like.user.toString() !== req.user.id.toString()
         );
       } else {
         // Ajouter le like
-        activity.likes.push({ user: req.user._id });
+        activity.likes.push({ user: req.user.id });
       }
 
       await activity.save();
 
-      res.json({
-        error: false,
-        message: existingLike ? "Like retiré" : "Like ajouté",
-        data: { liked: !existingLike, totalLikes: activity.likes.length },
+      serverMessage(res, existingLike ? "LIKE_REMOVED" : "LIKE_ADDED", {
+        liked: !existingLike,
+        totalLikes: activity.likes.length,
       });
     } catch (error) {
       console.error("Erreur lors du like:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du like",
-      });
+      return serverMessage(res, "LIKE_ACTION_FAILED", error.message);
     }
   },
 
@@ -644,49 +539,38 @@ module.exports = {
       const { content } = req.body;
 
       if (!content || content.trim().length === 0) {
-        return res.status(400).json({
-          error: true,
-          message: "Le contenu du commentaire est requis",
-        });
+        return serverMessage(res, "COMMENT_CONTENT_REQUIRED");
       }
 
       if (content.length > 300) {
-        return res.status(400).json({
-          error: true,
-          message: "Le commentaire ne peut pas dépasser 300 caractères",
-        });
+        console.error("Commentaire trop long :", content.length);
+        return serverMessage(res, "COMMENT_TOO_LONG");
       }
 
       const activity = await ActivityShare.findById(req.params.id);
 
       if (!activity) {
-        return res.status(404).json({
-          error: true,
-          message: "Activité non trouvée",
-        });
+        return serverMessage(res, "ACTIVITY_NOT_FOUND");
       }
 
       const comment = {
-        user: req.user._id,
+        user: req.user.id,
         content: content.trim(),
       };
 
       activity.comments.push(comment);
       await activity.save();
 
-      await activity.populate("comments.user", "fname lname profileImage");
+      await activity.populate("comments.user", "fname lname profile_image");
 
-      res.status(201).json({
-        error: false,
-        message: "Commentaire ajouté avec succès",
-        data: activity.comments[activity.comments.length - 1],
-      });
+      return serverMessage(
+        res,
+        "COMMENT_ADDED",
+        activity.comments[activity.comments.length - 1]
+      );
     } catch (error) {
       console.error("Erreur lors de l'ajout du commentaire:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de l'ajout du commentaire",
-      });
+      return serverMessage(res, "COMMENT_ADD_FAILED", error.message);
     }
   },
 
@@ -696,11 +580,9 @@ module.exports = {
       const { error, value } = reportUserSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
+        console.error("Validation error:", error.details[0].message);
+
+        return serverMessage(res, "BAD_REQUEST");
       }
 
       const { reportedUserId } = req.body;
@@ -708,36 +590,34 @@ module.exports = {
       // Vérifier que l'utilisateur signalé existe
       const reportedUser = await User.findById(reportedUserId);
       if (!reportedUser) {
-        return res.status(404).json({
-          error: true,
-          message: "Utilisateur non trouvé",
-        });
+        return serverMessage(res, "USER_NOT_FOUND");
       }
 
       // Vérifier qu'on ne se signale pas soi-même
-      if (reportedUserId === req.user._id.toString()) {
-        return res.status(400).json({
-          error: true,
-          message: "Vous ne pouvez pas vous signaler vous-même",
-        });
+      if (reportedUserId === req.user.id.toString()) {
+        console.error("Tentative de signalement de soi-même:", req.user.id);
+
+        return serverMessage(res, "CANNOT_REPORT_SELF");
       }
 
       // Vérifier s'il n'y a pas déjà un signalement récent
       const existingReport = await Report.findOne({
-        reporter: req.user._id,
+        reporter: req.user.id,
         reported: reportedUserId,
         createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
       });
 
       if (existingReport) {
-        return res.status(409).json({
-          error: true,
-          message: "Vous avez déjà signalé cet utilisateur récemment",
-        });
+        console.error(
+          "Signalement déjà existant pour l'utilisateur:",
+          reportedUserId
+        );
+
+        return serverMessage(res, "USER_ALREADY_REPORTED");
       }
 
       const report = new Report({
-        reporter: req.user._id,
+        reporter: req.user.id,
         reported: reportedUserId,
         reason: value.reason,
         details: value.details,
@@ -752,37 +632,38 @@ module.exports = {
         await Friendship.findOneAndUpdate(
           {
             $or: [
-              { requester: req.user._id, recipient: reportedUserId },
-              { requester: reportedUserId, recipient: req.user._id },
+              { requester: req.user.id, recipient: reportedUserId },
+              { requester: reportedUserId, recipient: req.user.id },
             ],
           },
           {
             status: "blocked",
             blockedAt: new Date(),
-            blockedBy: req.user._id,
+            blockedBy: req.user.id,
           }
         );
       }
 
-      res.status(201).json({
-        error: false,
-        message:
-          "Signalement envoyé avec succès. Notre équipe l'examinera dans les 24h.",
-        data: { reportId: report._id },
+      // res.status(201).json({
+      //   error: false,
+      //   message:
+      //     "Signalement envoyé avec succès. Notre équipe l'examinera dans les 24h.",
+      //   data: { reportId: report.id },
+      // });
+
+      return serverMessage(res, "REPORT_SUBMITTED", {
+        report_id: report.id,
       });
     } catch (error) {
       console.error("Erreur lors du signalement:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du signalement",
-      });
+      return serverMessage(res, "REPORT_SUBMISSION_FAILED");
     }
   },
 
   // GET /api/friends/stats - Statistiques des amis
   getFriendsStats: async (req, res) => {
     try {
-      const userId = req.user._id;
+      const userId = req.user.id;
 
       const [friendsCount, pendingRequests, sentRequests, recentActivity] =
         await Promise.all([
@@ -804,9 +685,9 @@ module.exports = {
             sharedBy: {
               $in: await Friendship.getFriends(userId).then((friends) =>
                 friends.map((f) =>
-                  f.requester._id.toString() === userId.toString()
-                    ? f.recipient._id
-                    : f.requester._id
+                  f.requester.id.toString() === userId.toString()
+                    ? f.recipient.id
+                    : f.requester.id
                 )
               ),
             },
@@ -823,17 +704,14 @@ module.exports = {
         mutualConnections: Math.floor(friendsCount * 1.5),
       };
 
-      res.json({
-        error: false,
-        message: "Statistiques récupérées avec succès",
-        data: stats,
-      });
+      if (stats.totalFriends === 0) {
+        return serverMessage(res, "NO_FRIENDS_STATS_FOUND");
+      }
+
+      return serverMessage(res, "FRIENDS_STATS_RETRIEVED", stats);
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des statistiques",
-      });
+      return serverMessage(res, "FRIENDS_STATS_RETRIEVAL_FAILED");
     }
   },
 
@@ -842,38 +720,32 @@ module.exports = {
     try {
       const friendship = await Friendship.findOne({
         $or: [
-          { requester: req.user._id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user._id },
+          { requester: req.user.id, recipient: req.params.id },
+          { requester: req.params.id, recipient: req.user.id },
         ],
       });
 
       if (friendship) {
         friendship.status = "blocked";
         friendship.blockedAt = new Date();
-        friendship.blockedBy = req.user._id;
+        friendship.blockedBy = req.user.id;
         await friendship.save();
       } else {
         // Créer une entrée de blocage même s'il n'y avait pas d'amitié
         const blockEntry = new Friendship({
-          requester: req.user._id,
+          requester: req.user.id,
           recipient: req.params.id,
           status: "blocked",
           blockedAt: new Date(),
-          blockedBy: req.user._id,
+          blockedBy: req.user.id,
         });
         await blockEntry.save();
       }
 
-      res.json({
-        error: false,
-        message: "Utilisateur bloqué avec succès",
-      });
+      return serverMessage(res, "USER_BLOCKED");
     } catch (error) {
       console.error("Erreur lors du blocage:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du blocage",
-      });
+      return serverMessage(res, "BLOCK_USER_FAILED", error.message);
     }
   },
 };

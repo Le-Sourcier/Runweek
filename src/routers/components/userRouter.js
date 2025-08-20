@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const passport = require("passport");
 const {
   userRegisterValidator,
   userAuthValidator,
@@ -606,6 +607,116 @@ router
    *               $ref: '#/components/schemas/Error500'
    */
   .put("/update/", loginLimiter, ctr.updateUser) //Update user profile data
+  /**
+   * @openapi
+   * /api/user/update/password:
+   *   put:
+   *     tags: [User & Auth]
+   *     summary: Update user password
+   *     description: Updates the password of the authenticated user. Requires current password for verification.
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - oldPassword
+   *               - newPassword
+   *             properties:
+   *               oldPassword:
+   *                 type: string
+   *                 format: password
+   *                 example: "oldPassword123!"
+   *               newPassword:
+   *                 type: string
+   *                 format: password
+   *                 example: "NewSecurePassword456!"
+   *     responses:
+   *       '200':
+   *         description: Password updated successfully.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: PASSWORD_UPDATED_SUCCESS
+   *       '400':
+   *         description: Bad request (e.g., missing fields, validation error).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 400
+   *                 message:
+   *                   type: string
+   *                   example: REQUIRED_FIELDS_MISSING
+   *       '401':
+   *         description: Unauthorized (e.g., current password incorrect, token invalid).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: INVALID_CURRENT_PASSWORD
+   *       '404':
+   *         description: Profile not found.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 404
+   *                 message:
+   *                   type: string
+   *                   example: PROFILE_NOT_FOUND
+   *       '500':
+   *         description: Internal server error.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: INTERNAL_SERVER_ERROR
+   */
+  .put("/update/password", loginLimiter, ctr.updatePassword) //Update user password
   /**
    * @openapi
    * /api/user/invite-member:
@@ -1241,6 +1352,123 @@ router
    *               properties:
    *                 error: { type: 'string', example: 'UNKNOWN_ERROR' } # Specific error format from controller
    */
-  .delete("/delete/:id", loginLimiter, ctr.delete); //Delete user by id
+  .delete("/delete/:id", loginLimiter, ctr.delete) //Delete user by id
+
+  /**
+   * @openapi
+   * /api/user/google:
+   *   get:
+   *     tags: [User & Auth]
+   *     summary: Initiate Google authentication
+   *     description: |
+   *       Starts the OAuth authentication process with Google.
+   *       Redirects to Google's consent screen for the requested permissions.
+   *       Included scopes are profile, email, and Google Fit data (activity, heart rate, sleep, location).
+   *     responses:
+   *       302:
+   *         description: Redirect to Google OAuth consent screen
+   *         headers:
+   *           Location:
+   *             description: Redirect URL to Google
+   *             schema:
+   *               type: string
+   *               example: "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fgoogle%2Fcallback&scope=profile%20email%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffitness.activity.read%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffitness.heart_rate.read%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffitness.sleep.read%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffitness.location.read&client_id=your-google-client-id"
+   *       500:
+   *         description: Server error during authentication initialization
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: "Failed to initialize Google authentication"
+   */
+  // GET /api/auth/google - Initier l'authentification Google
+  .get("/google", ctr.initiateGoogleAuth)
+
+  /**
+   * @openapi
+   * /api/user/google/callback:
+   *   get:
+   *     tags: [User & Auth]
+   *     summary: Google OAuth callback
+   *     description: |
+   *       Callback endpoint for Google OAuth authentication.
+   *       Processes Google's response, authenticates the user, and generates JWT tokens.
+   *       Redirects to the frontend with access and refresh tokens.
+   *     parameters:
+   *       - in: query
+   *         name: code
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Authorization code provided by Google
+   *       - in: query
+   *         name: error
+   *         schema:
+   *           type: string
+   *         description: Potential error returned by Google
+   *       - in: query
+   *         name: state
+   *         schema:
+   *           type: string
+   *         description: State parameter for CSRF protection
+   *     responses:
+   *       302:
+   *         description: |
+   *           Redirect to frontend with JWT tokens as URL parameters.
+   *           On success - redirect to /auth/callback?token=ACCESS_TOKEN&refresh=REFRESH_TOKEN
+   *           On failure - redirect to /login?error=google_auth_failed
+   *         headers:
+   *           Location:
+   *             description: Redirect URL to frontend with tokens
+   *             schema:
+   *               type: string
+   *               example: "http://localhost:5173/auth/callback?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNjE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&refresh=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNjE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+   *       400:
+   *         description: Google authentication error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 400
+   *                 message:
+   *                   type: string
+   *                   example: "Google authentication failed"
+   *       500:
+   *         description: Server error during callback processing
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: "Internal server error during Google callback"
+   */
+  .get(
+    "/google/callback",
+    passport.authenticate("google", { session: false }),
+    ctr.handleGoogleCallback
+  ); // GET /api/auth/google/callback - Callback Google OAuth
 
 module.exports = router;

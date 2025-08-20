@@ -3,6 +3,7 @@ const dayjs = require("dayjs");
 const bcrypt = require("bcrypt");
 const db = require("../../models");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
 const { Op } = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
 
@@ -924,6 +925,48 @@ module.exports = {
     } catch (error) {
       console.error("CHECK_REFERRAL_CODE_ERROR", error);
       return serverMessage(res, "CHECK_REFERRAL_CODE_ERROR");
+    }
+  },
+
+  initiateGoogleAuth: (req, res) => {
+    passport.authenticate("google", {
+      scope: [
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/fitness.activity.read",
+        "https://www.googleapis.com/auth/fitness.heart_rate.read",
+        "https://www.googleapis.com/auth/fitness.sleep.read",
+        "https://www.googleapis.com/auth/fitness.location.read",
+      ],
+    })(req, res);
+  },
+  // Callback Google OAuth
+  handleGoogleCallback: async (req, res) => {
+    try {
+      const user = req.user;
+
+      // Générer les tokens JWT
+      const accessToken = jwt.sign(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      const refreshToken = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d" }
+      );
+
+      // Rediriger vers le frontend avec les tokens
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      res.redirect(
+        `${frontendUrl}/auth/callback?token=${accessToken}&refresh=${refreshToken}`
+      );
+    } catch (error) {
+      console.error("Erreur lors du callback Google:", error);
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
     }
   },
 };
