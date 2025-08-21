@@ -59,7 +59,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       fname:
    *                         type: string
    *                         example: "John"
@@ -191,7 +191,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       requester:
    *                         type: object
    *                         properties:
@@ -360,7 +360,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     requester:
    *                       type: string
    *                       format: uuid
@@ -502,7 +502,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     requester:
    *                       type: object
    *                       properties:
@@ -626,7 +626,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     requester:
    *                       type: string
    *                       format: uuid
@@ -825,7 +825,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       fname:
    *                         type: string
    *                         example: "John"
@@ -943,7 +943,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       participants:
    *                         type: array
    *                         items:
@@ -1097,7 +1097,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       conversation:
    *                         type: string
    *                         format: uuid
@@ -1241,7 +1241,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     conversation:
    *                       type: string
    *                       format: uuid
@@ -1387,7 +1387,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       sharedBy:
    *                         type: object
    *                         properties:
@@ -1594,7 +1594,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     sharedBy:
    *                       type: object
    *                       properties:
@@ -1830,7 +1830,7 @@ router
    *                         id:
    *                           type: string
    *                           format: uuid
-   *                           example: "507f1f77bcf86cd799439011"
+   *                           example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                         fname:
    *                           type: string
    *                           example: "John"
@@ -1938,7 +1938,7 @@ router
    *               reportedUserId:
    *                 type: string
    *                 format: uuid
-   *                 example: "507f1f77bcf86cd799439011"
+   *                 example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                 description: ID of the user to report
    *               reason:
    *                 type: string
@@ -1979,7 +1979,7 @@ router
    *                     report_id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *       400:
    *         description: Bad request
    *         content:

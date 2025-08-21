@@ -63,7 +63,7 @@ router
    *                       id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       user_id:
    *                         type: string
    *                         format: uuid
@@ -317,7 +317,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     user_id:
    *                       type: string
    *                       format: uuid
@@ -514,7 +514,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     user_id:
    *                       type: string
    *                       format: uuid
@@ -690,7 +690,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     user_id:
    *                       type: string
    *                       format: uuid
@@ -853,7 +853,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     current:
    *                       type: number
    *                       example: 35.5
@@ -982,7 +982,7 @@ router
    *                     id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *       404:
    *         description: Goal not found
    *         content:

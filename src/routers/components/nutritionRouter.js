@@ -59,7 +59,7 @@ router
    *                       _id:
    *                         type: string
    *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439011"
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                       name:
    *                         type: string
    *                         example: "Apple"
@@ -251,7 +251,7 @@ router
    *                     _id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     name:
    *                       type: string
    *                       example: "Homemade Protein Shake"
@@ -354,7 +354,7 @@ router
    *                     _id:
    *                       type: string
    *                       format: uuid
-   *                       example: "507f1f77bcf86cd799439011"
+   *                       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                     user_id:
    *                       type: string
    *                       format: uuid
@@ -518,7 +518,7 @@ router
    *               foodItem_id:
    *                 type: string
    *                 format: uuid
-   *                 example: "507f1f77bcf86cd799439011"
+   *                 example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *               quantity:
    *                 type: number
    *                 minimum: 0.1
@@ -812,7 +812,7 @@ router
    *                         _id:
    *                           type: string
    *                           format: uuid
-   *                           example: "507f1f77bcf86cd799439011"
+   *                           example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
    *                         user_id:
    *                           type: string
    *                           format: uuid

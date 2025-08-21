@@ -10,7 +10,7 @@ router
   .use("/stripe", authorize, require("./components/stripeProductRouter"))
   .use("/activities", authorize, require("./components/activityRouter"))
 
-  .use("/auth/google", require("./components/googleAuthRouter"))
+  .use("/auth", require("./components/googleAuthRouter"))
   .use("/google/fit", authorize, require("./components/googleFitRouter"))
 
   .use("/aicoach", authorize, require("./components/aiCoachRouter"))

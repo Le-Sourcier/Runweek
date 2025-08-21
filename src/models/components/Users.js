@@ -51,6 +51,11 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      google_linked: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false, // Indique si le compte Google est lié
+      },
     },
     {
       hooks: {

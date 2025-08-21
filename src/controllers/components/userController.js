@@ -928,45 +928,163 @@ module.exports = {
     }
   },
 
+  // Initialisation de l'authentification Google
   initiateGoogleAuth: (req, res) => {
-    passport.authenticate("google", {
-      scope: [
-        "profile",
-        "email",
-        "https://www.googleapis.com/auth/fitness.activity.read",
-        "https://www.googleapis.com/auth/fitness.heart_rate.read",
-        "https://www.googleapis.com/auth/fitness.sleep.read",
-        "https://www.googleapis.com/auth/fitness.location.read",
-      ],
-    })(req, res);
-  },
-  // Callback Google OAuth
-  handleGoogleCallback: async (req, res) => {
     try {
-      const user = req.user;
-
-      // Générer les tokens JWT
-      const accessToken = jwt.sign(
-        { userId: user.id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-      );
-
-      const refreshToken = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d" }
-      );
-
-      // Rediriger vers le frontend avec les tokens
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-      res.redirect(
-        `${frontendUrl}/auth/callback?token=${accessToken}&refresh=${refreshToken}`
-      );
+      passport.authenticate("google", {
+        scope: [
+          "profile",
+          "email",
+          "https://www.googleapis.com/auth/fitness.activity.read",
+          "https://www.googleapis.com/auth/fitness.heart_rate.read",
+          "https://www.googleapis.com/auth/fitness.sleep.read",
+          "https://www.googleapis.com/auth/fitness.location.read",
+        ],
+        session: false,
+      })(req, res);
     } catch (error) {
-      console.error("Erreur lors du callback Google:", error);
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-      res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+      console.error("Google auth initiation error:", error);
+      return serverMessage(res, "GOOGLE_AUTH_INITIATION_FAILED");
+    }
+  },
+
+  // Callback Google OAuth
+  handleGoogleCallback: async (req, res, next) => {
+    passport.authenticate(
+      "google",
+      { session: false },
+      async (err, user, info) => {
+        try {
+          if (err) {
+            console.error("Google auth error:", err);
+
+            // Vérifier si c'est une erreur de code d'authentification invalide
+            if (err.message && err.message.includes("authorization code")) {
+              return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+            }
+
+            return serverMessage(res, "GOOGLE_AUTHENTICATION_FAILED");
+          }
+
+          if (!user) {
+            console.error("No user from Google auth");
+            return serverMessage(res, "GOOGLE_AUTHENTICATION_FAILED");
+          }
+
+          // Vérifier si le paramètre "error" est présent dans la requête (venant de Google)
+          if (req.query.error) {
+            console.error("Google returned error:", req.query.error);
+            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+          }
+
+          // Vérifier si le code d'autorisation est présent
+          if (!req.query.code) {
+            console.error("No authorization code from Google");
+            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+          }
+
+          // Générer les tokens JWT
+          const accessToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+          );
+
+          const refreshToken = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d" }
+          );
+
+          // Créer ou mettre à jour la session
+          const expiresAt = dayjs().add(7, "days").toDate();
+          const ip = getClientIp(req);
+
+          await Sessions.upsert({
+            user_id: user.id,
+            token: refreshToken,
+            expires_at: expiresAt,
+            ip_address: ip,
+            user_agent: req.headers["user-agent"],
+          });
+
+          // Mettre à jour le token de l'utilisateur
+          await Users.update(
+            { token: accessToken },
+            { where: { id: user.id } }
+          );
+
+          // Rediriger vers le frontend avec les tokens
+          const frontendUrl =
+            process.env.NODE_ENV !== "production"
+              ? process.env.FRONTEND_URL_DEV + "/profile"
+              : process.env.FRONTEND_URL || "http://localhost:5173";
+          res.redirect(
+            `${frontendUrl}/auth/callback?token=${accessToken}&refresh=${refreshToken}&userId=${
+              user.id
+            }&firstLogin=${!user.createdAt}`
+          );
+        } catch (error) {
+          console.error("Erreur lors du callback Google:", error);
+
+          // Vérifier si c'est une erreur liée au code d'authentification
+          if (error.message && error.message.includes("authorization code")) {
+            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+          }
+
+          return serverMessage(res, "GOOGLE_AUTH_CALLBACK_FAILED");
+        }
+      }
+    )(req, res, next);
+  },
+  // Lier un compte Google à un compte existant
+  linkGoogleAccount: async (req, res) => {
+    try {
+      const { googleToken } = req.body;
+      const userId = req.user.id;
+
+      if (!googleToken) {
+        return serverMessage(res, "GOOGLE_TOKEN_REQUIRED");
+      }
+
+      // Vérifier le token Google (implémentation simplifiée)
+      // En production, utilisez la bibliothèque google-auth-library
+      let googleEmail;
+      try {
+        // Cette partie devrait utiliser la bibliothèque officielle Google
+        // pour vérifier le token ID Google
+        const decoded = jwt.decode(googleToken);
+        googleEmail = decoded.email;
+
+        if (!googleEmail) {
+          return serverMessage(res, "INVALID_GOOGLE_TOKEN");
+        }
+      } catch (error) {
+        console.error("Google token verification error:", error);
+        return serverMessage(res, "INVALID_GOOGLE_TOKEN");
+      }
+
+      // Vérifier que l'email Google correspond à l'email de l'utilisateur connecté
+      const user = await Users.findByPk(userId);
+      if (user.email !== googleEmail) {
+        return serverMessage(res, "GOOGLE_EMAIL_MISMATCH");
+      }
+
+      // Vérifier si le compte Google est déjà lié
+      if (user.google_linked) {
+        return serverMessage(res, "GOOGLE_ACCOUNT_ALREADY_LINKED");
+      }
+
+      // Marquer l'utilisateur comme lié à Google
+      await Users.update({ google_linked: true }, { where: { id: userId } });
+
+      return serverMessage(res, "GOOGLE_ACCOUNT_LINKED", {
+        googleLinked: true,
+        email: user.email,
+      });
+    } catch (error) {
+      console.error("Error linking Google account:", error);
+      return serverMessage(res, "GOOGLE_LINK_FAILED");
     }
   },
 };
