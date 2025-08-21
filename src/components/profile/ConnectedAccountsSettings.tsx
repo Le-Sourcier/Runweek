@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
-import { Users, Link2, Facebook, Twitter, Zap, BarChart2 } from "lucide-react"; // Example icons
+import { Link2, Facebook, Twitter, Zap, BarChart2, Link } from "lucide-react"; // Example icons
 import { motion } from "framer-motion";
+import { SocialAccountConnection } from "../../types/user";
 
 interface ConnectedAccountsSettingsProps {
   onBack: () => void;
@@ -30,6 +31,12 @@ const availableSocialIntegrations: SocialAccountIntegration[] = [
     description: "Post updates about your runs.",
   },
   {
+    id: "google",
+    name: "Google",
+    icon: <Link size={24} />,
+    description: "Link your Google account for easy access.",
+  },
+  {
     id: "strava",
     name: "Strava",
     icon: <Zap size={24} />,
@@ -43,17 +50,6 @@ const availableSocialIntegrations: SocialAccountIntegration[] = [
   }, // Using BarChart2 for Garmin
 ];
 
-// Assuming user.socialAccounts is an object like: { 'strava': { connected: true, username: 'runner123' }, 'facebook': { connected: false } }
-// Or it could be an array of connected IDs: ['strava', 'garmin']
-// For this example, let's assume it's an object where keys are integration IDs.
-interface UserSocialAccounts {
-  [accountId: string]: {
-    connected: boolean;
-    username?: string; // Optional: display username if connected
-    linkedDate?: string; // Optional: display when it was linked
-  };
-}
-
 export default function ConnectedAccountsSettings({
   onBack,
 }: ConnectedAccountsSettingsProps) {
@@ -61,16 +57,18 @@ export default function ConnectedAccountsSettings({
 
   // Local state to manage social accounts, initialized from user context.
   // This allows for optimistic updates or handling intermediate states if needed.
-  const [socialAccounts, setSocialAccounts] = useState<UserSocialAccounts>(
-    user?.socialAccounts || {}
-  );
+  const [socialAccounts, setSocialAccounts] = useState<
+    SocialAccountConnection[]
+  >(user?.socialAccounts || ([] as SocialAccountConnection[]));
 
   useEffect(() => {
-    setSocialAccounts(user?.socialAccounts || {});
+    setSocialAccounts(
+      user?.socialAccounts || ([] as SocialAccountConnection[])
+    );
   }, [user?.socialAccounts]);
 
   const handleToggleAccountConnection = (accountId: string) => {
-    const isConnected = socialAccounts[accountId]?.connected;
+    const isConnected = socialAccounts.find((acc) => acc.name === accountId);
 
     if (isConnected) {
       // Simulate disconnection
@@ -120,7 +118,10 @@ export default function ConnectedAccountsSettings({
 
       <div className="space-y-4">
         {availableSocialIntegrations.map((integration, index) => {
-          const accountStatus = socialAccounts[integration.id];
+          const accountStatus = socialAccounts.find(
+            (acc) => acc.name === integration.id
+          ) || { connected: false };
+          // Assuming accountStatus has a 'connected' boolean and optionally a 'username
           const isConnected = accountStatus?.connected;
 
           return (
@@ -144,9 +145,9 @@ export default function ConnectedAccountsSettings({
                   <p className="text-sm text-muted-foreground">
                     {integration.description}
                   </p>
-                  {isConnected && accountStatus.username && (
+                  {isConnected && accountStatus.name && (
                     <p className="text-xs text-primary">
-                      Connected as: {accountStatus.username}
+                      Connected as: {accountStatus.name}
                     </p>
                   )}
                 </div>

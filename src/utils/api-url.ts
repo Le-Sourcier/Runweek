@@ -11,17 +11,20 @@ export const ApiUrl = {
   GET_AI_COACH_MESSAGES: "/aicoach/history",
   SEND_AI_COACH_MESSAGES: "/aicoach",
 
+  LINK_GOOGLE_ACCOUNT: "/auth/link-google",
+  UNLINK_GOOGLE_ACCOUNT: "/auth/google/unlink",
 
   /**
- * Fonction pour les url à paramètres sous la forme url/:id
- */
-  parameterized: (item: string, parameter: string | number) => item.replace(':id', parameter.toString()),
+   * Fonction pour les url à paramètres sous la forme url/:id
+   */
+  parameterized: (item: string, parameter: string | number) =>
+    item.replace(":id", parameter.toString()),
 
-  queryable: (item: string, queries: Array<{ key: any, value: string }>) => {
-    item += '?';
+  queryable: (item: string, queries: Array<{ key: any; value: string }>) => {
+    item += "?";
     queries.forEach((query) => {
       item += `${query.key}=${query.value}&`;
     });
     return item.slice(0, -1);
-  }
+  },
 } as const;

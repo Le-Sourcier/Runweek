@@ -155,12 +155,17 @@ export type UserContextType = {
   message: string | null; // For login/auth errors
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   register: (auth: UserRegistration) => Promise<void>; // Made async to mimic API call
+  linkGoogleAccount: () => Promise<void>;
+  unlinkGoogleAccount: () => Promise<void>;
   verifyMail: (token: string) => Promise<void>;
   resendVerificationMail: (email: string) => Promise<void>;
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => Promise<void>;
   updateUserPreferences: (preferences: UserPreferences) => void;
-  updatePassword: (updatePasswordData: { currentPassword: string, newPassword: string }) => Promise<void>;
+  updatePassword: (updatePasswordData: {
+    currentPassword: string;
+    newPassword: string;
+  }) => Promise<void>;
   unlockSpecificAchievement: () => void; // Added for new achievement simulation
   addGoal: (goalData: Omit<UserGoal, "id" | "current" | "completed">) => void;
   updateGoal: (

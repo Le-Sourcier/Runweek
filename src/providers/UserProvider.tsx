@@ -167,8 +167,6 @@ export const defaultDashboardWidgetsConfig = {
 //   },
 // };
 
-const BASE_URL = import.meta.env.VITE_API_URL + "/user";
-
 export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check sec
   const [user, setUser] = useState<User | null>(null);
@@ -215,7 +213,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { data } = await apiUtils.get<User>(ApiUrl.ME);
       if (data) setUser(data);
     } catch (error: any) {
-
       if (error.response.status === 401) {
         await refreshUserTokens();
         await fetchUser();
@@ -235,7 +232,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const refreshToken = localStorage.getItem("rft");
     if (!refreshToken) throw new Error("Aucun refreshToken");
 
-    const { data } = await apiUtils.post<LoginResponse>(ApiUrl.REFRESH, { refreshToken });
+    const { data } = await apiUtils.post<LoginResponse>(ApiUrl.REFRESH, {
+      refreshToken,
+    });
 
     if (!data.accessToken) throw new Error("Refresh échoué");
 
@@ -246,7 +245,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setAccessToken(newToken);
     localStorage.setItem("aspk", newToken);
     if (newRefresh) localStorage.setItem("rft", newRefresh);
-  }
+  };
 
   React.useEffect(() => {
     const init = async () => {
@@ -274,15 +273,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       handleAuthSuccess(data);
 
-      showMessage(message as MessageCode, {
-        name: user?.fname ?? "",
-      }, {
-        language: "fr",
-      });
-
+      showMessage(
+        message as MessageCode,
+        {
+          name: user?.fname ?? "",
+        },
+        {
+          language: "fr",
+        }
+      );
     } catch (error) {
       const _message = extractErrorMessage(error);
-
 
       setMessage(_message.message);
 
@@ -323,9 +324,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const resendVerificationMail = async (
-    email: string
-  ) => {
+  const resendVerificationMail = async (email: string) => {
     setIsLoading(true);
     try {
       await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });
@@ -348,7 +347,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserProfile = async (updatedProfileData: Partial<User>) => {
-
     try {
       await apiUtils.put<User>(ApiUrl.UPDATE_PROFILE, updatedProfileData);
       await fetchUser();
@@ -357,10 +355,132 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updatePassword = async (updatePasswordData: { currentPassword: string, newPassword: string }) => {
+  const updatePassword = async (updatePasswordData: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
     try {
       await apiUtils.put<User>(ApiUrl.UPDATE_PASSWORD, updatePasswordData);
     } catch (error) {
+      throw error;
+    }
+  };
+  //Link google account to an existant user account
+  const linkGoogleAccount = async () => {
+    const token = sec.getItem("aspk") as string;
+    try {
+      const { data, message, error } = await apiUtils.post(
+        ApiUrl.LINK_GOOGLE_ACCOUNT,
+        {
+          googleToken: token,
+        }
+      );
+
+      if (error) {
+        const _message = extractErrorMessage(error);
+        // setMessage(_message.message);
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+        throw new Error(_message.message);
+      }
+
+      if (data) {
+        // const updatedUser = { ...user, googleAuth: data };
+        // setUser(updatedUser);
+        await fetchUser();
+        // setMessage(message);
+        console.log("Google account linked successfully:", data);
+
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+      } else {
+        const _message = message || "Failed to link Google account.";
+        setMessage(message);
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+        throw new Error(_message);
+      }
+      // if (data) {
+      //   toast.success("Google account linked successfully!");
+      //   await fetchUser();
+      // }
+
+      // setMessage(_message);
+    } catch (error) {
+      console.error("Error linking Google account:", error);
+      throw error;
+    }
+  };
+
+  // Unlink google account from an existant user account
+  // This will remove the googleAuth object from the user object
+  const unlinkGoogleAccount = async () => {
+    try {
+      const { data, message, error } = await apiUtils.post(
+        ApiUrl.UNLINK_GOOGLE_ACCOUNT
+      );
+
+      if (error) {
+        const _message = extractErrorMessage(error);
+        // setMessage(_message.message);
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+        throw new Error(_message.message);
+      }
+
+      if (data) {
+        // const updatedUser = { ...user, googleAuth: data };
+        // setUser(updatedUser);
+        await fetchUser();
+        // setMessage(message);
+
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+      } else {
+        const _message = message || "Failed to link Google account.";
+        setMessage(message);
+        showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+        throw new Error(_message);
+      }
+      // if (data) {
+      //   toast.success("Google account linked successfully!");
+      //   await fetchUser();
+      // }
+
+      // setMessage(_message);
+    } catch (error) {
+      console.error("Error linking Google account:", error);
       throw error;
     }
   };
@@ -496,6 +616,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         message,
         login,
         register,
+        linkGoogleAccount,
+        unlinkGoogleAccount,
         verifyMail,
         resendVerificationMail,
         logout,
