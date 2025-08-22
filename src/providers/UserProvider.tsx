@@ -319,28 +319,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifyMail = async (token: string) => {
+  const verifyMail = async (
+    token: string
+  ): Promise<{ message: string; error: boolean }> => {
     setIsLoading(true);
     try {
       const { message, error } = await apiUtils.post(ApiUrl.VERIFY_MAIL, {
         token,
       });
       if (error) {
-        return showMessage(
+        showMessage(
           message as MessageCode,
           {},
           {
             language: "fr",
           }
         );
+        return { error: true, message: "EMAIL_VERIFICATION_FAILED" };
       }
-      return showMessage(
+      showMessage(
         message as MessageCode,
         {},
         {
           language: "fr",
         }
       );
+      return { error: true, message: "EMAIL_VERIFIED_SUCCESS" };
     } catch {
       showMessage(
         "EMAIL_VERIFICATION_FAILED",
@@ -349,11 +353,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
           language: "fr",
         }
       );
-      const _message = "error verifying email address";
       return {
         error: true,
-        message: _message,
-        data: [],
+        message: "EMAIL_VERIFICATION_FAILED",
       };
     } finally {
       setIsLoading(false);
