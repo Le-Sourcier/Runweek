@@ -1,3 +1,4 @@
+import { Facebook, Twitter, Zap, BarChart2, Link } from "lucide-react";
 import { GoalCategory } from ".";
 
 export type UserStats = {
@@ -148,6 +149,13 @@ export type MailVerification = {
   email?: string;
 };
 
+interface SocialAccountIntegration {
+  id: string; // e.g., 'facebook', 'strava'
+  name: string;
+  icon: JSX.Element;
+  description: string;
+}
+
 export type UserContextType = {
   user: User | null;
   isLoading: boolean;
@@ -155,8 +163,8 @@ export type UserContextType = {
   message: string | null; // For login/auth errors
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
   register: (auth: UserRegistration) => Promise<void>; // Made async to mimic API call
-  linkGoogleAccount: () => Promise<void>;
-  unlinkGoogleAccount: () => Promise<void>;
+  linkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; //
+  unlinkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; // Added for unlinked account
   verifyMail: (token: string) => Promise<void>;
   resendVerificationMail: (email: string) => Promise<void>;
   logout: () => void;
@@ -175,3 +183,36 @@ export type UserContextType = {
   deleteGoal: (goalId: string) => void;
   // setUser: React.Dispatch<React.SetStateAction<User | null>>; // Keep if direct manipulation is needed, or remove if only via login/logout
 };
+
+export const availableSocialIntegrations: SocialAccountIntegration[] = [
+  {
+    id: "facebook",
+    name: "Facebook",
+    icon: <Facebook size={24} />,
+    description: "Share your activities and achievements.",
+  },
+  {
+    id: "twitter",
+    name: "Twitter",
+    icon: <Twitter size={24} />,
+    description: "Post updates about your runs.",
+  },
+  {
+    id: "google",
+    name: "Google",
+    icon: <Link size={24} />,
+    description: "Link your Google account for easy access.",
+  },
+  {
+    id: "strava",
+    name: "Strava",
+    icon: <Zap size={24} />,
+    description: "Sync your runs with the Strava community.",
+  }, // Using Zap as a placeholder for Strava
+  {
+    id: "garmin",
+    name: "Garmin Connect",
+    icon: <BarChart2 size={24} />,
+    description: "Automatically sync activities from your Garmin device.",
+  }, // Using BarChart2 for Garmin
+];

@@ -14,8 +14,8 @@ export interface MealEntry {
   id: string;
   foodItem: FoodItem;
   quantity: number; // en grammes ou portions
-  unit: 'g' | 'portion' | 'ml';
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  unit: "g" | "portion" | "ml";
+  mealType: "breakfast" | "lunch" | "dinner" | "snack";
   timestamp: string; // ISO date string
 }
 
@@ -51,7 +51,7 @@ export interface FriendRequest {
   id: string;
   from: Friend;
   to: Friend;
-  status: 'pending' | 'accepted' | 'declined';
+  status: "pending" | "accepted" | "declined";
   timestamp: string;
 }
 
@@ -83,11 +83,18 @@ export interface DietStats {
 
 export interface NutritionRecommendation {
   id: string;
-  type: 'improvement' | 'warning' | 'suggestion' | 'achievement';
+  type: "improvement" | "warning" | "suggestion" | "achievement";
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high';
-  category: 'calories' | 'protein' | 'carbs' | 'fat' | 'hydration' | 'timing' | 'variety';
+  priority: "low" | "medium" | "high";
+  category:
+    | "calories"
+    | "protein"
+    | "carbs"
+    | "fat"
+    | "hydration"
+    | "timing"
+    | "variety";
   actionable?: boolean;
   suggestedFoods?: string[];
   timestamp: string;
@@ -98,5 +105,5 @@ export interface DietAnalysis {
   recommendations: NutritionRecommendation[];
   strengths: string[];
   areasForImprovement: string[];
-  weeklyTrend: 'improving' | 'stable' | 'declining';
+  weeklyTrend: "improving" | "stable" | "declining";
 }

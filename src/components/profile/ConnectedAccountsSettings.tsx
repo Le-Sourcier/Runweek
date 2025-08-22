@@ -1,73 +1,36 @@
 import { useState, useEffect } from "react";
 import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
-import { Link2, Facebook, Twitter, Zap, BarChart2, Link } from "lucide-react"; // Example icons
+import { Link2 } from "lucide-react"; // Example icons
 import { motion } from "framer-motion";
-import { SocialAccountConnection } from "../../types/user";
+import {
+  availableSocialIntegrations,
+  SocialAccountConnection,
+} from "../../types/user";
 
 interface ConnectedAccountsSettingsProps {
   onBack: () => void;
 }
 
-interface SocialAccountIntegration {
-  id: string; // e.g., 'facebook', 'strava'
-  name: string;
-  icon: JSX.Element;
-  description: string;
-}
-
 // Define this array based on available integrations
-const availableSocialIntegrations: SocialAccountIntegration[] = [
-  {
-    id: "facebook",
-    name: "Facebook",
-    icon: <Facebook size={24} />,
-    description: "Share your activities and achievements.",
-  },
-  {
-    id: "twitter",
-    name: "Twitter",
-    icon: <Twitter size={24} />,
-    description: "Post updates about your runs.",
-  },
-  {
-    id: "google",
-    name: "Google",
-    icon: <Link size={24} />,
-    description: "Link your Google account for easy access.",
-  },
-  {
-    id: "strava",
-    name: "Strava",
-    icon: <Zap size={24} />,
-    description: "Sync your runs with the Strava community.",
-  }, // Using Zap as a placeholder for Strava
-  {
-    id: "garmin",
-    name: "Garmin Connect",
-    icon: <BarChart2 size={24} />,
-    description: "Automatically sync activities from your Garmin device.",
-  }, // Using BarChart2 for Garmin
-];
 
 export default function ConnectedAccountsSettings({
   onBack,
 }: ConnectedAccountsSettingsProps) {
-  const { user, updateUserProfile } = useUserContext();
+  const { user, updateUserProfile, linkedAccount, unlinkedAccount } =
+    useUserContext();
 
   // Local state to manage social accounts, initialized from user context.
   // This allows for optimistic updates or handling intermediate states if needed.
   const [socialAccounts, setSocialAccounts] = useState<
     SocialAccountConnection[]
-  >(user?.socialAccounts || ([] as SocialAccountConnection[]));
+  >(user?.socialAccounts as SocialAccountConnection[]);
 
   useEffect(() => {
-    setSocialAccounts(
-      user?.socialAccounts || ([] as SocialAccountConnection[])
-    );
-  }, [user?.socialAccounts]);
+    setSocialAccounts(user?.socialAccounts as SocialAccountConnection[]);
+  }, [user?.socialAccounts, socialAccounts]);
 
-  const handleToggleAccountConnection = (accountId: string) => {
+  const handleToggleAccountConnection = async (accountId: string) => {
     const isConnected = socialAccounts.find((acc) => acc.name === accountId);
 
     if (isConnected) {
@@ -75,33 +38,18 @@ export default function ConnectedAccountsSettings({
       if (
         window.confirm(`Are you sure you want to disconnect from ${accountId}?`)
       ) {
-        const updatedAccounts = {
-          ...socialAccounts,
-          [accountId]: { connected: false },
-        };
-        setSocialAccounts(updatedAccounts);
+        const linkedAccounts = await unlinkedAccount(accountId);
+        setSocialAccounts(linkedAccounts);
         if (user) {
-          updateUserProfile({ ...user, socialAccounts: updatedAccounts });
+          updateUserProfile({ ...user, socialAccounts: linkedAccounts });
           console.log(`${accountId} disconnected.`);
         }
       }
     } else {
-      // Simulate connection (e.g., OAuth flow)
-      alert(
-        `Simulating connection to ${accountId}... In a real app, this would trigger an OAuth flow.`
-      );
-      // For simulation, let's assume connection is successful
-      const updatedAccounts = {
-        ...socialAccounts,
-        [accountId]: {
-          connected: true,
-          username: `User${Date.now().toString().slice(-4)}`, // Dummy username
-          linkedDate: new Date().toISOString(),
-        },
-      };
-      setSocialAccounts(updatedAccounts);
+      const linkedAccounts = await linkedAccount(accountId);
+      setSocialAccounts(linkedAccounts);
       if (user) {
-        updateUserProfile({ ...user, socialAccounts: updatedAccounts });
+        updateUserProfile({ ...user, socialAccounts: linkedAccounts });
         console.log(`${accountId} connected.`);
       }
     }
@@ -118,10 +66,9 @@ export default function ConnectedAccountsSettings({
 
       <div className="space-y-4">
         {availableSocialIntegrations.map((integration, index) => {
-          const accountStatus = socialAccounts.find(
-            (acc) => acc.name === integration.id
-          ) || { connected: false };
-          // Assuming accountStatus has a 'connected' boolean and optionally a 'username
+          const accountStatus =
+            socialAccounts &&
+            socialAccounts.find((acc) => acc.name === integration.id);
           const isConnected = accountStatus?.connected;
 
           return (
@@ -146,7 +93,7 @@ export default function ConnectedAccountsSettings({
                     {integration.description}
                   </p>
                   {isConnected && accountStatus.name && (
-                    <p className="text-xs text-primary">
+                    <p className="text-xs text-primary capitalize ">
                       Connected as: {accountStatus.name}
                     </p>
                   )}

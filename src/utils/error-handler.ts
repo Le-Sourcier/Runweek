@@ -19,6 +19,8 @@ export const MESSAGE_MAPPINGS = {
       "A verification email has been sent to your address. Please check your inbox.",
     EMAIL_VERIFIED_SUCCESS:
       "Your email address has been successfully verified. Thank you for completing this step.",
+    EMAIL_VERIFICATION_FAILED:
+      "Error verifying email address, please try again later or contact technical support",
     PASSWORD_RESET_REQUESTED:
       "Password reset instructions have been sent to your email address. Please follow the link to proceed.",
     PASSWORD_RESET_SUCCESS:
@@ -389,6 +391,8 @@ export const MESSAGE_MAPPINGS = {
       "Un email de vérification a été envoyé à votre adresse. Veuillez vérifier votre boîte de réception.",
     EMAIL_VERIFIED_SUCCESS:
       "Votre adresse email a été vérifiée avec succès. Merci d'avoir complété cette étape.",
+    EMAIL_VERIFICATION_FAILED:
+      "Erreur lors de la vérification de l'adresse e-mail, veuillez réessayer plus tard ou contacter le support technique",
     PASSWORD_RESET_REQUESTED:
       "Les instructions pour réinitialiser votre mot de passe ont été envoyées à votre adresse email. Veuillez suivre le lien pour continuer.",
     PASSWORD_RESET_SUCCESS:
@@ -749,39 +753,43 @@ export const MESSAGE_MAPPINGS = {
     // Default
     UNKNOWN_ERROR:
       "Une erreur inattendue s'est produite. Notre équipe technique a été notifiée et enquêtera sur le problème.",
-  }
+  },
 };
 
-
 export const getBaseMessage = (language: Language, code: MessageCode) => {
-  return MESSAGE_MAPPINGS[language][code] ||
+  return (
+    MESSAGE_MAPPINGS[language][code] ||
     MESSAGE_MAPPINGS["en"][code] ||
     MESSAGE_MAPPINGS["en"].UNKNOWN_ERROR
-}
+  );
+};
 
-export function extractErrorMessage(error: any, defaultMessage: string = "UNKNOWN_ERROR"): {
-	message: string,
-	code?: string
+export function extractErrorMessage(
+  error: any,
+  defaultMessage: string = "UNKNOWN_ERROR"
+): {
+  message: string;
+  code?: string;
 } {
-	const code: string = error.status
+  const code: string = error.status;
 
-	// Vérifier si error.response existe
-	if (!error.response || !error.response.data) {
-		return {message: defaultMessage!, code};
-	}
+  // Vérifier si error.response existe
+  if (!error.response || !error.response.data) {
+    return { message: defaultMessage!, code };
+  }
 
-	const {message} = error.response.data;
+  const { message } = error.response.data;
 
-	// Cas 1 : message est une chaîne
-	if (typeof message === 'string') {
-		return {message: message.trim(), code};
-	}
+  // Cas 1 : message est une chaîne
+  if (typeof message === "string") {
+    return { message: message.trim(), code };
+  }
 
-	// Cas 2 : message est un tableau
-	if (Array.isArray(message) && message.length > 0) {
-		return {message: message[0].trim(), code};
-	}
+  // Cas 2 : message est un tableau
+  if (Array.isArray(message) && message.length > 0) {
+    return { message: message[0].trim(), code };
+  }
 
-	// Cas 3 : aucun message valide trouvé
-	return {message: defaultMessage!, code};
+  // Cas 3 : aucun message valide trouvé
+  return { message: defaultMessage!, code };
 }

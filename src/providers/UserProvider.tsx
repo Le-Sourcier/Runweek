@@ -10,6 +10,8 @@ import {
   UserRegistration,
   RegisterRes,
   MailVerification,
+  SocialAccountConnection,
+  availableSocialIntegrations,
 } from "../types/user";
 import { fetchApi } from "../utils";
 import { UserContext } from "../context/UserContext";
@@ -20,7 +22,7 @@ import { MessageCode } from "../types/message";
 import { getCookie, removeCookie } from "../utils/Cookies";
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
-import { extractErrorMessage } from "../utils/error-handler";
+import { extractErrorMessage, MESSAGE_MAPPINGS } from "../utils/error-handler";
 
 // // Hardcoded sample user for login
 // const sampleUser: User = {
@@ -212,6 +214,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await apiUtils.get<User>(ApiUrl.ME);
       if (data) setUser(data);
+
+      const socialAccounts = data.socialAccounts || [];
+
+      setUser({ ...data, socialAccounts });
     } catch (error: any) {
       if (error.response.status === 401) {
         await refreshUserTokens();
@@ -316,9 +322,39 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const verifyMail = async (token: string) => {
     setIsLoading(true);
     try {
-      await apiUtils.post(ApiUrl.VERIFY_MAIL, { token });
-    } catch (error) {
-      throw error;
+      const { message, error } = await apiUtils.post(ApiUrl.VERIFY_MAIL, {
+        token,
+      });
+      if (error) {
+        return showMessage(
+          message as MessageCode,
+          {},
+          {
+            language: "fr",
+          }
+        );
+      }
+      return showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+    } catch {
+      showMessage(
+        "EMAIL_VERIFICATION_FAILED",
+        {},
+        {
+          language: "fr",
+        }
+      );
+      const _message = "error verifying email address";
+      return {
+        error: true,
+        message: _message,
+        data: [],
+      };
     } finally {
       setIsLoading(false);
     }
@@ -347,24 +383,59 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserProfile = async (updatedProfileData: Partial<User>) => {
-    try {
-      await apiUtils.put<User>(ApiUrl.UPDATE_PROFILE, updatedProfileData);
+    const { message, error, data } = await apiUtils.put<User>(
+      ApiUrl.UPDATE_PROFILE,
+      updatedProfileData
+    );
+    if (error) {
+      showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+    } else {
+      setUser(data);
       await fetchUser();
-    } catch (error) {
-      throw error;
+      showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+    }
+  };
+  const updatePassword = async (updatePasswordData: {
+    oldPassword: string;
+    newPassword: string;
+  }) => {
+    const { message, error, data } = await apiUtils.put<User>(
+      ApiUrl.UPDATE_PASSWORD,
+      updatePasswordData
+    );
+    if (error) {
+      showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+    } else {
+      setUser(data);
+      await fetchUser();
+      showMessage(
+        message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
     }
   };
 
-  const updatePassword = async (updatePasswordData: {
-    currentPassword: string;
-    newPassword: string;
-  }) => {
-    try {
-      await apiUtils.put<User>(ApiUrl.UPDATE_PASSWORD, updatePasswordData);
-    } catch (error) {
-      throw error;
-    }
-  };
   //Link google account to an existant user account
   const linkGoogleAccount = async () => {
     const token = sec.getItem("aspk") as string;
@@ -392,7 +463,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (data) {
         // const updatedUser = { ...user, googleAuth: data };
         // setUser(updatedUser);
-        await fetchUser();
+        // const u =  await fetchUser();
         // setMessage(message);
         console.log("Google account linked successfully:", data);
 
@@ -403,6 +474,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
             language: "fr",
           }
         );
+        // update user data
+        // setUser({ ...user, socialAccounts: data });
       } else {
         const _message = message || "Failed to link Google account.";
         setMessage(message);
@@ -483,6 +556,64 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error("Error linking Google account:", error);
       throw error;
     }
+  };
+
+  const linkedAccount = async (accountId: string) => {
+    switch (accountId) {
+      case "google":
+        await linkGoogleAccount();
+        break;
+      case "facebook":
+        // Implement Facebook linking logic here
+        toast.info("Facebook linking is not implemented yet.");
+        break;
+      case "twitter":
+        // Implement Twitter linking logic here
+        toast.info("Twitter linking is not implemented yet.");
+        break;
+      case "strava":
+        // Implement Strava linking logic here
+        toast.info("Strava linking is not implemented yet.");
+        break;
+      case "garmin":
+        // Implement Garmin linking logic here
+        toast.info("Garmin linking is not implemented yet.");
+        break;
+      default:
+        toast.error("Unknown account type.");
+        break;
+    }
+    await fetchUser();
+    return (user?.socialAccounts || []).filter((acc) => acc);
+  };
+
+  const unlinkedAccount = async (accountId: string) => {
+    switch (accountId) {
+      case "google":
+        await unlinkGoogleAccount();
+        break;
+      case "facebook":
+        // Implement Facebook linking logic here
+        toast.info("Facebook linking is not implemented yet.");
+        break;
+      case "twitter":
+        // Implement Twitter linking logic here
+        toast.info("Twitter linking is not implemented yet.");
+        break;
+      case "strava":
+        // Implement Strava linking logic here
+        toast.info("Strava linking is not implemented yet.");
+        break;
+      case "garmin":
+        // Implement Garmin linking logic here
+        toast.info("Garmin linking is not implemented yet.");
+        break;
+      default:
+        toast.error("Unknown account type.");
+        break;
+    }
+
+    return (user?.socialAccounts || []).filter((acc) => acc);
   };
 
   const addGoal = (
@@ -616,8 +747,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         message,
         login,
         register,
-        linkGoogleAccount,
-        unlinkGoogleAccount,
+        linkedAccount,
+        unlinkedAccount,
         verifyMail,
         resendVerificationMail,
         logout,
