@@ -14,6 +14,18 @@ export const ApiUrl = {
   LINK_GOOGLE_ACCOUNT: "/auth/link-google",
   UNLINK_GOOGLE_ACCOUNT: "/auth/google/unlink",
 
+  // Friends endpoints
+  FRIENDS: "/friends",
+  FRIENDS_REQUESTS: "/friends/requests",
+  FRIENDS_REQUEST: "/friends/request",
+  FRIENDS_SEARCH: "/friends/search",
+  FRIENDS_CONVERSATIONS: "/friends/conversations",
+  FRIENDS_ACTIVITY_FEED: "/friends/activity-feed",
+  FRIENDS_SHARE_ACTIVITY: "/friends/share-activity",
+  FRIENDS_ACTIVITY: "/friends/activity",
+  FRIENDS_REPORT: "/friends/report",
+  FRIENDS_STATS: "/friends/stats",
+
   /**
    * Fonction pour les url à paramètres sous la forme url/:id
    */

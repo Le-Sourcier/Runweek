@@ -6,7 +6,7 @@ import { Check, Mail, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUserContext } from "../hooks/useUser";
 import { UserRegistration } from "../types/user";
-import { Modal } from "../components/ui/modal";
+import { Modal } from "../components/ui/Modal";
 import { getCookie, removeCookie } from "../utils/Cookies";
 import { useAppNavigation } from "../hooks/useAppNavigation";
 import { extractErrorMessage } from "../utils/error-handler";
@@ -95,7 +95,7 @@ const RegisterPage: React.FC = () => {
 
       const redirectPath =
         getCookie("redirect_path") ||
-        (getCurrentLocation().pathname) ||
+        getCurrentLocation().pathname ||
         "/dashboard";
 
       removeCookie("redirect_path");
@@ -178,14 +178,15 @@ const RegisterPage: React.FC = () => {
                 {[1, 2, 3, 4].map((level) => (
                   <div
                     key={level}
-                    className={`h-2 flex-1 rounded-full transition-colors ${level <= score
-                      ? score <= 2
-                        ? "bg-red-400"
-                        : score === 3
+                    className={`h-2 flex-1 rounded-full transition-colors ${
+                      level <= score
+                        ? score <= 2
+                          ? "bg-red-400"
+                          : score === 3
                           ? "bg-yellow-400"
                           : "bg-green-400"
-                      : "bg-gray-200"
-                      }`}
+                        : "bg-gray-200"
+                    }`}
                   />
                 ))}
               </div>
@@ -284,10 +285,7 @@ const RegisterPage: React.FC = () => {
       </form>
 
       {showSuccessModal && (
-        <Modal
-          size="md"
-          onClose={() => setShowSuccessModal(false)}
-        >
+        <Modal size="md" onClose={() => setShowSuccessModal(false)}>
           <div className="text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mb-4">
               <Check className="h-8 w-8 text-white" />
@@ -317,12 +315,14 @@ const RegisterPage: React.FC = () => {
 
             <div className="space-y-3 flex flex-col gap-2">
               <p className="text-sm text-gray-600">
-                Vérifiez votre boîte de réception (et vos spams) puis cliquez sur
-                le lien pour activer votre compte.
+                Vérifiez votre boîte de réception (et vos spams) puis cliquez
+                sur le lien pour activer votre compte.
               </p>
 
               <Link to="/verify-mail">
-                <Button className="w-full">Aller à la vérification email</Button>
+                <Button className="w-full">
+                  Aller à la vérification email
+                </Button>
               </Link>
 
               <Link to="/login">
@@ -343,8 +343,9 @@ const PasswordCheck: React.FC<{ check: boolean; text: string }> = ({
   text,
 }) => (
   <div
-    className={`flex items-center gap-2 ${check ? "text-green-600" : "text-gray-400"
-      }`}
+    className={`flex items-center gap-2 ${
+      check ? "text-green-600" : "text-gray-400"
+    }`}
   >
     {check ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
     <span>{text}</span>

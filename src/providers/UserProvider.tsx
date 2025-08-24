@@ -8,12 +8,7 @@ import {
   LoginResponse,
   UserCredentials,
   UserRegistration,
-  RegisterRes,
-  MailVerification,
-  SocialAccountConnection,
-  availableSocialIntegrations,
 } from "../types/user";
-import { fetchApi } from "../utils";
 import { UserContext } from "../context/UserContext";
 import sec from "react-secure-storage";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -22,7 +17,7 @@ import { MessageCode } from "../types/message";
 import { getCookie, removeCookie } from "../utils/Cookies";
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
-import { extractErrorMessage, MESSAGE_MAPPINGS } from "../utils/error-handler";
+import { extractErrorMessage } from "../utils/error-handler";
 
 // // Hardcoded sample user for login
 // const sampleUser: User = {

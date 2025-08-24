@@ -33,11 +33,14 @@ import { DietProvider } from "./context/DietContext";
 import { SocialProvider } from "./context/SocialContext";
 import { UserProvider } from "./providers/UserProvider";
 import { MessageProvider } from "./providers/MessageProvider";
+import { FriendsProvider } from "./context/FriendsContext";
 
 // Components
 import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/layout/ProtectRouteLayout";
 import { ROUTES } from "./hooks/useAppNavigation";
+import FriendsLayout from "./components/layout/FriendsLayout";
+import SocketManager from "./utils/SocketManager";
 
 const MainAppLayoutContent: React.FC = () => {
   return (
@@ -47,11 +50,15 @@ const MainAppLayoutContent: React.FC = () => {
           <PRProvider>
             <DietProvider>
               <SocialProvider>
-                <FloatingCoachProvider>
-                  <Layout>
-                    <Outlet />
-                  </Layout>
-                </FloatingCoachProvider>
+                <FriendsProvider>
+                  <FloatingCoachProvider>
+                    <Layout>
+                      <SocketManager />
+
+                      <Outlet />
+                    </Layout>
+                  </FloatingCoachProvider>
+                </FriendsProvider>
               </SocialProvider>
             </DietProvider>
           </PRProvider>
@@ -97,6 +104,7 @@ const AuthRoutesHandler = () => {
         <Route path="personal-records" element={<PersonalRecords />} />
         <Route path="diet" element={<Diet />} />
         <Route path={ROUTES.TRAINING_PLAN} element={<TrainingPlan />} />
+        <Route path="friends" element={<FriendsLayout />} />
         <Route path="profile" element={<Profile />} />
         <Route path="support" element={<Support />} />
         <Route path="settings" element={<Settings />} />

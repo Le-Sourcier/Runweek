@@ -1,11 +1,12 @@
-import { useNavigate, NavigateOptions } from 'react-router-dom';
+import { useNavigate, NavigateOptions } from "react-router-dom";
 
 // Types pour une meilleure sécurité de type
 export interface NavigationParams {
   [key: string]: string | number | boolean | null | undefined;
 }
 
-export interface NavigateWithParamsOptions extends Omit<NavigateOptions, 'state'> {
+export interface NavigateWithParamsOptions
+  extends Omit<NavigateOptions, "state"> {
   state?: any;
   preserveQuery?: boolean; // Préserver les query params existants
   replace?: boolean;
@@ -38,7 +39,7 @@ export const useAppNavigation = () => {
 
     // Construire les query parameters
     const searchParams = new URLSearchParams();
-    
+
     // Préserver les query params existants si demandé
     if (options.preserveQuery) {
       const currentParams = new URLSearchParams(window.location.search);
@@ -64,7 +65,7 @@ export const useAppNavigation = () => {
     navigate(fullPath, {
       replace: options.replace || false,
       state: options.state,
-      ...options
+      ...options,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -118,7 +119,7 @@ export const useAppNavigation = () => {
     });
 
     const queryString = searchParams.toString();
-    const newPath = queryString 
+    const newPath = queryString
       ? `${window.location.pathname}?${queryString}`
       : window.location.pathname;
 
@@ -136,8 +137,8 @@ export const useAppNavigation = () => {
   ) => {
     try {
       // Validation basique du path
-      if (!path || typeof path !== 'string') {
-        console.error('Invalid path provided to safeNavigate:', path);
+      if (!path || typeof path !== "string") {
+        console.error("Invalid path provided to safeNavigate:", path);
         return false;
       }
 
@@ -145,11 +146,14 @@ export const useAppNavigation = () => {
       const requiredParams = path.match(/:(\w+)/g);
       if (requiredParams) {
         const missing = requiredParams
-          .map(param => param.substring(1))
-          .filter(param => urlParams[param] === undefined || urlParams[param] === null);
-        
+          .map((param) => param.substring(1))
+          .filter(
+            (param) =>
+              urlParams[param] === undefined || urlParams[param] === null
+          );
+
         if (missing.length > 0) {
-          console.error('Missing required URL parameters:', missing);
+          console.error("Missing required URL parameters:", missing);
           return false;
         }
       }
@@ -157,7 +161,7 @@ export const useAppNavigation = () => {
       navigateWithParams(path, urlParams, queryParams, options);
       return true;
     } catch (error) {
-      console.error('Navigation error:', error);
+      console.error("Navigation error:", error);
       return false;
     }
   };
@@ -190,7 +194,7 @@ export const useAppNavigation = () => {
     safeNavigate,
     getCurrentLocation,
     // Expose la fonction navigate originale si besoin
-    navigate
+    navigate,
   };
 };
 
@@ -232,7 +236,7 @@ export const ROUTES = {
   RESET_PASSWORD: "/reset-password/:token",
   FORGOT_PASSWORD: "/forgot-password",
   PROFILE: "/profile",
-  
+  FRIENDS: "/friends",
   SETTINGS: "/settings",
   STATISTICS: "/statistics",
   CALENDAR: "/calendar",

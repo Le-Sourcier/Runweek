@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import Modal from '../ui/Modal';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
-import { Search, Plus } from 'lucide-react';
-import { FoodItem } from '../../types/diet';
+import React, { useState, useEffect } from "react";
+import { Modal } from "../ui/Modal";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
+import { Search, Plus } from "lucide-react";
+import { FoodItem } from "../../types/diet";
 
 interface FoodSearchModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
   onSelectFood,
   searchFood,
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<FoodItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -30,7 +30,7 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
           const searchResults = await searchFood(query);
           setResults(searchResults);
         } catch (error) {
-          console.error('Erreur de recherche:', error);
+          console.error("Erreur de recherche:", error);
           setResults([]);
         } finally {
           setIsSearching(false);
@@ -46,13 +46,18 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
 
   const handleSelectFood = (food: FoodItem) => {
     onSelectFood(food);
-    setQuery('');
+    setQuery("");
     setResults([]);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Rechercher un aliment" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Rechercher un aliment"
+      size="lg"
+    >
       <div className="space-y-4">
         <div className="relative">
           <Input
@@ -62,22 +67,29 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
             placeholder="Rechercher un aliment..."
             className="pl-10"
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+            size={16}
+          />
 
           {/* Suggestions IA basées sur les recommandations */}
           {query.length === 0 && (
             <div className="mt-4">
-              <h4 className="text-sm font-medium text-foreground mb-2">Suggestions IA</h4>
+              <h4 className="text-sm font-medium text-foreground mb-2">
+                Suggestions IA
+              </h4>
               <div className="space-y-2">
-                {['Saumon', 'Brocoli', 'Yaourt grec', 'Amandes'].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => handleFoodSearch(suggestion)}
-                    className="w-full p-2 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
-                  >
-                    Rechercher "{suggestion}"
-                  </button>
-                ))}
+                {["Saumon", "Brocoli", "Yaourt grec", "Amandes"].map(
+                  (suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => handleFoodSearch(suggestion)}
+                      className="w-full p-2 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+                    >
+                      Rechercher "{suggestion}"
+                    </button>
+                  )
+                )}
               </div>
             </div>
           )}
@@ -86,7 +98,9 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
         {isSearching && (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-sm text-muted-foreground mt-2">Recherche en cours...</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Recherche en cours...
+            </p>
           </div>
         )}
 
@@ -108,8 +122,12 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-medium text-foreground">{food.calories}</span>
-                    <span className="text-xs text-muted-foreground block">cal/100g</span>
+                    <span className="font-medium text-foreground">
+                      {food.calories}
+                    </span>
+                    <span className="text-xs text-muted-foreground block">
+                      cal/100g
+                    </span>
                   </div>
                 </div>
               </div>
@@ -119,7 +137,9 @@ const FoodSearchModal: React.FC<FoodSearchModalProps> = ({
 
         {query.length > 2 && results.length === 0 && !isSearching && (
           <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">Aucun aliment trouvé pour "{query}"</p>
+            <p className="text-muted-foreground mb-4">
+              Aucun aliment trouvé pour "{query}"
+            </p>
             <Button variant="outline" className="flex items-center gap-2">
               <Plus size={16} />
               Ajouter un nouvel aliment

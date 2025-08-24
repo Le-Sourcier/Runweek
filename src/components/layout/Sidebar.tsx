@@ -12,6 +12,7 @@ import {
   Activity,
   Utensils,
   Settings,
+  Users,
 } from "lucide-react";
 import { useUserContext } from "../../hooks/useUser";
 import { motion } from "framer-motion";
@@ -53,6 +54,11 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       icon: <Utensils size={20} />,
       label: "Nutrition",
       path: ROUTES.DIET,
+    },
+    {
+      icon: <Users size={20} />,
+      label: "Amis",
+      path: ROUTES.FRIENDS,
     },
     { icon: <User size={20} />, label: "Profil", path: "/profile" },
     {
@@ -120,9 +126,10 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
                 to={item.path}
                 className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
-                  ${isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
                   }
                 `}
                 end={item.path === "/"}
@@ -140,14 +147,15 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
             to={ROUTES.SETTINGS}
             className={({ isActive }) => `
               flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all hover:translate-x-1
-              ${isActive
-              ? "bg-primary/10 text-primary"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
+              ${
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900"
               }
             `}
           >
             <span className="flex items-center gap-2">
-             <Settings size={20} /> Paramètres
+              <Settings size={20} /> Paramètres
             </span>
           </NavLink>
         </div>
