@@ -24,7 +24,12 @@ router
   .use("/friends", authorize, require("./components/friendsRouter"))
   .use("/nutrition", authorize, require("./components/nutritionRouter"))
   .use("/health", authorize, require("./components/healthRouter"))
-  .use("/achievements", authorize, require("./components/achievementRouter"));
+  .use("/achievements", authorize, require("./components/achievementRouter"))
+  .use(
+    "/data-sharing/preferences",
+    authorize,
+    require("./components/dataSharingPreferencesRouter")
+  );
 // router.use("/comments", authorize, require("./components/commentRouter"));
 // router.use("/reports", authorize, require("./components/reportRouter"));
 // router.use("/challenges", authorize, require("./components/challengeRouter"));

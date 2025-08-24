@@ -1,5 +1,7 @@
 const Joi = require("joi");
 const {
+  Users,
+  GoogleAuth,
   ActivityData,
   HeartRateData,
   SleepData,
@@ -27,6 +29,211 @@ const dateRangeSchema = Joi.object({
 
 module.exports = {
   // POST /api/health/sync - Synchroniser les données Google Fit
+  // syncHealthData: async (req, res) => {
+  //   try {
+  //     const { error, value } = syncRequestSchema.validate(req.body);
+
+  //     if (error) {
+  //       return res.status(400).json({
+  //         error: true,
+  //         message: "Données invalides",
+  //         details: error.details[0].message,
+  //       });
+  //     }
+
+  //     const { days, dataTypes, force } = value;
+
+  //     const user = await Users.findByPk(req.user.id, {
+  //       include: [
+  //         {
+  //           model: GoogleAuth,
+  //           as: "googleAuth",
+  //           attributes: ["id", "is_linked", "access_token", "refresh_token"],
+  //         },
+  //       ],
+  //     });
+
+  //     // Vérifier que l'utilisateur a connecté Google
+  //     if (!user.googleAuth || !user.googleAuth.is_linked) {
+  //       return res.status(400).json({
+  //         error: true,
+  //         message:
+  //           "Compte Google non connecté. Veuillez vous connecter avec Google d'abord.",
+  //       });
+  //     }
+
+  //     // Vérifier s'il y a déjà une synchronisation en cours
+  //     const ongoingSync = await DataSync.findOne({
+  //       where: {
+  //         user_id: req.user.id,
+  //         status: ["pending", "in_progress"],
+  //       },
+  //     });
+
+  //     if (ongoingSync && !force) {
+  //       return res.status(409).json({
+  //         error: true,
+  //         message: "Une synchronisation est déjà en cours",
+  //         data: {
+  //           syncId: ongoingSync.id,
+  //           startedAt: ongoingSync.createdAt,
+  //         },
+  //       });
+  //     }
+
+  //     const endDate = new Date();
+  //     const startDate = new Date(
+  //       endDate.getTime() - days * 24 * 60 * 60 * 1000
+  //     );
+
+  //     // Créer un enregistrement de synchronisation
+  //     const syncRecord = await DataSync.create({
+  //       user_id: req.user.id,
+  //       syncType: "manual",
+  //       dataTypes: dataTypes,
+  //       startDate: startDate,
+  //       endDate: endDate,
+  //       status: "in_progress",
+  //     });
+
+  //     // Lancer la synchronisation en arrière-plan
+  //     setImmediate(async () => {
+  //       try {
+  //         // Rafraîchir le token si nécessaire
+  //         await googleFitService.refreshTokenIfNeeded(user);
+
+  //         // Synchroniser les données
+  //         const syncedData = await googleFitService.syncAllData(
+  //           user,
+  //           days,
+  //           dataTypes
+  //         );
+
+  //         let recordsProcessed = 0;
+
+  //         // Traiter les données d'activité
+  //         if (dataTypes.includes("activity") && syncedData.activity) {
+  //           for (const dayData of syncedData.activity.steps) {
+  //             // Trouver les données correspondantes pour distance et calories
+  //             const distanceData = syncedData.activity.distance.find(
+  //               (d) =>
+  //                 new Date(d.date).toDateString() ===
+  //                 new Date(dayData.date).toDateString()
+  //             );
+
+  //             const calorieData = syncedData.activity.calories.find(
+  //               (c) =>
+  //                 new Date(c.date).toDateString() ===
+  //                 new Date(dayData.date).toDateString()
+  //             );
+
+  //             await ActivityData.upsert({
+  //               user_id: user.id,
+  //               date: dayData.date,
+  //               steps: dayData.steps,
+  //               distance: distanceData ? distanceData.distance : 0,
+  //               calories: calorieData ? calorieData.calories : 0,
+  //             });
+  //             recordsProcessed++;
+  //           }
+  //         }
+
+  //         // Traiter les données de fréquence cardiaque
+  //         if (dataTypes.includes("heartRate") && syncedData.heartRate) {
+  //           for (const hrData of syncedData.heartRate) {
+  //             if (hrData.average > 0) {
+  //               await HeartRateData.create({
+  //                 user_id: user.id,
+  //                 timestamp: hrData.timestamp,
+  //                 heartRate: Math.round(hrData.average),
+  //                 context: hrData.context || "active",
+  //               });
+  //               recordsProcessed++;
+  //             }
+  //           }
+  //         }
+
+  //         // Traiter les données de sommeil
+  //         if (dataTypes.includes("sleep") && syncedData.sleep) {
+  //           for (const sleepSession of syncedData.sleep) {
+  //             await SleepData.upsert({
+  //               user_id: user.id,
+  //               date: sleepSession.date,
+  //               bedTime: sleepSession.startTime,
+  //               wakeTime: sleepSession.endTime,
+  //               totalSleepMinutes: sleepSession.duration,
+  //               sleepQuality:
+  //                 sleepSession.quality && sleepSession.quality !== "unknown"
+  //                   ? sleepSession.quality
+  //                   : "good",
+  //             });
+  //             recordsProcessed++;
+  //           }
+  //         }
+
+  //         // Traiter les sessions d'exercice
+  //         if (dataTypes.includes("exercise") && syncedData.exercise) {
+  //           for (const session of syncedData.exercise) {
+  //             await ExerciseSession.upsert({
+  //               user_id: user.id,
+  //               googleSessionId: session.id,
+  //               name: session.name,
+  //               activityType: session.activityType,
+  //               activityName: session.activityName || "unknown",
+  //               startTime: session.startTime,
+  //               endTime: session.endTime,
+  //               duration: session.duration,
+  //               calories: session.calories || 0,
+  //               distance: session.distance || 0,
+  //             });
+  //             recordsProcessed++;
+  //           }
+  //         }
+
+  //         // Mettre à jour le dernier sync dans GoogleAuth
+  //         await GoogleAuth.update(
+  //           { last_sync: new Date() },
+  //           { where: { user_id: user.id } }
+  //         );
+
+  //         // Marquer la synchronisation comme terminée
+  //         await syncRecord.update({
+  //           status: "completed",
+  //           recordsProcessed: recordsProcessed,
+  //           completedAt: new Date(),
+  //         });
+  //       } catch (syncError) {
+  //         console.error("Erreur lors de la synchronisation:", syncError);
+
+  //         await syncRecord.update({
+  //           status: "failed",
+  //           errors: [syncError.message],
+  //           completedAt: new Date(),
+  //         });
+  //       }
+  //     });
+
+  //     res.status(202).json({
+  //       error: false,
+  //       message: "Synchronisation démarrée",
+  //       data: {
+  //         syncId: syncRecord.id,
+  //         status: "in_progress",
+  //         estimatedDuration: `${days * 2} secondes`,
+  //         dataTypes: dataTypes,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error("Erreur lors du démarrage de la synchronisation:", error);
+  //     res.status(500).json({
+  //       error: true,
+  //       message: "Erreur lors du démarrage de la synchronisation",
+  //       details:
+  //         process.env.NODE_ENV === "development" ? error.message : undefined,
+  //     });
+  //   }
+  // },
+
   syncHealthData: async (req, res) => {
     try {
       const { error, value } = syncRequestSchema.validate(req.body);
@@ -41,8 +248,18 @@ module.exports = {
 
       const { days, dataTypes, force } = value;
 
+      const user = await Users.findByPk(req.user.id, {
+        include: [
+          {
+            model: GoogleAuth,
+            as: "googleAuth",
+            attributes: ["id", "is_linked", "access_token", "refresh_token"],
+          },
+        ],
+      });
+
       // Vérifier que l'utilisateur a connecté Google
-      if (!req.user.googleAuth || !req.user.googleAuth.googleAccessToken) {
+      if (!user.googleAuth || !user.googleAuth.is_linked) {
         return res.status(400).json({
           error: true,
           message:
@@ -62,7 +279,10 @@ module.exports = {
         return res.status(409).json({
           error: true,
           message: "Une synchronisation est déjà en cours",
-          data: ongoingSync,
+          data: {
+            syncId: ongoingSync.id,
+            startedAt: ongoingSync.createdAt,
+          },
         });
       }
 
@@ -84,26 +304,46 @@ module.exports = {
       // Lancer la synchronisation en arrière-plan
       setImmediate(async () => {
         try {
-          await googleFitService.refreshTokenIfNeeded(req.user);
-          const syncedData = await googleFitService.syncAllData(req.user, days);
+          if (!syncRecord) {
+            console.error("Enregistrement de synchronisation introuvable");
+            return;
+          }
+          // Rafraîchir le token si nécessaire
+          await googleFitService.refreshTokenIfNeeded(user);
+
+          // Synchroniser les données - NE PAS passer dataTypes ici
+          const syncedData = await googleFitService.syncAllData(user, days);
+
+          if (!syncedData.activity)
+            syncedData.activity = { steps: [], distance: [], calories: [] };
+          if (!syncedData.heartRate) syncedData.heartRate = [];
+          if (!syncedData.sleep) syncedData.sleep = [];
+          if (!syncedData.running) syncedData.running = [];
 
           let recordsProcessed = 0;
 
           // Traiter les données d'activité
           if (dataTypes.includes("activity") && syncedData.activity) {
-            for (const dayData of syncedData.activity.steps) {
+            // La structure a changé - syncedData.activity contient directement steps, distance, calories
+            for (const stepData of syncedData.activity.steps || []) {
+              const distanceData = syncedData.activity.distance?.find(
+                (d) =>
+                  new Date(d.date).toDateString() ===
+                  new Date(stepData.date).toDateString()
+              );
+
+              const calorieData = syncedData.activity.calories?.find(
+                (c) =>
+                  new Date(c.date).toDateString() ===
+                  new Date(stepData.date).toDateString()
+              );
+
               await ActivityData.upsert({
-                user_id: req.user.id,
-                date: dayData.date,
-                steps: dayData.steps,
-                distance:
-                  syncedData.activity.distance.find(
-                    (d) => d.date.toDateString() === dayData.date.toDateString()
-                  )?.distance || 0,
-                calories:
-                  syncedData.activity.calories.find(
-                    (c) => c.date.toDateString() === dayData.date.toDateString()
-                  )?.calories || 0,
+                user_id: user.id,
+                date: stepData.date,
+                steps: stepData.steps || 0,
+                distance: distanceData ? distanceData.distance : 0,
+                calories: calorieData ? calorieData.calories : 0,
               });
               recordsProcessed++;
             }
@@ -114,10 +354,10 @@ module.exports = {
             for (const hrData of syncedData.heartRate) {
               if (hrData.average > 0) {
                 await HeartRateData.create({
-                  user_id: req.user.id,
+                  user_id: user.id,
                   timestamp: hrData.timestamp,
                   heartRate: Math.round(hrData.average),
-                  context: "active",
+                  context: hrData.context || "active",
                 });
                 recordsProcessed++;
               }
@@ -128,15 +368,15 @@ module.exports = {
           if (dataTypes.includes("sleep") && syncedData.sleep) {
             for (const sleepSession of syncedData.sleep) {
               await SleepData.upsert({
-                user_id: req.user.id,
+                user_id: user.id,
                 date: sleepSession.date,
                 bedTime: sleepSession.startTime,
                 wakeTime: sleepSession.endTime,
                 totalSleepMinutes: sleepSession.duration,
                 sleepQuality:
-                  sleepSession.quality === "unknown"
-                    ? "good"
-                    : sleepSession.quality,
+                  sleepSession.quality && sleepSession.quality !== "unknown"
+                    ? sleepSession.quality
+                    : "good",
               });
               recordsProcessed++;
             }
@@ -146,18 +386,26 @@ module.exports = {
           if (dataTypes.includes("exercise") && syncedData.running) {
             for (const session of syncedData.running) {
               await ExerciseSession.upsert({
-                user_id: req.user.id,
+                user_id: user.id,
                 googleSessionId: session.id,
                 name: session.name,
                 activityType: session.activityType,
-                activityName: "running",
+                activityName: session.activityName || "unknown",
                 startTime: session.startTime,
                 endTime: session.endTime,
                 duration: session.duration,
+                calories: session.calories || 0,
+                distance: session.distance || 0,
               });
               recordsProcessed++;
             }
           }
+
+          // Mettre à jour le dernier sync dans GoogleAuth
+          await GoogleAuth.update(
+            { last_sync: new Date() },
+            { where: { user_id: user.id } }
+          );
 
           // Marquer la synchronisation comme terminée
           await syncRecord.update({
@@ -167,9 +415,11 @@ module.exports = {
           });
         } catch (syncError) {
           console.error("Erreur lors de la synchronisation:", syncError);
+
           await syncRecord.update({
             status: "failed",
             errors: [syncError.message],
+            completedAt: new Date(),
           });
         }
       });
@@ -181,6 +431,7 @@ module.exports = {
           syncId: syncRecord.id,
           status: "in_progress",
           estimatedDuration: `${days * 2} secondes`,
+          dataTypes: dataTypes,
         },
       });
     } catch (error) {
@@ -188,10 +439,11 @@ module.exports = {
       res.status(500).json({
         error: true,
         message: "Erreur lors du démarrage de la synchronisation",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   },
-
   // GET /api/health/sync/status/:syncId - Vérifier le statut d'une synchronisation
   getSyncStatus: async (req, res) => {
     try {
@@ -207,7 +459,7 @@ module.exports = {
         return serverMessage(res, "SYNC_NOT_FOUND");
       }
 
-      return serverMessage(res, "SYNC_STATUS_RETRIEVED");
+      return serverMessage(res, "SYNC_STATUS_RETRIEVED", syncRecord);
     } catch (error) {
       console.error("Erreur lors de la récupération du statut:", error);
       return serverMessage(res, "SYNC_STATUS_RETRIEVAL_FAILED");
@@ -604,9 +856,17 @@ module.exports = {
   // GET /api/health/connection/status - Vérifier le statut de connexion Google
   getConnectionStatus: async (req, res) => {
     try {
-      const isConnected = !!(
-        req.user.googleAuth && req.user.googleAuth.googleAccessToken
-      );
+      const user = await Users.findByPk(req.user.id, {
+        include: [
+          {
+            model: GoogleAuth,
+            as: "googleAuth",
+            attributes: ["is_linked", "access_token", "createdAt"],
+          },
+        ],
+      });
+
+      const isConnected = !!(user.googleAuth && user.googleAuth.is_linked);
 
       let lastSync = null;
       if (isConnected) {
@@ -617,12 +877,9 @@ module.exports = {
         lastSync = recentSync ? recentSync.createdAt : null;
       }
 
-      if (!isConnected) {
-        return serverMessage(res, "GOOGLE_FIT_NOT_CONNECTED");
-      }
       const data = {
         isConnected: isConnected,
-        connectedAt: req.user.googleAuth?.connectedAt || null,
+        connectedAt: user.googleAuth?.createdAt || null,
         lastSync: lastSync,
         scopes: isConnected
           ? [
@@ -633,6 +890,7 @@ module.exports = {
             ]
           : [],
       };
+
       return serverMessage(res, "GOOGLE_FIT_CONNECTION_STATUS_RETRIEVED", data);
     } catch (error) {
       console.error("Erreur lors de la vérification du statut:", error);

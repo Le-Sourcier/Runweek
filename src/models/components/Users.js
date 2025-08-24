@@ -51,11 +51,6 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      google_linked: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false, // Indique si le compte Google est lié
-      },
     },
     {
       hooks: {
@@ -65,64 +60,30 @@ module.exports = (sequelize) => {
           if (!user.id) {
             user.id = uuidv4();
           }
-
-          // // If no token yet, generate JWT now
-          // if (!user.token) {
-          //     user.token = jwt.sign(
-          //         {
-          //             id: user.id,
-          //             email: user.email, // note: email may be undefined until after validation, so ensure email is set on create
-          //             role: user.role || "USER",
-          //         },
-          //         SECRET,
-          //         { expiresIn: "30d" }
-          //     );
-          // }
         },
 
         // 2) Hash password right before saving to DB
         beforeCreate: async (user, options) => {
           user.password = await bcrypt.hash(user.password, 10);
         },
-        // (you could also add beforeUpdate if you want to re-hash on password change)
+        afterCreate: async (user, options) => {
+          try {
+            // Créer des préférences de partage par défaut pour le nouvel utilisateur
+            await sequelize.models.DataSharingPreferences.create({
+              user_id: user.id,
+              // Les valeurs par défaut sont déjà définies dans le modèle
+            });
+          } catch (error) {
+            console.error(
+              "Error creating default data sharing preferences:",
+              error
+            );
+          }
+        },
       },
       paranoid: true, // Activer la suppression douce (soft delete)
     }
   );
-
-  // Users.associate = (models) => {
-  //     Users.hasOne(models.Roles, {
-  //         foreignKey: "user_id",
-  //         as: "role_data",
-  //         onDelete: "CASCADE",
-  //     });
-  //     Users.hasOne(models.Profiles, {
-  //         foreignKey: "user_id",
-  //         as: "profile",
-  //     });
-  //     Users.hasMany(models.Sessions, {
-  //         foreignKey: "user_id",
-  //         as: "sessions",
-  //     });
-  //     Users.hasMany(models.Subscriptions, {
-  //         foreignKey: "user_id",
-  //         as: "subscriptions",
-  //     });
-  //     Users.hasMany(models.Notifications, {
-  //         foreignKey: "user_id",
-  //         as: "notifications",
-  //     });
-  //     // 👉 Relations pour invitations / parrainages
-  //     Users.hasMany(models.UserRelations, {
-  //         foreignKey: "user_id",
-  //         as: "relations_received",
-  //     });
-
-  //     Users.hasMany(models.UserRelations, {
-  //         foreignKey: "related_by",
-  //         as: "relations_sent",
-  //     });
-  // };
 
   // Définition des associations
   Users.associate = (models) => {
@@ -285,6 +246,27 @@ module.exports = (sequelize) => {
       foreignKey: "user_id",
       as: "personalRecord",
       onDelete: "CASCADE", // Supprime les Records personelles de repas si l'utilisateur est supprimé
+    });
+
+    // 23. Relation One-to-One avec GoogleAuth
+    Users.hasOne(models.GoogleAuth, {
+      foreignKey: "user_id",
+      as: "googleAuth",
+      onDelete: "CASCADE",
+    });
+
+    //24. Relation on-to-One whith DataSharingPreferences
+    Users.hasOne(models.DataSharingPreferences, {
+      foreignKey: "user_id",
+      as: "dataSharingPreferences",
+      onDelete: "CASCADE",
+    });
+
+    //25. Relation on-to-One whith UserStats
+    Users.hasOne(models.UserStats, {
+      foreignKey: "user_id",
+      as: "stats",
+      onDelete: "CASCADE",
     });
   };
   Users.prototype.generateTokens = function () {

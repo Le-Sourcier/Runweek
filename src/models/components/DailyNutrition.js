@@ -71,10 +71,6 @@ module.exports = (sequelize) => {
         {
           fields: ["user_id", "date"],
         },
-        {
-          unique: true,
-          fields: ["user_id", "date"],
-        },
       ],
     }
   );

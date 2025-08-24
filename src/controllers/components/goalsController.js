@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { Goal } = require("../../models");
 const { serverMessage } = require("../../utils");
+const { Op } = require("sequelize");
 
 // Schémas de validation
 const createGoalSchema = Joi.object({
@@ -43,33 +44,120 @@ module.exports = {
   // GET /api/goals - Récupérer tous les objectifs de l'utilisateur
   getAllGoals: async (req, res) => {
     try {
-      const { completed, category, sort = "deadline" } = req.query;
+      const {
+        completed,
+        category,
+        sort = "deadline",
+        page = 1,
+        limit = 10,
+        search,
+      } = req.query;
 
-      const filter = { user_id: req.user.id, isActive: true };
-
-      if (completed !== undefined) {
-        filter.completed = completed === "true";
-      }
-
-      if (category && category !== "all") {
-        filter.category = category;
-      }
-
-      const sortOptions = {
-        deadline: { deadline: 1 },
-        created: { createdAt: -1 },
-        progress: { current: -1 },
-        priority: { priority: -1, deadline: 1 },
+      // Filtre de base
+      const where = {
+        user_id: req.user.id,
+        isActive: true,
       };
 
-      const goals = await Goal.find(filter)
-        .sort(sortOptions[sort] || sortOptions.deadline)
-        .lean();
+      // Filtre par statut de complétion
+      if (completed !== undefined) {
+        where.completed = completed === "true";
+      }
 
-      return serverMessage(res, "GOALS_RETRIEVED", goals);
+      // Filtre par catégorie
+      if (category && category !== "all") {
+        where.category = category;
+      }
+
+      // Filtre de recherche par titre
+      if (search && search.trim() !== "") {
+        where.title = {
+          [Op.like]: `%${search.trim()}%`,
+        };
+      }
+
+      // Options de tri
+      const orderOptions = {
+        deadline: [["deadline", "ASC"]],
+        created: [["createdAt", "DESC"]],
+        updated: [["updatedAt", "DESC"]],
+        progress: [
+          ["progressPercentage", "DESC"],
+          ["deadline", "ASC"],
+        ],
+        priority: [
+          ["priority", "DESC"],
+          ["deadline", "ASC"],
+        ],
+        title: [["title", "ASC"]],
+        category: [
+          ["category", "ASC"],
+          ["deadline", "ASC"],
+        ],
+      };
+
+      // Configuration de la pagination
+      const pageNumber = parseInt(page);
+      const limitNumber = parseInt(limit);
+      const offset = (pageNumber - 1) * limitNumber;
+
+      // Récupération des objectifs avec pagination
+      const { count, rows: goals } = await Goal.findAndCountAll({
+        where,
+        order: orderOptions[sort] || orderOptions.deadline,
+        limit: limitNumber,
+        offset: offset,
+      });
+
+      // Calcul du total pour la pagination
+      const totalPages = Math.ceil(count / limitNumber);
+
+      // Calcul des statistiques
+      const stats = {
+        total: count,
+        completed: await Goal.count({
+          where: { ...where, completed: true },
+        }),
+        inProgress: await Goal.count({
+          where: {
+            ...where,
+            completed: false,
+            progressPercentage: { [Op.gt]: 0, [Op.lt]: 100 },
+          },
+        }),
+        notStarted: await Goal.count({
+          where: {
+            ...where,
+            completed: false,
+            progressPercentage: 0,
+          },
+        }),
+        overdue: await Goal.count({
+          where: {
+            ...where,
+            completed: false,
+            deadline: { [Op.lt]: new Date() },
+          },
+        }),
+      };
+
+      // Formatage de la réponse
+      const response = {
+        goals,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages,
+          totalGoals: count,
+          hasNext: pageNumber < totalPages,
+          hasPrev: pageNumber > 1,
+          limit: limitNumber,
+        },
+        stats,
+      };
+
+      return serverMessage(res, "GOALS_RETRIEVED", response);
     } catch (error) {
       console.error("Erreur lors de la récupération des objectifs:", error);
-
       return serverMessage(res, "GOALS_RETRIEVAL_FAILED", error.message);
     }
   },

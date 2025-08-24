@@ -1,14 +1,18 @@
 const Joi = require("joi");
 const {
-  User,
+  Users,
+  UserStats,
   Friendship,
   Conversation,
   Message,
   ActivityShare,
   Report,
+  Profiles,
+  DataSharingPreferences,
 } = require("../../models");
-const { serve } = require("swagger-ui-express");
 const { serverMessage } = require("../../utils");
+const { Op } = require("sequelize");
+const db = require("../../models");
 
 // Validation schemas
 const sendFriendRequestSchema = Joi.object({
@@ -56,46 +60,120 @@ module.exports = {
   // GET /api/friends - Récupérer la liste des amis
   getFriends: async (req, res) => {
     try {
-      const { status = "online", sort = "name" } = req.query;
+      const { status = "all", sort = "name" } = req.query;
 
       const friendships = await Friendship.getFriends(req.user.id);
 
-      let friends = friendships.map((friendship) => {
-        const friend =
-          friendship.requester.id.toString() === req.user.id.toString()
-            ? friendship.recipient
-            : friendship.requester;
+      let friends = await Promise.all(
+        friendships.map(async (friendship) => {
+          const friend =
+            friendship.requester.id.toString() === req.user.id.toString()
+              ? friendship.recipient
+              : friendship.requester;
 
-        return {
-          ...friend.toObject(),
-          friendshipId: friendship.id,
-          friendsSince: friendship.acceptedAt,
-        };
-      });
+          // Récupérer les préférences de partage de l'ami
+          const sharingPreferences =
+            await db.sequelize.models.DataSharingPreferences.findOne({
+              where: { user_id: friend.id },
+              attributes: [
+                "shareActivities",
+                "shareGoals",
+                "shareAchievements",
+                "showInSearch",
+              ],
+            });
 
-      // Filtrer par statut
-      if (status === "online") {
-        friends = friends.map((friend) => ({
-          ...friend,
-          isOnline: Math.random() > 0.6,
-          lastActivity: new Date(),
-        }));
+          // Récupérer les stats de l'ami (si partagées)
+          let stats = null;
+          if (sharingPreferences?.shareActivities) {
+            // Exemple de calcul des stats - à adapter selon vos modèles
+            const activityData = await db.sequelize.models.ActivityData.findAll(
+              {
+                where: { user_id: friend.id },
+                attributes: [
+                  [
+                    db.sequelize.fn("SUM", db.sequelize.col("distance")),
+                    "totalDistance",
+                  ],
+                  [
+                    db.sequelize.fn("COUNT", db.sequelize.col("id")),
+                    "totalRuns",
+                  ],
+                ],
+                raw: true,
+              }
+            );
+
+            const userStats = await db.sequelize.models.UserStats.findOne({
+              where: { user_id: friend.id },
+              attributes: ["level", "experience"],
+            });
+
+            stats = {
+              totalDistance: activityData[0]?.totalDistance || 0,
+              totalRuns: activityData[0]?.totalRuns || 0,
+              averagePace: "5:30", // À calculer selon vos données
+              level: userStats?.level || 1,
+              experience: userStats?.experience || 0,
+            };
+          }
+
+          // Récupérer le nombre d'amis communs
+          const mutualFriends = await Friendship.countMutualFriends(
+            req.user.id,
+            friend.id
+          );
+
+          // Déterminer le statut en ligne (simulé pour l'exemple)
+          const isOnline = Math.random() > 0.6;
+
+          const _user = await Users.findByPk(friend.id);
+
+          return {
+            id: friend.id,
+            name: `${friend.profile?.fname || ""} ${
+              friend.profile?.lname || ""
+            }`.trim(),
+            email: friend.email,
+            profileImage: friend.profile?.image || null,
+            isOnline,
+            lastActivity: _user.updatedAt,
+            mutualFriends,
+            joinedDate: friend.createdAt.toISOString().split("T")[0],
+            stats: sharingPreferences?.shareActivities ? stats : null,
+            preferences: {
+              profileVisibility: sharingPreferences?.showInSearch
+                ? "public"
+                : "private",
+              activityVisibility: sharingPreferences?.shareActivities
+                ? "friends"
+                : "private",
+            },
+          };
+        })
+      );
+
+      // Filtrer par statut si demandé
+      if (status !== "all") {
+        friends = friends.filter((friend) =>
+          status === "online" ? friend.isOnline : !friend.isOnline
+        );
       }
 
       // Trier
       friends.sort((a, b) => {
         switch (sort) {
           case "name":
-            return `${a.fname} ${a.lname}`.localeCompare(
-              `${b.fname} ${b.lname}`
-            );
+            return a.name.localeCompare(b.name);
           case "level":
             return (b.stats?.level || 0) - (a.stats?.level || 0);
           case "recent":
             return (
-              new Date(b.lastActivity || 0).getTime() -
-              new Date(a.lastActivity || 0).getTime()
+              new Date(b.lastActivity).getTime() -
+              new Date(a.lastActivity).getTime()
             );
+          case "mutual":
+            return b.mutualFriends - a.mutualFriends;
           default:
             return 0;
         }
@@ -111,33 +189,26 @@ module.exports = {
       return serverMessage(res, "FRIENDS_RETRIEVAL_FAILED", error.message);
     }
   },
-
   // GET /api/friends/requests - Récupérer les demandes d'amis
   getFriendRequests: async (req, res) => {
     try {
       const { type = "received" } = req.query;
+      const userId = req.user.id;
 
-      let filter = {};
-      if (type === "received") {
-        filter = { recipient: req.user.id, status: "pending" };
-      } else if (type === "sent") {
-        filter = { requester: req.user.id, status: "pending" };
-      }
+      const requests = await Friendship.getFriendRequests(userId, type);
 
-      const requests = await Friendship.find(filter)
-        .populate(
-          "requester recipient",
-          "fname lname email profile_image stats"
-        )
-        .sort({ createdAt: -1 });
-
-      if (!requests.length) {
+      if (!requests || requests.length === 0) {
         return serverMessage(res, "NO_FRIEND_REQUESTS_FOUND");
       }
+
       return serverMessage(res, "FRIENDS_RETRIEVED", requests);
     } catch (error) {
       console.error("Erreur lors de la récupération des demandes:", error);
-      return serverMessage(res, "FRIEND_REQUESTS_RETRIEVAL_FAILED");
+      return serverMessage(
+        res,
+        "FRIEND_REQUESTS_RETRIEVAL_FAILED",
+        error.message
+      );
     }
   },
 
@@ -146,21 +217,31 @@ module.exports = {
     try {
       const { error, value } = sendFriendRequestSchema.validate(req.body);
 
+      const { email, message } = value;
+      const { email: _email } = req.user;
+
       if (error) {
         console.error("Validation error:", error.details[0].message);
         return serverMessage(res, "BAD_REQUEST");
       }
 
-      const { email, message } = value;
-
       // Trouver l'utilisateur destinataire
-      const recipient = await User.findOne({ email: email.toLowerCase() });
+      const recipient = await Users.findOne({
+        where: { email },
+        include: [
+          {
+            model: DataSharingPreferences,
+            as: "dataSharingPreferences",
+            attributes: ["allowFriendRequests"],
+          },
+        ],
+      });
 
       if (!recipient) {
         return serverMessage(res, "USER_NOT_FOUND");
       }
 
-      if (recipient.id.toString() === req.user.id.toString()) {
+      if (email === _email.toString()) {
         console.error("Tentative d'ajout de soi-même:", req.user.id);
         return serverMessage(res, "CANNOT_ADD_SELF");
       }
@@ -171,12 +252,12 @@ module.exports = {
         recipient.id
       );
 
-      if (existingFriendship) {
+      // CORRECTION ICI: Vérifier si existingFriendship existe ET a un status
+      if (existingFriendship && existingFriendship.status) {
         if (existingFriendship.status === "accepted") {
           return serverMessage(res, "ALREADY_FRIENDS");
         } else if (existingFriendship.status === "pending") {
           console.error("Demande d'ami déjà envoyée:", existingFriendship.id);
-
           return serverMessage(res, "FRIEND_REQUEST_ALREADY_SENT");
         } else if (existingFriendship.status === "blocked") {
           console.error("Amitié bloquée:", existingFriendship.id);
@@ -185,21 +266,34 @@ module.exports = {
       }
 
       // Vérifier les paramètres de confidentialité du destinataire
-      if (!recipient.preferences?.dataSharing?.allowFriendRequests) {
+      // CORRECTION: Vérifier si preferences existe avant d'accéder à dataSharing
+
+      console.log(recipient.dataSharingPreferences);
+      if (
+        !recipient.dataSharingPreferences ||
+        !recipient.dataSharingPreferences?.allowFriendRequests
+      ) {
         console.error("Demande d'ami non autorisée:", recipient.id);
         return serverMessage(res, "FRIENDSHIP_NOT_ALLOWED");
       }
 
-      // Créer la demande d'ami
-      const friendship = new Friendship({
-        requester: req.user.id,
-        recipient: recipient.id,
+      // Créer la demande d'ami - CORRECTION: utiliser les bons noms de champ
+      const friendship = await Friendship.create({
+        requester_id: req.user.id, // Utiliser requester_id au lieu de requester
+        recipient_id: recipient.id, // Utiliser recipient_id au lieu de recipient
         requestMessage: message,
       });
 
-      await friendship.save();
+      const data = {
+        id: friendship.id,
+        requester_id: friendship.requester_id,
+        recipient: friendship.recipient_id,
+        status: friendship.stats,
+        requestMessage: friendship.requestMessage,
+        createdAt: friendship.createdAt,
+      };
 
-      return serverMessage(res, "FRIEND_REQUEST_SENT", friendship);
+      return serverMessage(res, "FRIEND_REQUEST_SENT", data);
     } catch (error) {
       console.error("Erreur lors de l'envoi de la demande:", error);
       return serverMessage(res, "FRIEND_REQUEST_FAILED", error.message);
@@ -210,10 +304,26 @@ module.exports = {
   acceptFriendRequest: async (req, res) => {
     try {
       const friendship = await Friendship.findOne({
-        id: req.params.id,
-        recipient: req.user.id,
-        status: "pending",
-      }).populate("requester", "fname lname email profile_image");
+        where: {
+          id: req.params.id,
+          recipient_id: req.user.id,
+          status: "pending",
+        },
+        include: [
+          {
+            model: Users,
+            as: "requester",
+            attributes: ["id", "email"],
+            include: [
+              {
+                model: Profiles,
+                as: "profile",
+                attributes: ["id", "fname", "lname", "image"],
+              },
+            ],
+          },
+        ],
+      });
 
       if (!friendship) {
         return serverMessage(res, "FRIEND_REQUEST_NOT_FOUND");
@@ -287,41 +397,162 @@ module.exports = {
         return serverMessage(res, "SEARCH_QUERY_TOO_SHORT");
       }
 
-      const searchRegex = new RegExp(q.trim(), "i");
+      const searchQuery = q.trim();
 
-      // Récupérer les IDs des amis existants
-      const friendships = await Friendship.find({
-        $or: [{ requester: req.user.id }, { recipient: req.user.id }],
-        status: { $in: ["accepted", "pending"] },
+      // Récupérer les IDs des amis existants et demandes en cours
+      const friendships = await Friendship.findAll({
+        where: {
+          [Op.or]: [
+            { requester_id: req.user.id },
+            { recipient_id: req.user.id },
+          ],
+          status: {
+            [Op.in]: ["accepted", "pending"],
+          },
+        },
       });
 
-      const excludeIds = friendships.map((f) =>
-        f.requester.toString() === req.user.id.toString()
-          ? f.recipient
-          : f.requester
+      // Exclure les utilisateurs déjà en relation
+      const excludeIds = friendships.map((friendship) =>
+        friendship.requester_id === req.user.id
+          ? friendship.recipient_id
+          : friendship.requester_id
       );
       excludeIds.push(req.user.id);
 
-      const users = await User.find({
-        id: { $nin: excludeIds },
-        $or: [
-          { fname: searchRegex },
-          { lname: searchRegex },
-          { email: searchRegex },
-        ],
-        "preferences.dataSharing.showInSearch": true,
-        isActive: true,
-      })
-        .select("fname lname email profile_image stats preferences")
-        .limit(parseInt(limit));
+      // Vérifier d'abord s'il y a des utilisateurs avec showInSearch = true
+      const usersWithSharing = await DataSharingPreferences.findAll({
+        where: { showInSearch: true },
+        attributes: ["user_id"],
+      });
 
-      return serverMessage(res, "USERS_RETRIEVED", users);
+      // Recherche des utilisateurs
+      const users = await Users.findAll({
+        where: {
+          id: {
+            [Op.notIn]: excludeIds,
+          },
+          status: "VERIFIED",
+          [Op.or]: [
+            { email: { [Op.iLike]: `%${searchQuery}%` } },
+            { "$profile.fname$": { [Op.iLike]: `%${searchQuery}%` } },
+            { "$profile.lname$": { [Op.iLike]: `%${searchQuery}%` } },
+            db.sequelize.where(
+              db.sequelize.fn(
+                "CONCAT",
+                db.sequelize.col("profile.fname"),
+                " ",
+                db.sequelize.col("profile.lname")
+              ),
+              {
+                [Op.iLike]: `%${searchQuery}%`,
+              }
+            ),
+          ],
+        },
+        include: [
+          {
+            model: Profiles,
+            as: "profile",
+            required: true,
+          },
+          {
+            model: UserStats,
+            as: "stats",
+            attributes: ["average_pace", "level", "experience"],
+            required: false,
+          },
+          {
+            model: DataSharingPreferences,
+            as: "dataSharingPreferences",
+            where: {
+              showInSearch: true,
+            },
+            required: true,
+          },
+        ],
+        attributes: ["id", "email", "createdAt"],
+        limit: parseInt(limit),
+        // Ajouter le logging pour voir la requête SQL générée
+        // logging: console.log,
+      });
+
+      // console.log("Raw users found:", users.length);
+
+      // Récupérer les données d'activité pour chaque utilisateur
+      const usersWithActivityData = await Promise.all(
+        users.map(async (user) => {
+          try {
+            const activityData = await db.sequelize.models.ActivityData.findAll(
+              {
+                where: { user_id: user.id },
+                attributes: [
+                  [
+                    db.sequelize.fn("SUM", db.sequelize.col("distance")),
+                    "totalDistance",
+                  ],
+                  [
+                    db.sequelize.fn("COUNT", db.sequelize.col("id")),
+                    "totalRuns",
+                  ],
+                ],
+                raw: true,
+              }
+            );
+
+            return {
+              user: user.toJSON(),
+              activityData: activityData[0] || {
+                totalDistance: 0,
+                totalRuns: 0,
+              },
+            };
+          } catch (error) {
+            console.error(
+              "Error fetching activity data for user",
+              user.id,
+              error
+            );
+            return {
+              user: user.toJSON(),
+              activityData: { totalDistance: 0, totalRuns: 0 },
+            };
+          }
+        })
+      );
+
+      // Formater la réponse
+      const formattedUsers = usersWithActivityData.map(
+        ({ user, activityData }) => ({
+          id: user.id,
+          email: user.email,
+          name: `${user.profile.fname} ${user.profile.lname}`,
+          profileImage: user.profile.image,
+          joinedDate: user.createdAt,
+          stats: {
+            totalDistance: activityData.totalDistance || 0,
+            totalRuns: activityData.totalRuns || 0,
+            averagePace: user.stats?.average_pace || "0:00",
+            level: user.stats?.level || 1,
+            experience: user.stats?.experience || 0,
+          },
+          preferences: {
+            profileVisibility:
+              user.dataSharingPreferences?.profileVisibility || "public",
+            activityVisibility:
+              user.dataSharingPreferences?.activityVisibility || "public",
+            showInSearch: user.dataSharingPreferences?.showInSearch || true,
+          },
+        })
+      );
+
+      // console.log("Formatted users:", formattedUsers);
+      return serverMessage(res, "USERS_RETRIEVED", formattedUsers);
     } catch (error) {
       console.error("Erreur lors de la recherche d'utilisateurs:", error);
       return serverMessage(res, "USER_SEARCH_FAILED");
     }
   },
-
   // GET /api/friends/conversations - Récupérer les conversations
   getConversations: async (req, res) => {
     try {
@@ -667,32 +898,65 @@ module.exports = {
 
       const [friendsCount, pendingRequests, sentRequests, recentActivity] =
         await Promise.all([
-          Friendship.countDocuments({
-            $or: [
-              { requester: userId, status: "accepted" },
-              { recipient: userId, status: "accepted" },
-            ],
-          }),
-          Friendship.countDocuments({
-            recipient: userId,
-            status: "pending",
-          }),
-          Friendship.countDocuments({
-            requester: userId,
-            status: "pending",
-          }),
-          ActivityShare.countDocuments({
-            sharedBy: {
-              $in: await Friendship.getFriends(userId).then((friends) =>
-                friends.map((f) =>
-                  f.requester.id.toString() === userId.toString()
-                    ? f.recipient.id
-                    : f.requester.id
-                )
-              ),
+          // Compter les amis (relations acceptées)
+          Friendship.count({
+            where: {
+              status: "accepted",
+              [Op.or]: [{ requester_id: userId }, { recipient_id: userId }],
             },
-            createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
           }),
+          // Compter les demandes reçues en attente
+          Friendship.count({
+            where: {
+              status: "pending",
+              recipient_id: userId,
+            },
+          }),
+          // Compter les demandes envoyées en attente
+          Friendship.count({
+            where: {
+              status: "pending",
+              requester_id: userId,
+            },
+          }),
+          // Compter les activités récentes des amis
+          (async () => {
+            try {
+              // Récupérer d'abord la liste des IDs des amis
+              const friendships = await Friendship.findAll({
+                where: {
+                  status: "accepted",
+                  [Op.or]: [{ requester_id: userId }, { recipient_id: userId }],
+                },
+                attributes: ["requester_id", "recipient_id"],
+                raw: true,
+              });
+
+              // Extraire les IDs des amis
+              const friendIds = friendships.map((friendship) =>
+                friendship.requester_id === userId
+                  ? friendship.recipient_id
+                  : friendship.requester_id
+              );
+
+              if (friendIds.length === 0) return 0;
+
+              // Compter les activités partagées par ces amis dans les 7 derniers jours
+              return ActivityShare.count({
+                where: {
+                  shared_by_id: {
+                    [Op.in]: friendIds,
+                  },
+                  createdAt: {
+                    [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                  },
+                },
+              });
+            } catch (error) {
+              console.error("Erreur lors du comptage des activités:", error);
+              return 0;
+            }
+          })(),
         ]);
 
       const stats = {

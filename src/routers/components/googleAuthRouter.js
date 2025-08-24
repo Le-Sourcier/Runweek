@@ -144,12 +144,12 @@ router
    *           schema:
    *             type: object
    *             required:
-   *               - googleToken
+   *               - code
    *             properties:
-   *               googleToken:
+   *               code:
    *                 type: string
    *                 description: Google ID token received from client-side Google authentication
-   *                 example: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjFiYj..."
+   *                 example: "4/0AVMBsJhwrH6g4g9bWpm7bfttuEd............................"
    *     responses:
    *       200:
    *         description: Google account linked successfully
@@ -242,6 +242,172 @@ router
    *                   type: string
    *                   example: GOOGLE_LINK_FAILED
    */
-  .post("/link-google", authorize, authController.linkGoogleAccount);
+  .post("/link-google", authorize, authController.linkGoogleAccount)
+
+  /**
+   * @openapi
+   * /api/auth/google/unlink:
+   *   post:
+   *     tags: [Authentication]
+   *     summary: Unlink Google account
+   *     description: Unlinks Google account from user profile without revoking access (soft unlink)
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Google account unlinked successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: GOOGLE_ACCOUNT_UNLINKED
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     googleLinked:
+   *                       type: boolean
+   *                       example: false
+   *                     email:
+   *                       type: string
+   *                       format: email
+   *                       example: "user@example.com"
+   *       404:
+   *         description: User not found or Google account not linked
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 404
+   *                 message:
+   *                   type: string
+   *                   oneOf:
+   *                     - example: USER_NOT_FOUND
+   *                     - example: GOOGLE_ACCOUNT_NOT_LINKED
+   *       401:
+   *         description: Unauthorized access
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: UNAUTHORIZED_ACCESS
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: GOOGLE_UNLINK_FAILED
+   */
+  .post("/google/unlink", authorize, authController.unlinkGoogleAccount)
+
+  /**
+   * @openapi
+   * /api/auth/google/disconnect:
+   *   post:
+   *     tags: [Authentication]
+   *     summary: Disconnect Google account
+   *     description: Revokes Google OAuth access and completely disconnects the Google account (hard disconnect)
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Google account disconnected successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: GOOGLE_ACCOUNT_DISCONNECTED
+   *       404:
+   *         description: No Google account linked
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 404
+   *                 message:
+   *                   type: string
+   *                   example: NO_GOOGLE_ACCOUNT_LINKED
+   *       401:
+   *         description: Unauthorized access
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: UNAUTHORIZED_ACCESS
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: GOOGLE_DISCONNECT_FAILED
+   */
+  .post("/google/disconnect", authorize, authController.disconnectGoogle);
 
 module.exports = router;

@@ -11,7 +11,7 @@ class GoogleFitService {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_CALLBACK_URL
+      process.env.GOOGLE_REDIRECT_URI
     );
 
     oauth2Client.setCredentials({
@@ -26,74 +26,63 @@ class GoogleFitService {
   async getActivityData(user, startDate, endDate) {
     try {
       const oauth2Client = this.createOAuth2Client(
-        user.googleAuth.googleAccessToken,
-        user.googleAuth.googleRefreshToken
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
       );
 
-      const startTimeNanos = new Date(startDate).getTime() * 1000000;
-      const endTimeNanos = new Date(endDate).getTime() * 1000000;
+      const startTimeMillis = new Date(startDate).getTime();
+      const endTimeMillis = new Date(endDate).getTime();
 
-      // Récupérer les pas
-      const stepsData =
-        await this.fitness.users.dataSources.dataPointChanges.list({
-          auth: oauth2Client,
-          userId: "me",
-          dataSourceId:
-            "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
-          requestBody: {
-            aggregateBy: [
-              {
-                dataTypeName: "com.google.step_count.delta",
-              },
-            ],
-            bucketByTime: { durationMillis: 86400000 }, // 1 jour
-            startTimeMillis: startTimeNanos / 1000000,
-            endTimeMillis: endTimeNanos / 1000000,
-          },
-        });
+      // Utiliser dataset.aggregate avec la bonne structure
+      const stepsResponse = await this.fitness.users.dataset.aggregate({
+        auth: oauth2Client,
+        userId: "me",
+        requestBody: {
+          aggregateBy: [
+            {
+              dataTypeName: "com.google.step_count.delta",
+            },
+          ],
+          bucketByTime: { durationMillis: 86400000 },
+          startTimeMillis: startTimeMillis,
+          endTimeMillis: endTimeMillis,
+        },
+      });
 
-      // Récupérer la distance
-      const distanceData =
-        await this.fitness.users.dataSources.dataPointChanges.list({
-          auth: oauth2Client,
-          userId: "me",
-          dataSourceId:
-            "derived:com.google.distance.delta:com.google.android.gms:merge_distance_delta",
-          requestBody: {
-            aggregateBy: [
-              {
-                dataTypeName: "com.google.distance.delta",
-              },
-            ],
-            bucketByTime: { durationMillis: 86400000 },
-            startTimeMillis: startTimeNanos / 1000000,
-            endTimeMillis: endTimeNanos / 1000000,
-          },
-        });
+      const distanceResponse = await this.fitness.users.dataset.aggregate({
+        auth: oauth2Client,
+        userId: "me",
+        requestBody: {
+          aggregateBy: [
+            {
+              dataTypeName: "com.google.distance.delta",
+            },
+          ],
+          bucketByTime: { durationMillis: 86400000 },
+          startTimeMillis: startTimeMillis,
+          endTimeMillis: endTimeMillis,
+        },
+      });
 
-      // Récupérer les calories
-      const caloriesData =
-        await this.fitness.users.dataSources.dataPointChanges.list({
-          auth: oauth2Client,
-          userId: "me",
-          dataSourceId:
-            "derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended",
-          requestBody: {
-            aggregateBy: [
-              {
-                dataTypeName: "com.google.calories.expended",
-              },
-            ],
-            bucketByTime: { durationMillis: 86400000 },
-            startTimeMillis: startTimeNanos / 1000000,
-            endTimeMillis: endTimeNanos / 1000000,
-          },
-        });
+      const caloriesResponse = await this.fitness.users.dataset.aggregate({
+        auth: oauth2Client,
+        userId: "me",
+        requestBody: {
+          aggregateBy: [
+            {
+              dataTypeName: "com.google.calories.expended",
+            },
+          ],
+          bucketByTime: { durationMillis: 86400000 },
+          startTimeMillis: startTimeMillis,
+          endTimeMillis: endTimeMillis,
+        },
+      });
 
       return {
-        steps: this.processStepsData(stepsData.data),
-        distance: this.processDistanceData(distanceData.data),
-        calories: this.processCaloriesData(caloriesData.data),
+        steps: this.processStepsData(stepsResponse.data),
+        distance: this.processDistanceData(distanceResponse.data),
+        calories: this.processCaloriesData(caloriesResponse.data),
       };
     } catch (error) {
       console.error(
@@ -110,32 +99,29 @@ class GoogleFitService {
   async getHeartRateData(user, startDate, endDate) {
     try {
       const oauth2Client = this.createOAuth2Client(
-        user.googleAuth.googleAccessToken,
-        user.googleAuth.googleRefreshToken
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
       );
 
-      const startTimeNanos = new Date(startDate).getTime() * 1000000;
-      const endTimeNanos = new Date(endDate).getTime() * 1000000;
+      const startTimeMillis = new Date(startDate).getTime();
+      const endTimeMillis = new Date(endDate).getTime();
 
-      const heartRateData =
-        await this.fitness.users.dataSources.dataPointChanges.list({
-          auth: oauth2Client,
-          userId: "me",
-          dataSourceId:
-            "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm",
-          requestBody: {
-            aggregateBy: [
-              {
-                dataTypeName: "com.google.heart_rate.bpm",
-              },
-            ],
-            bucketByTime: { durationMillis: 3600000 }, // 1 heure
-            startTimeMillis: startTimeNanos / 1000000,
-            endTimeMillis: endTimeNanos / 1000000,
-          },
-        });
+      const heartRateResponse = await this.fitness.users.dataset.aggregate({
+        auth: oauth2Client,
+        userId: "me",
+        requestBody: {
+          aggregateBy: [
+            {
+              dataTypeName: "com.google.heart_rate.bpm",
+            },
+          ],
+          bucketByTime: { durationMillis: 3600000 },
+          startTimeMillis: startTimeMillis,
+          endTimeMillis: endTimeMillis,
+        },
+      });
 
-      return this.processHeartRateData(heartRateData.data);
+      return this.processHeartRateData(heartRateResponse.data);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de la fréquence cardiaque:",
@@ -151,22 +137,19 @@ class GoogleFitService {
   async getSleepData(user, startDate, endDate) {
     try {
       const oauth2Client = this.createOAuth2Client(
-        user.googleAuth.googleAccessToken,
-        user.googleAuth.googleRefreshToken
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
       );
 
-      const startTimeNanos = new Date(startDate).getTime() * 1000000;
-      const endTimeNanos = new Date(endDate).getTime() * 1000000;
-
-      const sleepData = await this.fitness.users.sessions.list({
+      const sleepResponse = await this.fitness.users.sessions.list({
         auth: oauth2Client,
         userId: "me",
         startTime: new Date(startDate).toISOString(),
         endTime: new Date(endDate).toISOString(),
-        activityType: 72, // Sleep activity type
+        activityType: 72,
       });
 
-      return this.processSleepData(sleepData.data);
+      return this.processSleepData(sleepResponse.data);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des données de sommeil:",
@@ -180,19 +163,19 @@ class GoogleFitService {
   async getRunningActivities(user, startDate, endDate) {
     try {
       const oauth2Client = this.createOAuth2Client(
-        user.googleAuth.googleAccessToken,
-        user.googleAuth.googleRefreshToken
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
       );
 
-      const runningActivities = await this.fitness.users.sessions.list({
+      const runningResponse = await this.fitness.users.sessions.list({
         auth: oauth2Client,
         userId: "me",
         startTime: new Date(startDate).toISOString(),
         endTime: new Date(endDate).toISOString(),
-        activityType: 8, // Running activity type
+        activityType: 8,
       });
 
-      return this.processRunningActivities(runningActivities.data);
+      return this.processRunningActivities(runningResponse.data);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des activités de course:",
@@ -218,7 +201,7 @@ class GoogleFitService {
 
     return data.bucket.map((bucket) => ({
       date: new Date(parseInt(bucket.startTimeMillis)),
-      distance: (bucket.dataset[0]?.point[0]?.value[0]?.fpVal || 0) / 1000, // Convertir en km
+      distance: (bucket.dataset[0]?.point[0]?.value[0]?.fpVal || 0) / 1000,
     }));
   }
 
@@ -236,23 +219,48 @@ class GoogleFitService {
   processHeartRateData(data) {
     if (!data.bucket) return [];
 
-    return data.bucket.map((bucket) => {
-      const points = bucket.dataset[0]?.point || [];
-      const heartRates = points
-        .map((point) => point.value[0]?.fpVal)
-        .filter((hr) => hr);
+    const heartRates = [];
 
-      return {
-        timestamp: new Date(parseInt(bucket.startTimeMillis)),
-        average:
-          heartRates.length > 0
-            ? heartRates.reduce((a, b) => a + b) / heartRates.length
-            : 0,
-        min: heartRates.length > 0 ? Math.min(...heartRates) : 0,
-        max: heartRates.length > 0 ? Math.max(...heartRates) : 0,
-        readings: heartRates.length,
-      };
+    data.bucket.forEach((bucket) => {
+      if (bucket.dataset && bucket.dataset[0] && bucket.dataset[0].point) {
+        bucket.dataset[0].point.forEach((point) => {
+          if (
+            point.value &&
+            point.value[0] &&
+            point.value[0].fpVal !== undefined
+          ) {
+            heartRates.push({
+              timestamp: new Date(parseInt(point.startTimeNanos / 1000000)),
+              bpm: point.value[0].fpVal,
+            });
+          }
+        });
+      }
     });
+
+    // Grouper par heure pour les statistiques
+    const hourlyStats = {};
+    heartRates.forEach((hr) => {
+      const hour = new Date(hr.timestamp).toISOString().slice(0, 13) + ":00:00";
+      if (!hourlyStats[hour]) {
+        hourlyStats[hour] = {
+          values: [],
+          timestamp: new Date(hour),
+        };
+      }
+      hourlyStats[hour].values.push(hr.bpm);
+    });
+
+    return Object.values(hourlyStats).map((stats) => ({
+      timestamp: stats.timestamp,
+      average:
+        stats.values.length > 0
+          ? stats.values.reduce((a, b) => a + b) / stats.values.length
+          : 0,
+      min: stats.values.length > 0 ? Math.min(...stats.values) : 0,
+      max: stats.values.length > 0 ? Math.max(...stats.values) : 0,
+      readings: stats.values.length,
+    }));
   }
 
   // Traitement des données de sommeil
@@ -265,7 +273,7 @@ class GoogleFitService {
       endTime: new Date(parseInt(session.endTimeMillis)),
       duration:
         (parseInt(session.endTimeMillis) - parseInt(session.startTimeMillis)) /
-        (1000 * 60), // en minutes
+        (1000 * 60),
       quality: session.description || "unknown",
     }));
   }
@@ -281,7 +289,7 @@ class GoogleFitService {
       endTime: new Date(parseInt(session.endTimeMillis)),
       duration:
         (parseInt(session.endTimeMillis) - parseInt(session.startTimeMillis)) /
-        (1000 * 60), // en minutes
+        (1000 * 60),
       activityType: session.activityType,
       description: session.description,
     }));
@@ -293,6 +301,14 @@ class GoogleFitService {
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
     try {
+      console.log("Début de la synchronisation Google Fit...");
+
+      // Rafraîchir le token d'abord
+      const refreshedToken = await this.refreshTokenIfNeeded(user);
+      if (refreshedToken) {
+        user.googleAuth.access_token = refreshedToken;
+      }
+
       const [activityData, heartRateData, sleepData, runningActivities] =
         await Promise.all([
           this.getActivityData(user, startDate, endDate),
@@ -300,6 +316,13 @@ class GoogleFitService {
           this.getSleepData(user, startDate, endDate),
           this.getRunningActivities(user, startDate, endDate),
         ]);
+
+      console.log("Synchronisation réussie:", {
+        steps: activityData.steps.length,
+        heartRate: heartRateData.length,
+        sleep: sleepData.length,
+        running: runningActivities.length,
+      });
 
       return {
         activity: activityData,
@@ -315,49 +338,112 @@ class GoogleFitService {
     }
   }
 
-  // Vérifier et rafraîchir les tokens si nécessaire
+  // Vérifier et rafraîchir les tokens si nécessaire - VERSION AMÉLIORÉE
   async refreshTokenIfNeeded(user) {
     try {
       const oauth2Client = this.createOAuth2Client(
-        user.googleAuth.googleAccessToken,
-        user.googleAuth.googleRefreshToken
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
       );
 
-      // Tenter une requête simple pour vérifier la validité du token
+      // Vérifier si le token est expiré ou va bientôt expirer
+      const tokenInfo = await oauth2Client.getTokenInfo(
+        user.googleAuth.access_token
+      );
+      const expirationTime = tokenInfo.expiry_date;
+      const currentTime = Date.now();
+
+      // Si le token expire dans moins de 5 minutes, on le rafraîchit
+      if (expirationTime - currentTime < 300000) {
+        console.log("Token expirant bientôt, rafraîchissement...");
+        const { credentials } = await oauth2Client.refreshAccessToken();
+
+        // Mettre à jour les tokens
+        await user.update({
+          "googleAuth.access_token": credentials.access_token,
+          "googleAuth.refresh_token":
+            credentials.refresh_token || user.googleAuth.refresh_token,
+          "googleAuth.token_expiry": new Date(
+            credentials.expiry_date || Date.now() + 3600 * 1000
+          ),
+        });
+
+        console.log("Token rafraîchi avec succès");
+        return credentials.access_token;
+      }
+
+      return null;
+    } catch (error) {
+      if (error.code === 401) {
+        console.log("Token expiré, tentative de rafraîchissement...");
+        try {
+          const oauth2Client = this.createOAuth2Client(
+            user.googleAuth.access_token,
+            user.googleAuth.refresh_token
+          );
+
+          const { credentials } = await oauth2Client.refreshAccessToken();
+
+          await user.update({
+            "googleAuth.access_token": credentials.access_token,
+            "googleAuth.refresh_token":
+              credentials.refresh_token || user.googleAuth.refresh_token,
+            "googleAuth.token_expiry": new Date(
+              credentials.expiry_date || Date.now() + 3600 * 1000
+            ),
+          });
+
+          console.log("Token rafraîchi après expiration");
+          return credentials.access_token;
+        } catch (refreshError) {
+          console.error("Erreur lors du rafraîchissement:", refreshError);
+          throw new Error("Token Google expiré et impossible à rafraîchir");
+        }
+      }
+
+      console.error("Erreur de vérification du token:", error);
+      throw error;
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Vérifier la connexion Google Fit
+  async checkConnection(user) {
+    try {
+      const oauth2Client = this.createOAuth2Client(
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
+      );
+
+      // Test simple pour vérifier la connexion
       await this.fitness.users.dataSources.list({
         auth: oauth2Client,
         userId: "me",
       });
 
-      return user.googleAuth.googleAccessToken;
+      return true;
     } catch (error) {
-      if (error.code === 401) {
-        // Token expiré, essayer de le rafraîchir
-        try {
-          const oauth2Client = this.createOAuth2Client(
-            user.googleAuth.googleAccessToken,
-            user.googleAuth.googleRefreshToken
-          );
+      console.error("Erreur de connexion Google Fit:", error);
+      return false;
+    }
+  }
 
-          const { credentials } = await oauth2Client.refreshAccessToken();
+  // NOUVELLE MÉTHODE: Obtenir les données sources disponibles
+  async getAvailableDataSources(user) {
+    try {
+      const oauth2Client = this.createOAuth2Client(
+        user.googleAuth.access_token,
+        user.googleAuth.refresh_token
+      );
 
-          // Mettre à jour les tokens dans la base de données
-          await user.update({
-            "googleAuth.googleAccessToken": credentials.access_token,
-            "googleAuth.googleRefreshToken":
-              credentials.refresh_token || user.googleAuth.googleRefreshToken,
-          });
+      const response = await this.fitness.users.dataSources.list({
+        auth: oauth2Client,
+        userId: "me",
+      });
 
-          return credentials.access_token;
-        } catch (refreshError) {
-          console.error(
-            "Erreur lors du rafraîchissement du token:",
-            refreshError
-          );
-          throw new Error("Token Google expiré et impossible à rafraîchir");
-        }
-      }
-      throw error;
+      return response.data.dataSource || [];
+    } catch (error) {
+      console.error("Erreur lors de la récupération des data sources:", error);
+      return [];
     }
   }
 }

@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const { Op } = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
+const axios = require("axios");
+const { OAuth2Client } = require("google-auth-library");
 
 const {
   Users,
@@ -16,6 +18,7 @@ const {
   Roles,
   UserRelations,
   Notifications,
+  GoogleAuth,
 } = db;
 const sendMail = require("../../functions/components/sendMail");
 const MailInvitationTemplate = require("../../../lib/MailInvitationTemplate");
@@ -312,6 +315,11 @@ module.exports = {
             attributes: ["fname", "lname", "phone", "address", "bio", "image"],
           },
           {
+            model: GoogleAuth,
+            as: "googleAuth",
+            attributes: ["id", "is_linked", "refresh_token"],
+          },
+          {
             model: db.Subscriptions,
             as: "subscriptions",
             where: { is_active: true },
@@ -350,6 +358,15 @@ module.exports = {
         address: user.profile.address ?? null,
         image: user.profile?.image ?? null,
         bio: user.profile?.bio ?? null,
+
+        socialAccounts: user.googleAuth && [
+          {
+            id: user.googleAuth.id,
+            name: "google",
+            connected: user.googleAuth.is_linked,
+            refresh_token: user.googleAuth.refresh_token,
+          },
+        ],
         // Date
         createdAt: user.createdAt,
       };
@@ -502,7 +519,6 @@ module.exports = {
         // transaction,
         include: ["profile"],
       });
-      // console.log("TOKEN: ", user.token);
 
       if (!user || user.status === "VERIFIED") {
         return serverMessage(res, "INVALID_OR_EXPIRED_TOKEN");
@@ -523,11 +539,11 @@ module.exports = {
 
       await user.save();
 
-      await createNotification({
-        user_id: user.id,
-        type: "ACCOUNT_VALIDATED",
-        content: `Félicitations ${user.profile.fname} ${user.profile.lname}, votre compte a été validé avec succès`,
-      });
+      // await createNotification({
+      //   user_id: user.id,
+      //   type: "ACCOUNT_VALIDATED",
+      //   content: `Félicitations ${user.profile.fname} ${user.profile.lname}, votre compte a été validé avec succès`,
+      // });
 
       return serverMessage(res, "ACCOUNT_VALIDATED_SUCCESS");
     } catch (error) {
@@ -935,19 +951,24 @@ module.exports = {
         scope: [
           "profile",
           "email",
+          "https://www.googleapis.com/auth/userinfo.profile",
+          "https://www.googleapis.com/auth/userinfo.email",
           "https://www.googleapis.com/auth/fitness.activity.read",
           "https://www.googleapis.com/auth/fitness.heart_rate.read",
           "https://www.googleapis.com/auth/fitness.sleep.read",
           "https://www.googleapis.com/auth/fitness.location.read",
+          "openid", // ← Ajouter openid
         ],
+        accessType: "offline", // ← ESSENTIEL
+        prompt: "consent", // ← Force le consentement
         session: false,
+        include_granted_scopes: true,
       })(req, res);
     } catch (error) {
       console.error("Google auth initiation error:", error);
       return serverMessage(res, "GOOGLE_AUTH_INITIATION_FAILED");
     }
   },
-
   // Callback Google OAuth
   handleGoogleCallback: async (req, res, next) => {
     passport.authenticate(
@@ -1037,28 +1058,45 @@ module.exports = {
       }
     )(req, res, next);
   },
-  // Lier un compte Google à un compte existant
+  // Link an existing user account with Google
   linkGoogleAccount: async (req, res) => {
     try {
-      const { googleToken } = req.body;
+      const { code } = req.body; // ← Recevoir le code d'autorisation, pas un token
       const userId = req.user.id;
 
-      if (!googleToken) {
-        return serverMessage(res, "GOOGLE_TOKEN_REQUIRED");
+      if (!code) {
+        return serverMessage(res, "GOOGLE_AUTH_CODE_REQUIRED");
       }
 
-      // Vérifier le token Google (implémentation simplifiée)
-      // En production, utilisez la bibliothèque google-auth-library
-      let googleEmail;
-      try {
-        // Cette partie devrait utiliser la bibliothèque officielle Google
-        // pour vérifier le token ID Google
-        const decoded = jwt.decode(googleToken);
-        googleEmail = decoded.email;
+      // Initialiser le client OAuth2 Google
+      const oAuth2Client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI || "postmessage" // Pour les flows sans redirection
+      );
 
-        if (!googleEmail) {
-          return serverMessage(res, "INVALID_GOOGLE_TOKEN");
-        }
+      // Échanger le code contre les tokens
+      let tokens;
+      try {
+        const { tokens: googleTokens } = await oAuth2Client.getToken(code);
+        tokens = googleTokens;
+      } catch (error) {
+        console.error("Google token exchange error:", error);
+        return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+      }
+
+      if (!tokens.access_token || !tokens.id_token) {
+        return serverMessage(res, "GOOGLE_TOKEN_EXCHANGE_FAILED");
+      }
+
+      // Vérifier le token ID Google pour obtenir les infos utilisateur
+      let payload;
+      try {
+        const ticket = await oAuth2Client.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
       } catch (error) {
         console.error("Google token verification error:", error);
         return serverMessage(res, "INVALID_GOOGLE_TOKEN");
@@ -1066,25 +1104,167 @@ module.exports = {
 
       // Vérifier que l'email Google correspond à l'email de l'utilisateur connecté
       const user = await Users.findByPk(userId);
-      if (user.email !== googleEmail) {
+      if (user.email !== payload.email) {
         return serverMessage(res, "GOOGLE_EMAIL_MISMATCH");
       }
 
-      // Vérifier si le compte Google est déjà lié
-      if (user.google_linked) {
-        return serverMessage(res, "GOOGLE_ACCOUNT_ALREADY_LINKED");
-      }
+      // Chercher ou créer l'enregistrement GoogleAuth
+      const [googleAuth, created] = await GoogleAuth.findOrCreate({
+        where: { user_id: userId },
+        defaults: {
+          user_id: userId,
+          google_id: payload.sub,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token || null, // refresh_token peut être null
+          token_expiry: tokens.expiry_date
+            ? new Date(tokens.expiry_date)
+            : new Date(Date.now() + 3500 * 1000),
+          scopes: tokens.scope || "",
+          is_linked: true,
+          last_sync: new Date(),
+        },
+      });
 
-      // Marquer l'utilisateur comme lié à Google
-      await Users.update({ google_linked: true }, { where: { id: userId } });
+      if (!created) {
+        // Vérifier si le compte Google est déjà lié
+        if (googleAuth.is_linked) {
+          return serverMessage(res, "GOOGLE_ACCOUNT_ALREADY_LINKED");
+        }
+
+        // Mettre à jour avec les nouveaux tokens
+        await GoogleAuth.update(
+          {
+            google_id: payload.sub,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token || googleAuth.refresh_token, // Garder l'ancien si nouveau null
+            token_expiry: tokens.expiry_date
+              ? new Date(tokens.expiry_date)
+              : new Date(Date.now() + 3500 * 1000),
+            scopes: tokens.scope || googleAuth.scopes,
+            is_linked: true,
+            last_sync: new Date(),
+          },
+          { where: { user_id: userId } }
+        );
+      }
 
       return serverMessage(res, "GOOGLE_ACCOUNT_LINKED", {
         googleLinked: true,
         email: user.email,
+        hasRefreshToken: !!tokens.refresh_token,
       });
     } catch (error) {
       console.error("Error linking Google account:", error);
       return serverMessage(res, "GOOGLE_LINK_FAILED");
+    }
+  },
+  // Unlink un compte Google d'un utilisateur
+  unlinkGoogleAccount: async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Vérifier si l'utilisateur existe
+      const user = await Users.findByPk(userId, {
+        include: {
+          model: GoogleAuth,
+          as: "googleAuth",
+          attributes: [
+            "is_linked",
+            "google_id",
+            "refresh_token",
+            "access_token",
+            "scopes",
+          ],
+        },
+      });
+      if (!user) {
+        return serverMessage(res, "USER_NOT_FOUND");
+      }
+
+      // Vérifier si le compte Google est déjà lié
+      if (!user.googleAuth.is_linked) {
+        return serverMessage(res, "GOOGLE_ACCOUNT_NOT_LINKED");
+      }
+
+      // Dé-lier le compte Google
+      await GoogleAuth.update(
+        {
+          is_linked: false,
+          google_id: null,
+          refresh_token: null,
+          access_token: null,
+          scopes: null,
+          expires_at: null, // Optionnel
+        },
+        { where: { user_id: userId } }
+      );
+
+      return serverMessage(res, "GOOGLE_ACCOUNT_UNLINKED", {
+        googleLinked: false,
+        email: user.email,
+      });
+    } catch (error) {
+      console.error("Error unlinking Google account:", error);
+      return serverMessage(res, "GOOGLE_UNLINK_FAILED");
+    }
+  },
+  // Deconnect an existing Google account
+  disconnectGoogle: async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Trouver l'utilisateur
+      const user = await Users.findByPk(userId, {
+        include: {
+          model: GoogleAuth,
+          as: "googleAuth",
+          attributes: ["is_linked", "refresh_token", "access_token"],
+        },
+      });
+
+      if (!user.googleAuth.is_linked) {
+        return serverMessage(res, "NO_GOOGLE_ACCOUNT_LINKED");
+      }
+
+      // Révoquer l'accès Google (si nous avons stocké le refresh token)
+      // Note: Cette étape nécessite que vous ayez stocké le refresh_token Google
+      if (user.googleAuth.refresh_token) {
+        try {
+          await axios.post(
+            "https://oauth2.googleapis.com/revoke",
+            {
+              token: user.googleAuth.refresh_token,
+            },
+            {
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+            }
+          );
+        } catch (revokeError) {
+          console.warn(
+            "Google revoke error (may be normal if token already expired):",
+            revokeError.message
+          );
+        }
+      }
+
+      // Mettre à jour l'utilisateur pour indiquer que Google n'est plus lié
+      await GoogleAuth.update(
+        {
+          is_linked: false,
+          google_id: null,
+          refresh_token: null,
+          access_token: null,
+          scopes: null,
+          expires_at: null, // Optionnel
+        },
+        { where: { user_id: userId } }
+      );
+      return serverMessage(res, "GOOGLE_ACCOUNT_DISCONNECTED");
+    } catch (error) {
+      console.error("Error disconnecting Google account:", error);
+      return serverMessage(res, "GOOGLE_DISCONNECT_FAILED");
     }
   },
 };

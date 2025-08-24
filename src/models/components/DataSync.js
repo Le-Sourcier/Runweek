@@ -56,9 +56,6 @@ module.exports = (sequelize) => {
         {
           fields: ["user_id", "status"],
         },
-        {
-          fields: ["user_id", "createdAt"],
-        },
       ],
     }
   );

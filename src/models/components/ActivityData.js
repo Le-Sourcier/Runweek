@@ -66,9 +66,6 @@ module.exports = (sequelize) => {
           unique: true,
           fields: ["user_id", "date"],
         },
-        {
-          fields: ["user_id", "date"],
-        },
       ],
     }
   );

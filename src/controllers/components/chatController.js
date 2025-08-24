@@ -3,95 +3,6 @@ const { Users, Profiles, Activities, ChatMessages } = require("./../../models");
 const askAI = require("../../services/askAI");
 
 module.exports = {
-  //   sentMessage: async (req, res) => {
-  //     const { message } = req.body;
-  //     const userId = req.user.id;
-
-  //     // Save user message
-  //     await ChatMessages.create({
-  //       user_id: userId,
-  //       message_content: message,
-  //       sender: "user",
-  //       message_type: "text",
-  //     });
-
-  //     if (!message) {
-  //       return serverMessage(res, "BAD_REQUEST");
-  //     }
-
-  //     try {
-  //       const user = await Users.findByPk(userId, {
-  //         include: [
-  //           {
-  //             model: Profiles,
-  //             as: "profile",
-  //             attributes: ["fname", "lname", "bio"],
-  //           },
-  //           //   {
-  //           //     model: db.Subscriptions,
-  //           //     as: "subscriptions",
-  //           //     where: { is_active: true },
-  //           //     required: false,
-  //           //     include: [
-  //           //       {
-  //           //         model: db.Plans,
-  //           //         as: "plan",
-  //           //         attributes: ["name"],
-  //           //       },
-  //           //     ],
-  //           //   },
-  //         ],
-  //       });
-
-  //       if (!user) {
-  //         return serverMessage(res, "PROFILE_NOT_FOUND");
-  //       }
-
-  //       const recentActivities = await Activities.findAll({
-  //         where: { user_id: userId },
-  //         order: [["date", "DESC"]],
-  //         limit: 5,
-  //       });
-
-  //       const userContext = {
-  //         profile: {
-  //           firstName: user.profile?.fname,
-  //           lastName: user.profile?.lname,
-  //           bio: user.profile?.bio,
-  //           plan: user.subscriptions?.[0]?.plan?.name || "FREE",
-  //         },
-  //         activities: recentActivities.map((act) => ({
-  //           title: act.title,
-  //           type: act.type,
-  //           distance: act.distance,
-  //           duration: act.duration,
-  //           date: act.date,
-  //         })),
-  //       };
-
-  //       const aiReply = await askAI(message, userContext);
-
-  //       const chat = await ChatMessages.create({
-  //         user_id: userId,
-  //         message_content: aiReply,
-  //         sender: "bot",
-  //         message_type: "text",
-  //       });
-  //       const data = {
-  //         id: chat.id,
-  //         type: chat.message_type,
-  //         message: aiReply,
-  //         sender: chat.sender,
-  //       };
-  //       return serverMessage(res, "SUCCESS", data);
-  //     } catch (err) {
-  //       console.error("Erreur IA coach:", err.message);
-  //       return serverMessage(res, "INTERNAL_SERVER_ERROR");
-  //     }
-  //   },
-
-  // Modifiez votre fonction sentMessage pour inclure l'historique
-
   sendMessage: async (req, res) => {
     const { message } = req.body;
     const userId = req.user.id;
@@ -133,7 +44,7 @@ module.exports = {
         return serverMessage(res, "PROFILE_NOT_FOUND");
       }
 
-      const recentActivities = await Activities.findAll({
+      const recentActivities = await ActivityData.findAll({
         where: { user_id: userId },
         order: [["date", "DESC"]],
         limit: 10,

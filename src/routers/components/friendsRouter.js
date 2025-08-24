@@ -25,13 +25,13 @@ router
    *         schema:
    *           type: string
    *           enum: [online, offline, all]
-   *           default: online
+   *           default: all
    *         description: Filter friends by online status
    *       - in: query
    *         name: sort
    *         schema:
    *           type: string
-   *           enum: [name, level, recent]
+   *           enum: [name, level, recent, mutual]
    *           default: name
    *         description: Sort friends by criteria
    *     responses:
@@ -60,37 +60,17 @@ router
    *                         type: string
    *                         format: uuid
    *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-   *                       fname:
+   *                       name:
    *                         type: string
-   *                         example: "John"
-   *                       lname:
-   *                         type: string
-   *                         example: "Doe"
+   *                         example: "John Doe"
    *                       email:
    *                         type: string
    *                         format: email
    *                         example: "john.doe@example.com"
-   *                       profile_image:
+   *                       profileImage:
    *                         type: string
    *                         nullable: true
    *                         example: "https://example.com/profile.jpg"
-   *                       stats:
-   *                         type: object
-   *                         properties:
-   *                           level:
-   *                             type: number
-   *                             example: 5
-   *                           experience:
-   *                             type: number
-   *                             example: 1250
-   *                       friendshipId:
-   *                         type: string
-   *                         format: uuid
-   *                         example: "507f1f77bcf86cd799439012"
-   *                       friendsSince:
-   *                         type: string
-   *                         format: date-time
-   *                         example: "2024-01-15T12:00:00.000Z"
    *                       isOnline:
    *                         type: boolean
    *                         example: true
@@ -98,6 +78,43 @@ router
    *                         type: string
    *                         format: date-time
    *                         example: "2024-01-20T10:30:00.000Z"
+   *                       mutualFriends:
+   *                         type: integer
+   *                         example: 5
+   *                       joinedDate:
+   *                         type: string
+   *                         format: date
+   *                         example: "2024-01-15"
+   *                       stats:
+   *                         type: object
+   *                         nullable: true
+   *                         properties:
+   *                           totalDistance:
+   *                             type: number
+   *                             example: 150.5
+   *                           totalRuns:
+   *                             type: integer
+   *                             example: 25
+   *                           averagePace:
+   *                             type: string
+   *                             example: "5:30"
+   *                           level:
+   *                             type: integer
+   *                             example: 5
+   *                           experience:
+   *                             type: integer
+   *                             example: 1250
+   *                       preferences:
+   *                         type: object
+   *                         properties:
+   *                           profileVisibility:
+   *                             type: string
+   *                             enum: [public, private]
+   *                             example: "public"
+   *                           activityVisibility:
+   *                             type: string
+   *                             enum: [friends, private]
+   *                             example: "friends"
    *       404:
    *         description: No friends found
    *         content:

@@ -92,7 +92,7 @@
 
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { Users, Profiles } = require("../models");
+const { Users, Profiles, GoogleAuth } = require("../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -100,6 +100,7 @@ const jwt = require("jsonwebtoken");
 module.exports = (app) => {
   // Initialisation de Passport
   app.use(passport.initialize());
+  app.use(passport.session());
 
   // Configuration de la stratégie Google
   passport.use(
@@ -109,6 +110,8 @@ module.exports = (app) => {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: process.env.GOOGLE_REDIRECT_URI,
         passReqToCallback: true,
+        accessType: "offline", // ← ESSENTIEL pour obtenir un refresh_token
+        prompt: "consent", // ← Force la demande de consentement
       },
       async (req, accessToken, refreshToken, profile, done) => {
         try {
@@ -136,11 +139,18 @@ module.exports = (app) => {
               },
             };
 
-            // await existingUser.update({
-            //   googleAuth: googleData,
-            //   lastLogin: new Date(),
-            // });
-
+            //Update or create GoogleAuth record
+            // Mettre à jour les tokens
+            await GoogleAuth.upsert({
+              user_id: existingUser.id,
+              google_id: profile.id,
+              access_token: accessToken,
+              refresh_token: refreshToken, // ← Ici refreshToken devrait être présent
+              token_expiry: new Date(Date.now() + 3500 * 1000), // 3500 secondes
+              scopes: req.query.scope || profile._json.scope,
+              is_linked: true,
+              last_sync: new Date(),
+            });
             return done(null, existingUser);
           }
 
@@ -180,6 +190,20 @@ module.exports = (app) => {
               { transaction }
             );
 
+            // Créer l'enregistrement GoogleAuth
+            await GoogleAuth.create(
+              {
+                user_id: newUser.id,
+                google_id: profile.id,
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                token_expiry: new Date(Date.now() + 3600 * 1000), // 1 hour
+                scopes: profile._json.scope,
+                is_linked: true,
+                last_sync: new Date(),
+              },
+              { transaction }
+            );
             await transaction.commit();
 
             // Récupérer l'utilisateur complet avec le profil

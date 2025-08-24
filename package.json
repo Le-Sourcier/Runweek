@@ -24,8 +24,10 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
     "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
+    "connect-session-sequelize": "^8.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csv-parse": "^5.6.0",
@@ -52,8 +54,10 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.15.6",
+    "redis": "^5.8.2",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "stripe": "^18.3.0",
     "ua-parser-js": "^2.0.4",
     "uuid": "^11.1.0",
