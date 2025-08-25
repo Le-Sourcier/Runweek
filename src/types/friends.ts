@@ -22,7 +22,7 @@ export interface Friend {
   };
 }
 
-export type FriendRequestType = "sent" | "received";
+export type FriendRequestType = "all" | "sent" | "received";
 
 export interface FriendRequest {
   type: FriendRequestType;
@@ -62,6 +62,37 @@ export interface FriendFilter {
   sort?: "name" | "level" | "recent" | "mutual";
 }
 
+export type BlockedFriendSort = "name" | "mutual" | "recent";
+
+export interface BlockedFriendFilters {
+  sort?: BlockedFriendSort;
+  limit?: number;
+  page?: number;
+}
+
+export interface BlockedFriend {
+  id: string;
+  name: string;
+  email: string;
+  profileImage: string | null;
+  mutualFriends: number;
+  joinedDate: string;
+  blockedAt: string;
+  preferences: {
+    profileVisibility: "public" | "private";
+    activityVisibility: "friends" | "private";
+  };
+}
+
+export interface BlockedFriendsResponse {
+  friends: BlockedFriend[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}
 // api/friends?status=online&sort=name'
 export interface FriendsState {
   // Données
@@ -87,8 +118,19 @@ export interface FriendsState {
   onlineFriends: Set<string>;
   socket: Socket | null;
 
+  blockedFriends: BlockedFriend[];
+  blockedFriendsPagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  } | null;
+  isBlockedFriendsLoading: boolean;
+  blockedFriendsError: string | null;
+
   // Actions pour les amis
   getFriends: (filters?: FriendFilter) => Promise<void>;
+  getBlockedFriends: (filters?: BlockedFriendFilters) => Promise<void>;
   getFriendsRequest: (filter: FriendRequestType) => Promise<void>;
   sendFriendRequest: (email: string, message?: string) => Promise<boolean>;
   acceptFriendRequest: (requestId: string) => void;
@@ -97,12 +139,13 @@ export interface FriendsState {
   searchUsers: (query: string) => Promise<void>;
   clearSearchResults: () => void;
   blockUser: (userId: string) => void;
+  unblockUser: (userId: string) => void;
   reportUser: (userId: string, reason: string) => void;
   updatePrivacySettings: (settings: {
     profileVisibility: string;
     activityVisibility: string;
   }) => void;
-  getFriendsStats: () => void;
+  getFriendsStats: () => Promise<void>;
   getFriendActivities: () => void;
   initializeSocket: (id: string) => void;
   disconnectSocket: () => void;

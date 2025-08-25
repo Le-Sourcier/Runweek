@@ -11,6 +11,7 @@ import ActivityTab from "../../pages/friends/ActivityTab";
 import DiscoverTab from "../../pages/friends/DiscoverTab";
 import FriendsTab from "../../pages/friends/FriendsTab";
 import RequestsTab from "../../pages/friends/RequestsTab";
+import BlockedFriendsTab from "../../pages/friends/BlockedFriendsTab";
 
 const FriendsLayout: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,7 @@ const FriendsLayout: React.FC = () => {
     { id: "requests", label: "Demandes", count: 0 },
     { id: "discover", label: "Découvrir", count: null },
     { id: "activity", label: "Activité", count: null },
+    { id: "blocked", label: "Amis bloqués", count: null },
   ] as const;
 
   type TabType = (typeof tabs)[number]["id"];
@@ -35,7 +37,7 @@ const FriendsLayout: React.FC = () => {
     const loadInitialData = async () => {
       try {
         await getFriendsStats();
-      } catch (error) {
+      } catch {
         toast.error("Erreur lors du chargement des statistiques");
       }
     };
@@ -51,12 +53,15 @@ const FriendsLayout: React.FC = () => {
     switch (currentTab) {
       case "friends":
         return <FriendsTab />;
+
       case "requests":
         return <RequestsTab />;
       case "discover":
         return <DiscoverTab />;
       case "activity":
         return <ActivityTab />;
+      case "blocked":
+        return <BlockedFriendsTab />;
       default:
         return <FriendsTab />;
     }

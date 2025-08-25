@@ -40,9 +40,33 @@ const FriendsTab: React.FC = () => {
     setIsProfileModalOpen(true);
   };
 
-  const handleSendMessage = (friendId: string) => {
-    // Implémentez la logique d'envoi de message
-    console.log("Send message to:", friendId);
+  const handleRealSendMessage = (friendId: string) => {
+    const conversations = JSON.parse(
+      localStorage.getItem("runweek_conversations") || "[]"
+    );
+    const conversation = conversations.find((conv: any) =>
+      conv.participants.includes(friendId)
+    );
+
+    if (conversation) {
+      const newMessage = {
+        id: `msg_${Date.now()}`,
+        senderId: "current_user",
+        text: "messageText",
+        timestamp: new Date().toISOString(),
+        read: false,
+      };
+
+      conversation.messages.push(newMessage);
+      conversation.lastMessage = newMessage;
+      conversation.updatedAt = new Date().toISOString();
+
+      localStorage.setItem(
+        "runweek_conversations",
+        JSON.stringify(conversations)
+      );
+      toast.success(`Message envoyé !`);
+    }
   };
 
   const filteredAndSortedFriends = friends
@@ -120,7 +144,7 @@ const FriendsTab: React.FC = () => {
             onRemoveFriend={removeFriend}
             onBlockUser={blockUser}
             onReportUser={reportUser}
-            onSendMessage={handleSendMessage}
+            onSendMessage={() => handleRealSendMessage(friend.id, "Hello")}
           />
         ))}
         {filteredAndSortedFriends.length === 0 && (
@@ -144,7 +168,7 @@ const FriendsTab: React.FC = () => {
         friend={selectedFriend}
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        onSendMessage={handleSendMessage}
+        onSendMessage={handleRealSendMessage}
         onRemoveFriend={removeFriend}
         onBlockUser={blockUser}
         onReportUser={reportUser}

@@ -1,13 +1,9 @@
 // Imports nécessaires
-import {
-  ApiError,
-  ApiResponse,
-  FetchOptions,
-} from "../interfaces/ApiInterface.ts";
 import { ApiUrl } from "../utils/api-url.ts";
 import { LoginResponse } from "../types/user.tsx";
 import { getBaseMessage } from "../utils/error-handler.ts";
 import sec from "react-secure-storage";
+import { ApiResponse, FetchOptions } from "../types/index.ts";
 
 // Headers communs pour toutes les requêtes
 const commonHeaders = {
@@ -42,20 +38,24 @@ export const defineHeaders = (
 };
 
 // Fonction pour créer une ApiError à partir d'une Response
-const createApiError = async (response: Response): Promise<ApiError> => {
+const createApiError = async (
+  response: Response
+): Promise<ApiResponse<{ status: number; message: string }>> => {
   let responseData;
   try {
-    responseData = await response.json();
+    const { message, status } = await response.json();
+    responseData = { message, status };
   } catch {
-    responseData = { message: response.statusText };
+    const { message, status } = await response.json();
+    responseData = { message, status };
   }
 
+  // const {message} =
+
   return {
-    response: {
-      status: response.status,
-      data: responseData,
-    },
-  } as ApiError;
+    status: responseData.status,
+    message: responseData.message,
+  } as ApiResponse<{ status: number; message: string }>;
 };
 
 // Fonction principale de fetch avec gestion des erreurs et du refresh token
@@ -100,7 +100,7 @@ const apiFetch = async <T = never>(
             }
 
             const refreshData: LoginResponse = await refreshResponse.json();
-            console.log("refreshData:", refreshData);
+            // console.log("refreshData:", refreshData);
 
             // Utiliser les méthodes du store
             sec.setItem("aspk", refreshData.accessToken as string);

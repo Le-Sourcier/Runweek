@@ -1,9 +1,17 @@
 import { create } from "zustand";
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
-import { Friend, FriendRequestType, FriendsState } from "../types/friends";
+import {
+  BlockedFriendFilters,
+  BlockedFriendsResponse,
+  Friend,
+  FriendRequestType,
+  FriendsState,
+  FriendsStats,
+} from "../types/friends";
 import { io } from "socket.io-client";
 import sec from "react-secure-storage";
+import { ApiError } from "../types";
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   // États initiaux
@@ -20,7 +28,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   error: null,
   onlineFriends: new Set(),
   socket: null,
-  currentUser: null, // Ajout de currentUser
+  currentUser: null,
+  blockedFriends: [],
+  blockedFriendsPagination: null,
+  isBlockedFriendsLoading: false,
+  blockedFriendsError: null,
 
   // Récupérer la liste des amis
   getFriends: async (filters = {}) => {
@@ -45,11 +57,53 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       set({ friends: friendsWithOnlineStatus, isLoading: false });
       // set({ friends: data, isLoading: false });
     } catch (err) {
-      const error =
-        err instanceof Error
-          ? err
-          : new Error("Erreur lors de la récupération des amis");
+      const error = err as ApiError;
+
+      if (error.message === "NO_FRIENDS_FOUND") {
+        set({ error: null, isLoading: false });
+
+        throw new Error();
+      }
+
       set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+  getBlockedFriends: async (filters: BlockedFriendFilters = {}) => {
+    set({ isBlockedFriendsLoading: true, blockedFriendsError: null });
+
+    try {
+      const params = new URLSearchParams();
+
+      // Ajouter les paramètres de filtrage
+      if (filters.sort) params.append("sort", filters.sort);
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.page) params.append("page", filters.page.toString());
+
+      const url = `${ApiUrl.BLOCKED_FRIENDS}?${params.toString()}`;
+
+      const { data } = await apiUtils.get<BlockedFriendsResponse>(url);
+
+      set({
+        blockedFriends: data.friends,
+        blockedFriendsPagination: data.pagination,
+        isBlockedFriendsLoading: false,
+      });
+    } catch (err) {
+      const error = err as ApiError;
+
+      if (error.message === "NO_BLOCKED_FRIENDS_FOUND") {
+        set({
+          blockedFriendsError: null,
+          isBlockedFriendsLoading: false,
+        });
+        throw new Error();
+      }
+
+      set({
+        blockedFriendsError: error.message,
+        isBlockedFriendsLoading: false,
+      });
       throw error;
     }
   },
@@ -64,20 +118,20 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
       const { data } = await apiUtils.get(url);
 
-      //   console.log("data: ", data);
-
       set({ friendRequests: data, isLoading: false });
     } catch (err) {
-      const error =
-        err instanceof Error
-          ? err
-          : new Error("Erreur lors de la récupération des amis");
+      const error = err as ApiError;
+
+      if (error.message === "NO_FRIEND_REQUESTS_FOUND") {
+        set({ error: null, isLoading: false });
+
+        throw new Error();
+      }
+
       set({ error: error.message, isLoading: false });
       throw error;
     }
   },
-
-  //   /friends/requests?type=sent
 
   // Envoyer une demande d'ami
   sendFriendRequest: async (email, message = "") => {
@@ -211,6 +265,25 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       throw error;
     }
   },
+  unblockUser: async (userId) => {
+    set({ isLoading: true, error: null });
+    try {
+      await apiUtils.put(`${ApiUrl.FRIENDS}/${userId}/unblock`);
+
+      // Mettre à jour l'état local
+      set((state) => ({
+        friends: state.friends.filter((friend) => friend.id !== userId),
+        isLoading: false,
+      }));
+    } catch (err) {
+      const error =
+        err instanceof Error
+          ? err
+          : new Error("Erreur lors du deblocage de l'utilisateur");
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
 
   // Signaler un utilisateur
   reportUser: async (userId, reason) => {
@@ -252,7 +325,6 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     }
   },
 
-  // Dans votre store
   getFriendActivities: async () => {
     set({ isActivityLoading: true, error: null });
     try {
@@ -271,8 +343,19 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   getFriendsStats: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get("/friends/stats");
-      set({ friendsStats: data, isLoading: false });
+      const { data } = await apiUtils.get<FriendsStats>("/friends/stats");
+
+      // Get the current online friends count from the store
+      const onlineFriendsCount = get().onlineFriends.size;
+
+      // Inject the connected friends count into the stats
+      const statsWithConnectedFriends = {
+        ...data,
+        onlineFriends: onlineFriendsCount, // Override the onlineFriends count with real-time data
+        connectedFriends: onlineFriendsCount, // Add a new field for connected friends
+      };
+
+      set({ friendsStats: statsWithConnectedFriends, isLoading: false });
     } catch (err) {
       const error =
         err instanceof Error
@@ -307,15 +390,15 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     });
 
     socket.on("connect", () => {
-      console.log("Connected to presence server");
+      // console.log("Connected to presence server");
 
       const currentUserId = userId || get().currentUser?.id;
       if (currentUserId) {
         socket.emit("user_online", currentUserId);
-        console.log(
-          "Notified server of online status for user:",
-          currentUserId
-        );
+        // console.log(
+        //   "Notified server of online status for user:",
+        //   currentUserId
+        // );
 
         // Demander la liste actuelle des amis en ligne
         socket.emit(
@@ -340,7 +423,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
                 friends: updatedFriends,
               };
             });
-            console.log("Initial online friends received:", onlineFriends);
+            // console.log("Initial online friends received:", onlineFriends);
           }
         );
       }
@@ -357,7 +440,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
         return { onlineFriends, friends: updatedFriends };
       });
-      console.log(`Friend ${userId} is now online`);
+      // console.log(`Friend ${userId} is now online`);
     });
 
     socket.on("friend_offline", (userId: string) => {
@@ -371,7 +454,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
         return { onlineFriends, friends: updatedFriends };
       });
-      console.log(`Friend ${userId} is now offline`);
+      // console.log(`Friend ${userId} is now offline`);
     });
 
     // Recevoir la liste complète des amis en ligne
@@ -391,11 +474,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           friends: updatedFriends,
         };
       });
-      console.log("Received complete online friends list:", onlineFriends);
+      // console.log("Received complete online friends list:", onlineFriends);
     });
 
     socket.on("reconnect", (attemptNumber) => {
-      console.log("Reconnected to server, attempt:", attemptNumber);
+      // console.log("Reconnected to server, attempt:", attemptNumber);
       const currentUserId = userId || get().currentUser?.id;
       if (currentUserId) {
         socket.emit("user_online", currentUserId);
@@ -403,11 +486,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     });
 
     socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
+      // console.error("Socket connection error:", error);
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("Disconnected from presence server:", reason);
+      // console.log("Disconnected from presence server:", reason);
     });
 
     set({ socket });
@@ -432,7 +515,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     if (user) {
       if (socket && socket.connected) {
         socket.emit("user_online", user.id);
-        console.log("Notified server of new user online:", user.id);
+        // console.log("Notified server of new user online:", user.id);
       } else if (!socket) {
         get().initializeSocket(user.id);
       }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Modal } from "../ui/Modal";
+import { DraggableModal } from "../ui/Modal";
 import Button from "../ui/Button";
 import { Send, Smile, Phone, Video, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,10 +38,6 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
   friend,
   onSendMessage,
 }) => {
-  if (!friend) {
-    return null;
-  }
-
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +61,10 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
 
   // Charger ou créer la conversation
   useEffect(() => {
+    if (!friend) {
+      return;
+    }
+
     if (isOpen) {
       const conversations = JSON.parse(
         localStorage.getItem("runweek_conversations") || "[]"
@@ -143,10 +143,11 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
 
       // Simuler la réponse de l'ami (pour la démo)
       setTimeout(() => {
+        if (!friend) return;
         const friendResponse: Message = {
           id: `msg_${Date.now() + 1}`,
           senderId: friend.id,
-          text: getRandomResponse(message),
+          text: getRandomResponse(),
           timestamp: new Date().toISOString(),
           read: false,
           type: "text",
@@ -177,6 +178,10 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
         }
       }, 2000 + Math.random() * 3000); // Réponse entre 2-5 secondes
 
+      if (!friend) {
+        return null;
+      }
+
       onSendMessage(friend.id, message);
       setMessage("");
     } catch (error) {
@@ -199,7 +204,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     });
   };
 
-  const getRandomResponse = (userMessage: string) => {
+  const getRandomResponse = () => {
     const responses = [
       "Merci pour ton message ! 😊",
       "C'est une excellente idée !",
@@ -212,20 +217,29 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     return responses[Math.floor(Math.random() * responses.length)];
   };
 
+  if (!friend) {
+    return null;
+  }
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="" size="lg">
+    <DraggableModal isOpen={isOpen} onClose={onClose} title="Chat" size="lg">
       <div className="flex flex-col h-[600px]">
         {/* En-tête de la conversation */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 mt-1 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <img
-                src={friend.profileImage}
-                alt={friend.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              {friend.profileImage ? (
+                <img
+                  src={friend.profileImage}
+                  alt={friend.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full border dark:border-gray-700 border-gray-200 object-cover flex items-center justify-center ">
+                  <span className=" capitalize">{friend.name.slice(0, 1)}</span>
+                </div>
+              )}
               {friend.isOnline && (
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                <div className="absolute -bottom-0 -right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
               )}
             </div>
             <div>
@@ -333,7 +347,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tapez votre message..."
-                className="input w-full resize-none"
+                className="input w-full resize-none dark:border-gray-600 placeholder:text-gray-500 dark:bg-gray-800"
                 rows={1}
                 style={{ minHeight: "40px", maxHeight: "120px" }}
                 onKeyDown={(e) => {
@@ -366,7 +380,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
           </div>
         </div>
       </div>
-    </Modal>
+    </DraggableModal>
   );
 };
 

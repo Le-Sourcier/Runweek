@@ -62,5 +62,15 @@ export type ApiResponse<T> = {
   error: boolean;
   status: number;
   message: string | null;
-  data?: T;
+  data: T;
 };
+
+export type ApiError = {
+  status: number;
+  message: string;
+};
+
+// Interface pour les options de fetch (remplace AxiosRequestConfig)
+export interface FetchOptions extends Omit<RequestInit, "method" | "body"> {
+  headers?: Record<string, string>;
+}

@@ -16,6 +16,7 @@ export const ApiUrl = {
 
   // Friends endpoints
   FRIENDS: "/friends",
+  BLOCKED_FRIENDS: "/friends/blocked",
   FRIENDS_REQUESTS: "/friends/requests",
   FRIENDS_REQUEST: "/friends/request",
   FRIENDS_SEARCH: "/friends/search",

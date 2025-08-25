@@ -36,8 +36,8 @@ const RequestsTab: React.FC = () => {
           // Charger seulement le type sélectionné
           await getFriendsRequest(activeFilter);
         }
-      } catch {
-        toast.error("Erreur lors du chargement des demandes");
+      } catch (err) {
+        // toast.error(err.message);
       } finally {
         setLocalLoading(false);
       }

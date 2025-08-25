@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Modal } from "../ui/Modal";
+import { formatTimeAgo } from "../../utils/date-formatter";
 
 interface FriendProfileModalProps {
   friend: Friend | null;
@@ -48,19 +49,19 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
 
   if (!friend) return null;
 
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diffInHours = Math.floor(
-      (now.getTime() - time.getTime()) / (1000 * 60 * 60)
-    );
+  // const formatTimeAgo = (timestamp: string) => {
+  //   const now = new Date();
+  //   const time = new Date(timestamp);
+  //   const diffInHours = Math.floor(
+  //     (now.getTime() - time.getTime()) / (1000 * 60 * 60)
+  //   );
 
-    if (diffInHours < 1) return "Il y a quelques minutes";
-    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `Il y a ${diffInDays}j`;
-    return time.toLocaleDateString("fr-FR");
-  };
+  //   if (diffInHours < 1) return "Il y a quelques minutes";
+  //   if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+  //   const diffInDays = Math.floor(diffInHours / 24);
+  //   if (diffInDays < 7) return `Il y a ${diffInDays}j`;
+  //   return time.toLocaleDateString("fr-FR");
+  // };
 
   const handleReportUser = () => {
     const reasons = [
@@ -228,7 +229,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
                       className="mx-auto text-blue-500 mb-2"
                     />
                     <p className="text-2xl font-bold text-foreground">
-                      {friend.stats.totalDistance.toFixed(1)}
+                      {friend.stats.totalDistance}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       km parcourus
