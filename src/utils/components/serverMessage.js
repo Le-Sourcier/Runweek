@@ -17,6 +17,7 @@ module.exports = (res, key, data = []) => {
       "GOAL_RETRIEVED",
       "EMAIL_SENDING_SUCCESS",
       "SESSION_TERMINATED",
+      "USER_UNBLOCKED",
       "EMAIL_VERIFICATION_SENT",
       "EMAIL_VERIFIED_SUCCESS",
       "USER_BLOCKED",
@@ -107,6 +108,7 @@ module.exports = (res, key, data = []) => {
       "DATA_SHARING_PREFERENCES_RETRIEVED",
       "DATA_SHARING_PREFERENCES_UPDATED",
       "DATA_SHARING_PREFERENCES_RETRIEVED",
+      "BLOCKED_FRIENDS_RETRIEVED",
     ],
     201: [
       "ACCOUNT_CREATED",
@@ -208,6 +210,7 @@ module.exports = (res, key, data = []) => {
     403: [
       "ACCESS_DENIED",
       "INSUFFICIENT_PERMISSIONS",
+      "CANNOT_UNBLOCK_NOT_BLOCKED_BY_YOU",
       "FORBIDDEN_RESOURCE",
       "ACCOUNT_ARCHIVED",
       "ACCOUNT_UNVERIFIED",
@@ -241,6 +244,7 @@ module.exports = (res, key, data = []) => {
       "NO_RECORDS_FOUND",
       "NO_NUTRITION_DATA",
       "JOB_NOT_FOUND",
+      "BLOCK_RELATIONSHIP_NOT_FOUND",
       "USER_NOT_FOUND",
       "PRODUCT_NOT_FOUND",
       "GOOGLE_ACCOUNT_NOT_LINKED",
@@ -261,6 +265,7 @@ module.exports = (res, key, data = []) => {
       "ACTIVITY_NOT_FOUND",
       "NO_FRIENDS_STATS_FOUND",
       "DATA_SHARING_PREFERENCES_NOT_FOUND",
+      "NO_BLOCKED_FRIENDS_FOUND",
     ],
     409: [
       "CONFLICT",
@@ -367,6 +372,8 @@ module.exports = (res, key, data = []) => {
       "DATA_SHARING_PREFERENCES_UPDATE_FAILED",
       "DATA_SHARING_PREFERENCES_RETRIEVAL_FAILED",
       "GOOGLE_TOKEN_EXCHANGE_FAILED",
+      "BLOCKED_FRIENDS_RETRIEVAL_FAILED",
+      "UNBLOCK_USER_FAILED",
     ],
     502: ["STRIPE_API_ERROR"],
     503: ["STRIPE_CONNECTION_ERROR"],

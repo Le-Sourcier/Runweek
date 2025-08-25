@@ -165,7 +165,209 @@ router
    *                   example: FRIENDS_RETRIEVAL_FAILED
    */
   .get("/", authorize, ctr.getFriends) // GET /api/friends Retrieve the authenticated user's friends list with optional filtering and sorting
-
+  /**
+   * @openapi
+   * /api/friends/blocked:
+   *   get:
+   *     tags: [Friends]
+   *     summary: Get blocked friends list
+   *     description: Retrieves the authenticated user's list of blocked friends with optional sorting. Blocked friends have limited information available based on their privacy settings.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: sort
+   *         schema:
+   *           type: string
+   *           enum: [name, mutual, recent]
+   *           default: name
+   *         description: Sort blocked friends by criteria (name, mutual friends count, or most recently blocked)
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 20
+   *         description: Limit the number of results returned
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number for pagination
+   *     responses:
+   *       200:
+   *         description: Blocked friends list retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: BLOCKED_FRIENDS_RETRIEVED
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     friends:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                             format: uuid
+   *                             example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+   *                           name:
+   *                             type: string
+   *                             example: "John Doe"
+   *                           email:
+   *                             type: string
+   *                             format: email
+   *                             example: "john.doe@example.com"
+   *                           profileImage:
+   *                             type: string
+   *                             nullable: true
+   *                             example: "https://example.com/profile.jpg"
+   *                           mutualFriends:
+   *                             type: integer
+   *                             example: 5
+   *                             description: Number of mutual friends between the user and the blocked friend
+   *                           joinedDate:
+   *                             type: string
+   *                             format: date
+   *                             example: "2024-01-15"
+   *                             description: Date when the blocked friend joined the platform
+   *                           preferences:
+   *                             type: object
+   *                             properties:
+   *                               profileVisibility:
+   *                                 type: string
+   *                                 enum: [public, private]
+   *                                 example: "public"
+   *                                 description: Profile visibility setting of the blocked friend
+   *                               activityVisibility:
+   *                                 type: string
+   *                                 enum: [friends, private]
+   *                                 example: "private"
+   *                                 description: Activity visibility setting of the blocked friend
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         total:
+   *                           type: integer
+   *                           example: 15
+   *                         page:
+   *                           type: integer
+   *                           example: 1
+   *                         limit:
+   *                           type: integer
+   *                           example: 20
+   *                         pages:
+   *                           type: integer
+   *                           example: 1
+   *       204:
+   *         description: No blocked friends found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 204
+   *                 message:
+   *                   type: string
+   *                   example: NO_BLOCKED_FRIENDS_FOUND
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     friends:
+   *                       type: array
+   *                       items: {}
+   *                       example: []
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         total:
+   *                           type: integer
+   *                           example: 0
+   *                         page:
+   *                           type: integer
+   *                           example: 1
+   *                         limit:
+   *                           type: integer
+   *                           example: 20
+   *                         pages:
+   *                           type: integer
+   *                           example: 0
+   *       400:
+   *         description: Invalid query parameters
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 400
+   *                 message:
+   *                   type: string
+   *                   example: INVALID_QUERY_PARAMETERS
+   *                 details:
+   *                   type: object
+   *                   properties:
+   *                     sort:
+   *                       type: string
+   *                       example: "Invalid sort parameter. Allowed values: name, mutual, recent"
+   *       401:
+   *         description: Unauthorized access
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: UNAUTHORIZED_ACCESS
+   *       500:
+   *         description: Server error while retrieving blocked friends
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: BLOCKED_FRIENDS_RETRIEVAL_FAILED
+   */
+  .get("/blocked", authorize, ctr.getBlockedFriends) // GET /api/friends/blocked - Get blocked friends list
   /**
    * @openapi
    * /api/friends/requests:
@@ -2245,6 +2447,106 @@ router
    *                   type: string
    *                   example: BLOCK_USER_FAILED
    */
-  .put("/:id/block", authorize, ctr.blockUser); //PUT /api/friends/:id/block - Block a user
+  .put("/:id/block", authorize, ctr.blockUser) //PUT /api/friends/:id/block - Block a user
+  /**
+   * @openapi
+   * /api/friends/{id}/unblock:
+   *   put:
+   *     tags: [Friends]
+   *     summary: Unblock user
+   *     description: Unblocks a previously blocked user, allowing normal interactions again. Only the user who initiated the block can unblock.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID of the user to unblock
+   *     responses:
+   *       200:
+   *         description: User unblocked successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: USER_UNBLOCKED
+   *       403:
+   *         description: Forbidden - Cannot unblock user not blocked by you
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 403
+   *                 message:
+   *                   type: string
+   *                   example: CANNOT_UNBLOCK_NOT_BLOCKED_BY_YOU
+   *       404:
+   *         description: Block relationship not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 404
+   *                 message:
+   *                   type: string
+   *                   example: BLOCK_RELATIONSHIP_NOT_FOUND
+   *       401:
+   *         description: Unauthorized access
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: UNAUTHORIZED_ACCESS
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: UNBLOCK_USER_FAILED
+   */
+  .put("/:id/unblock", authorize, ctr.unblockUser); //PUT /api/friends/:id/unblock - Unblock a user
 
 module.exports = router;

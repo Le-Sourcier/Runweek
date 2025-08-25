@@ -189,6 +189,7 @@ module.exports = {
       return serverMessage(res, "FRIENDS_RETRIEVAL_FAILED", error.message);
     }
   },
+
   // GET /api/friends/requests - Récupérer les demandes d'amis
   getFriendRequests: async (req, res) => {
     try {
@@ -207,6 +208,117 @@ module.exports = {
       return serverMessage(
         res,
         "FRIEND_REQUESTS_RETRIEVAL_FAILED",
+        error.message
+      );
+    }
+  },
+
+  // GET /api/friends/blocked - Récupérer les amis blockés
+  getBlockedFriends: async (req, res) => {
+    try {
+      const { sort = "name", limit = 20, page = 1 } = req.query;
+
+      // Validation des paramètres
+      const allowedSorts = ["name", "mutual", "recent"];
+      if (!allowedSorts.includes(sort)) {
+        return serverMessage(res, "INVALID_QUERY_PARAMETERS", {
+          sort: "Invalid sort parameter. Allowed values: name, mutual, recent",
+        });
+      }
+
+      const numericLimit = Math.min(parseInt(limit), 100);
+      const numericPage = Math.max(parseInt(page), 1);
+
+      const friendships = await Friendship.getFriends(req.user.id, "blocked");
+
+      let friends = await Promise.all(
+        friendships.map(async (friendship) => {
+          const friend =
+            friendship.requester.id.toString() === req.user.id.toString()
+              ? friendship.recipient
+              : friendship.requester;
+
+          // Récupérer les préférences de partage de l'ami
+          const sharingPreferences =
+            await db.sequelize.models.DataSharingPreferences.findOne({
+              where: { user_id: friend.id },
+              attributes: [
+                "shareActivities",
+                "shareGoals",
+                "shareAchievements",
+                "showInSearch",
+              ],
+            });
+
+          // Récupérer le nombre d'amis communs
+          const mutualFriends = await Friendship.countMutualFriends(
+            req.user.id,
+            friend.id
+          );
+
+          return {
+            id: friend.id,
+            name: `${friend.profile?.fname || ""} ${
+              friend.profile?.lname || ""
+            }`.trim(),
+            email: friend.email,
+            profileImage: friend.profile?.image || null,
+            mutualFriends,
+            joinedDate: friend.createdAt.toISOString().split("T")[0],
+            blockedAt: friendship.updatedAt, // Date du blocage
+            preferences: {
+              profileVisibility: sharingPreferences?.showInSearch
+                ? "public"
+                : "private",
+              activityVisibility: sharingPreferences?.shareActivities
+                ? "friends"
+                : "private",
+            },
+          };
+        })
+      );
+
+      // Trier
+      friends.sort((a, b) => {
+        switch (sort) {
+          case "name":
+            return a.name.localeCompare(b.name);
+          case "mutual":
+            return b.mutualFriends - a.mutualFriends;
+          case "recent":
+            return (
+              new Date(b.blockedAt).getTime() - new Date(a.blockedAt).getTime()
+            );
+          default:
+            return 0;
+        }
+      });
+
+      // Pagination
+      const startIndex = (numericPage - 1) * numericLimit;
+      const endIndex = startIndex + numericLimit;
+      const paginatedFriends = friends.slice(startIndex, endIndex);
+
+      const response = {
+        friends: paginatedFriends,
+        pagination: {
+          total: friends.length,
+          page: numericPage,
+          limit: numericLimit,
+          pages: Math.ceil(friends.length / numericLimit),
+        },
+      };
+
+      if (!friends.length) {
+        return serverMessage(res, "NO_BLOCKED_FRIENDS_FOUND", response);
+      }
+
+      return serverMessage(res, "BLOCKED_FRIENDS_RETRIEVED", response);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des amis bloqués:", error);
+      return serverMessage(
+        res,
+        "BLOCKED_FRIENDS_RETRIEVAL_FAILED",
         error.message
       );
     }
@@ -1010,6 +1122,51 @@ module.exports = {
     } catch (error) {
       console.error("Erreur lors du blocage:", error);
       return serverMessage(res, "BLOCK_USER_FAILED", error.message);
+    }
+  },
+  // PUT /api/friends/:id/unblock - Debloquer un utilisateur
+  unblockUser: async (req, res) => {
+    try {
+      const userIdToUnblock = req.params.id;
+      const currentUserId = req.user.id;
+      // Trouver l'amitié/relation de blocage
+      const friendship = await Friendship.findOne({
+        where: {
+          [Op.or]: [
+            {
+              requester_id: currentUserId,
+              recipient_id: userIdToUnblock,
+              status: "blocked",
+            },
+            {
+              requester_id: userIdToUnblock,
+              recipient_id: currentUserId,
+              status: "blocked",
+            },
+          ],
+        },
+      });
+
+      if (!friendship) {
+        return serverMessage(res, "BLOCK_RELATIONSHIP_NOT_FOUND");
+      }
+
+      // Vérifier qui a initié le blocage
+      if (friendship.blockedBy !== currentUserId.toString()) {
+        return serverMessage(res, "CANNOT_UNBLOCK_NOT_BLOCKED_BY_YOU");
+      }
+
+      if (friendship) {
+        friendship.status = "accepted";
+        friendship.blockedAt = null;
+        friendship.blockedBy = null;
+        await friendship.save();
+      }
+
+      return serverMessage(res, "USER_UNBLOCKED");
+    } catch (error) {
+      console.error("Erreur lors du blocage:", error);
+      return serverMessage(res, "UNBLOCK_USER_FAILED", error.message);
     }
   },
 };

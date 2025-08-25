@@ -154,12 +154,12 @@ module.exports = (sequelize) => {
   // };
 
   // Méthode spécifique pour les demandes d'amis - CORRIGÉE
-  Friendship.getFriends = function (user_id) {
+  Friendship.getFriends = function (user_id, status = "accepted") {
     return this.findAll({
       where: {
         [Op.or]: [
-          { requester_id: user_id, status: "accepted" },
-          { recipient_id: user_id, status: "accepted" },
+          { requester_id: user_id, status: status },
+          { recipient_id: user_id, status: status },
         ],
       },
       include: [
