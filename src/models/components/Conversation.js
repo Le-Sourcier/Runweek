@@ -50,6 +50,11 @@ module.exports = (sequelize) => {
       foreignKey: "conversation_id",
       as: "messages",
     });
+
+    Conversation.hasMany(models.ConversationParticipant, {
+      foreignKey: "conversation_id",
+      as: "conversationParticipants", // Use a different alias to avoid conflict
+    });
   };
 
   return Conversation;

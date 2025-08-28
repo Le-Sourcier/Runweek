@@ -453,12 +453,37 @@ module.exports = {
   },
 
   // PUT /api/friends/requests/:id/decline - Refuser une demande d'ami
+  // declineFriendRequest: async (req, res) => {
+  //   try {
+  //     const friendship = await Friendship.findOne({
+  //       id: req.params.id,
+  //       recipient: req.user.id,
+  //       status: "pending",
+  //     });
+
+  //     if (!friendship) {
+  //       return serverMessage(res, "FRIEND_REQUEST_NOT_FOUND");
+  //     }
+
+  //     friendship.status = "declined";
+  //     friendship.declinedAt = new Date();
+  //     await friendship.save();
+
+  //     return serverMessage(res, "FRIEND_REQUEST_DECLINED", friendship);
+  //   } catch (error) {
+  //     console.error("Erreur lors du refus de la demande:", error);
+  //     return serverMessage(res, "FRIEND_REQUEST_DECLINE_FAILED");
+  //   }
+  // },
+  // PUT /api/friends/requests/:id/decline - Refuser une demande d'ami
   declineFriendRequest: async (req, res) => {
     try {
       const friendship = await Friendship.findOne({
-        id: req.params.id,
-        recipient: req.user.id,
-        status: "pending",
+        where: {
+          id: req.params.id,
+          recipient_id: req.user.id,
+          status: "pending",
+        },
       });
 
       if (!friendship) {
@@ -477,21 +502,48 @@ module.exports = {
   },
 
   // DELETE /api/friends/:id - Supprimer un ami
+  // deleteFriend: async (req, res) => {
+  //   try {
+  //     const friendship = await Friendship.findOne({
+  //       $or: [
+  //         { requester: req.user.id, recipient: req.params.id },
+  //         { requester: req.params.id, recipient: req.user.id },
+  //       ],
+  //       status: "accepted",
+  //     });
+
+  //     if (!friendship) {
+  //       return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
+  //     }
+
+  //     await Friendship.findByIdAndDelete(friendship.id);
+
+  //     return serverMessage(res, "FRIEND_DELETED");
+  //   } catch (error) {
+  //     console.error("Erreur lors de la suppression de l'ami:", error);
+  //     return serverMessage(res, "FRIEND_DELETION_FAILED", error.message);
+  //   }
+  // },
+  // DELETE /api/friends/:id - Supprimer un ami
   deleteFriend: async (req, res) => {
     try {
       const friendship = await Friendship.findOne({
-        $or: [
-          { requester: req.user.id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user.id },
-        ],
-        status: "accepted",
+        where: {
+          [Op.or]: [
+            { requester_id: req.user.id, recipient_id: req.params.id },
+            { requester_id: req.params.id, recipient_id: req.user.id },
+          ],
+          status: "accepted",
+        },
       });
 
       if (!friendship) {
         return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
       }
 
-      await Friendship.findByIdAndDelete(friendship.id);
+      await Friendship.destroy({
+        where: { id: friendship.id },
+      });
 
       return serverMessage(res, "FRIEND_DELETED");
     } catch (error) {
@@ -665,21 +717,70 @@ module.exports = {
       return serverMessage(res, "USER_SEARCH_FAILED");
     }
   },
+
   // GET /api/friends/conversations - Récupérer les conversations
   getConversations: async (req, res) => {
     try {
-      const conversations = await Conversation.find({
-        participants: req.user.id,
-        isActive: true,
-      })
-        .populate("participants", "fname lname email profile_image")
-        .populate("lastMessage")
-        .sort({ lastActivity: -1 });
+      const conversations = await Conversation.findAll({
+        include: [
+          {
+            model: db.sequelize.models.Users,
+            as: "participants",
+            through: { attributes: [] },
+            where: { id: req.user.id },
+            attributes: [],
+          },
+          {
+            model: db.sequelize.models.Message,
+            as: "lastMessage",
+            attributes: ["id", "content", "createdAt"],
+          },
+        ],
+        where: { isActive: true },
+        order: [["lastActivity", "DESC"]],
+      });
+
       if (conversations.length === 0) {
         return serverMessage(res, "NO_CONVERSATIONS_FOUND");
       }
 
-      return serverMessage(res, "CONVERSATIONS_RETRIEVED", conversations);
+      // Formater la réponse
+      const formattedConversations = await Promise.all(
+        conversations.map(async (conversation) => {
+          // Récupérer tous les participants (sauf l'utilisateur courant)
+          const otherParticipants = await conversation.getParticipants({
+            where: { id: { [Op.ne]: req.user.id } },
+            include: [
+              {
+                model: db.sequelize.models.Profiles,
+                as: "profile",
+                attributes: ["fname", "lname", "image"],
+              },
+            ],
+            through: { attributes: [] },
+          });
+
+          return {
+            id: conversation.id,
+            participants: otherParticipants.map((user) => ({
+              id: user.id,
+              fname: user.profile?.fname,
+              lname: user.profile?.lname,
+              email: user.email,
+              profile_image: user.profile?.image,
+            })),
+            lastMessage: conversation.lastMessage,
+            lastActivity: conversation.lastActivity,
+            isActive: conversation.isActive,
+          };
+        })
+      );
+
+      return serverMessage(
+        res,
+        "CONVERSATIONS_RETRIEVED",
+        formattedConversations
+      );
     } catch (error) {
       console.error("Erreur lors de la récupération des conversations:", error);
       return serverMessage(res, "CONVERSATIONS_RETRIEVAL_FAILED");
@@ -693,88 +794,309 @@ module.exports = {
 
       // Vérifier que l'utilisateur fait partie de la conversation
       const conversation = await Conversation.findOne({
-        id: req.params.id,
-        participants: req.user.id,
+        include: [
+          {
+            model: db.sequelize.models.Users,
+            as: "participants",
+            where: { id: req.user.id },
+            through: { attributes: [] },
+            attributes: [],
+          },
+        ],
+        where: { id: req.params.id },
       });
 
       if (!conversation) {
         return serverMessage(res, "NO_CONVERSATION_FOUND");
       }
 
-      const messages = await Message.find({ conversation: req.params.id })
-        .populate("sender", "fname lname profile_image")
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit));
+      const messages = await Message.findAll({
+        where: { conversation_id: req.params.id },
+        include: [
+          {
+            model: db.sequelize.models.Users,
+            as: "sender",
+            attributes: ["id", "email"],
+            include: [
+              {
+                model: db.sequelize.models.Profiles,
+                as: "profile",
+                attributes: ["fname", "lname", "image"],
+              },
+            ],
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+        limit: parseInt(limit),
+        offset: (parseInt(page) - 1) * parseInt(limit),
+      });
 
-      return serverMessage(res, "MESSAGES_RETRIEVED", messages.reverse());
+      // Inverser l'ordre pour avoir les plus anciens en premier
+      const orderedMessages = messages.reverse();
+
+      return serverMessage(res, "MESSAGES_RETRIEVED", orderedMessages);
     } catch (error) {
       console.error("Erreur lors de la récupération des messages:", error);
       return serverMessage(res, "MESSAGES_RETRIEVAL_FAILED", error.message);
     }
   },
 
+  // GET /api/friends/conversations/:friend_id/messages - Récupérer les messages d'une conversation
+  getMessagesByFriendId: async (req, res) => {
+    try {
+      const { page = 1, limit = 50 } = req.query;
+      const friendId = req.params.friend_id;
+      const currentUserId = req.user.id;
+
+      // Vérifier d'abord que l'ami existe et est un ami accepté
+      const friendship = await Friendship.findOne({
+        where: {
+          status: "accepted",
+          [Op.or]: [
+            { requester_id: currentUserId, recipient_id: friendId },
+            { requester_id: friendId, recipient_id: currentUserId },
+          ],
+        },
+      });
+
+      if (!friendship) {
+        return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
+      }
+
+      // Trouver la conversation via la table ConversationParticipant
+      const conversationParticipants =
+        await db.sequelize.models.ConversationParticipant.findAll({
+          where: {
+            user_id: { [Op.in]: [currentUserId, friendId] },
+            leftAt: null,
+          },
+          attributes: ["conversation_id"],
+          raw: true,
+        });
+
+      // Grouper par conversation_id et compter le nombre de participants
+      const conversationCounts = {};
+      conversationParticipants.forEach((participant) => {
+        const convId = participant.conversation_id;
+        conversationCounts[convId] = (conversationCounts[convId] || 0) + 1;
+      });
+
+      // Trouver la conversation qui a exactement 2 participants (les deux utilisateurs)
+      const commonConversationId = Object.keys(conversationCounts).find(
+        (convId) => conversationCounts[convId] === 2
+      );
+
+      if (!commonConversationId) {
+        return serverMessage(res, "NO_CONVERSATION_FOUND");
+      }
+
+      // Récupérer les messages de cette conversation
+      const messages = await Message.findAll({
+        where: { conversation_id: commonConversationId },
+        include: [
+          {
+            model: db.sequelize.models.Users,
+            as: "sender",
+            attributes: ["id", "email"],
+            include: [
+              {
+                model: db.sequelize.models.Profiles,
+                as: "profile",
+                attributes: ["fname", "lname", "image"],
+              },
+            ],
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+        limit: parseInt(limit),
+        offset: (parseInt(page) - 1) * parseInt(limit),
+      });
+
+      // Formater les messages
+      const formattedMessages = messages.reverse().map((message) => ({
+        id: message.id,
+        friend_id: friendId,
+        sender: {
+          id: message.sender.id,
+          email: message.sender.email,
+          profile: {
+            fname: message.sender.profile?.fname || "",
+            lname: message.sender.profile?.lname || "",
+            image: message.sender.profile?.image || null,
+          },
+        },
+        content: message.content,
+        messageType: message.messageType,
+        createdAt: message.createdAt.toISOString(),
+      }));
+
+      return serverMessage(res, "MESSAGES_RETRIEVED", formattedMessages);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des messages:", error);
+      return serverMessage(res, "MESSAGES_RETRIEVAL_FAILED", error.message);
+    }
+  },
   // POST /api/friends/:id/message - Envoyer un message à un ami
   sendMessage: async (req, res) => {
+    const transaction = await db.sequelize.transaction();
+
     try {
       const { error, value } = sendMessageSchema.validate(req.body);
-
       if (error) {
+        await transaction.rollback();
         console.error("Validation error:", error.details[0].message);
         return serverMessage(res, "BAD_REQUEST");
       }
 
-      // Vérifier que les utilisateurs sont amis
+      const recipientId = req.params.id;
+      const senderId = req.user.id;
+
+      // Verify friendship
       const friendship = await Friendship.findOne({
-        $or: [
-          { requester: req.user.id, recipient: req.params.id },
-          { requester: req.params.id, recipient: req.user.id },
-        ],
-        status: "accepted",
+        where: {
+          [Op.or]: [
+            { requester_id: senderId, recipient_id: recipientId },
+            { requester_id: recipientId, recipient_id: senderId },
+          ],
+          status: "accepted",
+        },
+        transaction,
       });
 
       if (!friendship) {
-        console.error(
-          "Amitié non trouvée pour l'envoi du message:",
-          req.user.id,
-          req.params.id
-        );
+        await transaction.rollback();
+        console.error("Friendship not found:", senderId, recipientId);
         return serverMessage(res, "FRIENDSHIP_NOT_FOUND");
       }
 
-      // Trouver ou créer la conversation
-      let conversation = await Conversation.findOne({
-        participants: { $all: [req.user.id, req.params.id] },
-      });
+      // Find or create conversation - USING EXISTING ASSOCIATION
+      // Find or create conversation - SIMPLIFIED APPROACH
+      let conversation = null;
 
-      if (!conversation) {
-        conversation = new Conversation({
-          participants: [req.user.id, req.params.id],
+      // First, try to find existing conversation using a subquery
+      const conversationIds =
+        await db.sequelize.models.ConversationParticipant.findAll({
+          where: {
+            user_id: { [Op.in]: [senderId, recipientId] },
+            leftAt: null,
+          },
+          attributes: ["conversation_id"],
+          group: ["conversation_id"],
+          having: db.sequelize.literal("COUNT(DISTINCT user_id) = 2"),
+          transaction,
+          raw: true,
         });
-        await conversation.save();
+
+      if (conversationIds.length > 0) {
+        conversation = await Conversation.findOne({
+          where: {
+            id: conversationIds[0].conversation_id,
+          },
+          transaction,
+        });
       }
 
-      // Créer le message
-      const message = new Message({
-        conversation: conversation.id,
-        sender: req.user.id,
-        content: value.content,
-        messageType: value.messageType,
+      if (!conversation) {
+        // Create new conversation
+        conversation = await Conversation.create({}, { transaction });
+
+        // Add participants
+        await db.sequelize.models.ConversationParticipant.bulkCreate(
+          [
+            { conversation_id: conversation.id, user_id: senderId },
+            { conversation_id: conversation.id, user_id: recipientId },
+          ],
+          { transaction }
+        );
+      }
+
+      if (!conversation) {
+        // Create new conversation
+        conversation = await Conversation.create({}, { transaction });
+
+        // Add participants
+        await db.sequelize.models.ConversationParticipant.bulkCreate(
+          [
+            { conversation_id: conversation.id, user_id: senderId },
+            { conversation_id: conversation.id, user_id: recipientId },
+          ],
+          { transaction }
+        );
+      }
+
+      // Create message
+      const message = await Message.create(
+        {
+          conversation_id: conversation.id,
+          sender_id: senderId,
+          content: value.content,
+          messageType: value.messageType,
+        },
+        { transaction }
+      );
+
+      // Update conversation last activity
+      await Conversation.update(
+        {
+          last_message_id: message.id,
+          lastActivity: new Date(),
+        },
+        {
+          where: { id: conversation.id },
+          transaction,
+        }
+      );
+
+      // Get populated message
+      const populatedMessage = await Message.findByPk(message.id, {
+        include: [
+          {
+            model: db.sequelize.models.Users,
+            as: "sender",
+            attributes: ["id", "email"],
+            include: [
+              {
+                model: db.sequelize.models.Profiles,
+                as: "profile",
+                attributes: ["fname", "lname", "image"],
+              },
+            ],
+          },
+        ],
+        transaction,
       });
 
-      await message.save();
+      // Format response
+      // Format response pour correspondre au type TypeScript
+      const formattedMessage = {
+        id: populatedMessage.id,
+        friend_id: recipientId, // Ajouter friend_id
+        sender: {
+          id: populatedMessage.sender.id,
+          email: populatedMessage.sender.email,
+          profile: {
+            fname: populatedMessage.sender.profile?.fname || "",
+            lname: populatedMessage.sender.profile?.lname || "",
+            image: populatedMessage.sender.profile?.image || null,
+          },
+        },
+        content: populatedMessage.content,
+        messageType: populatedMessage.messageType,
+        createdAt: populatedMessage.createdAt.toISOString(),
+      };
 
-      // Mettre à jour la conversation
-      conversation.lastMessage = message.id;
-      conversation.lastActivity = new Date();
-      await conversation.save();
+      const io = req.app.get("io");
 
-      // Populer le message pour la réponse
-      await message.populate("sender", "fname lname profile_image");
+      io.to(`friend_${formattedMessage.friend_id}`).emit(
+        "new_message",
+        formattedMessage
+      );
 
-      return serverMessage(res, "MESSAGE_SENT", message);
+      await transaction.commit();
+      return serverMessage(res, "MESSAGE_SENT", formattedMessage);
     } catch (error) {
-      console.error("Erreur lors de l'envoi du message:", error);
+      await transaction.rollback();
+      console.error("Message sending error:", error);
       return serverMessage(res, "MESSAGE_SEND_FAILED", error.message);
     }
   },
@@ -918,20 +1240,105 @@ module.exports = {
   },
 
   // POST /api/friends/report - Signaler un utilisateur
+  // reportUser: async (req, res) => {
+  //   try {
+  //     const { error, value } = reportUserSchema.validate(req.body);
+
+  //     if (error) {
+  //       console.error("Validation error:", error.details[0].message);
+
+  //       return serverMessage(res, "BAD_REQUEST");
+  //     }
+
+  //     const { reportedUserId } = req.body;
+
+  //     // Vérifier que l'utilisateur signalé existe
+  //     const reportedUser = await User.findById(reportedUserId);
+  //     if (!reportedUser) {
+  //       return serverMessage(res, "USER_NOT_FOUND");
+  //     }
+
+  //     // Vérifier qu'on ne se signale pas soi-même
+  //     if (reportedUserId === req.user.id.toString()) {
+  //       console.error("Tentative de signalement de soi-même:", req.user.id);
+
+  //       return serverMessage(res, "CANNOT_REPORT_SELF");
+  //     }
+
+  //     // Vérifier s'il n'y a pas déjà un signalement récent
+  //     const existingReport = await Report.findOne({
+  //       reporter: req.user.id,
+  //       reported: reportedUserId,
+  //       createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  //     });
+
+  //     if (existingReport) {
+  //       console.error(
+  //         "Signalement déjà existant pour l'utilisateur:",
+  //         reportedUserId
+  //       );
+
+  //       return serverMessage(res, "USER_ALREADY_REPORTED");
+  //     }
+
+  //     const report = new Report({
+  //       reporter: req.user.id,
+  //       reported: reportedUserId,
+  //       reason: value.reason,
+  //       details: value.details,
+  //       severity: value.severity,
+  //     });
+
+  //     await report.save();
+
+  //     // Actions automatiques selon la gravité
+  //     if (value.severity === "high") {
+  //       // Bloquer automatiquement pour les cas graves
+  //       await Friendship.findOneAndUpdate(
+  //         {
+  //           $or: [
+  //             { requester: req.user.id, recipient: reportedUserId },
+  //             { requester: reportedUserId, recipient: req.user.id },
+  //           ],
+  //         },
+  //         {
+  //           status: "blocked",
+  //           blockedAt: new Date(),
+  //           blockedBy: req.user.id,
+  //         }
+  //       );
+  //     }
+
+  //     // res.status(201).json({
+  //     //   error: false,
+  //     //   message:
+  //     //     "Signalement envoyé avec succès. Notre équipe l'examinera dans les 24h.",
+  //     //   data: { reportId: report.id },
+  //     // });
+
+  //     return serverMessage(res, "REPORT_SUBMITTED", {
+  //       report_id: report.id,
+  //     });
+  //   } catch (error) {
+  //     console.error("Erreur lors du signalement:", error);
+  //     return serverMessage(res, "REPORT_SUBMISSION_FAILED");
+  //   }
+  // },
+
+  // POST /api/friends/report - Signaler un utilisateur
   reportUser: async (req, res) => {
     try {
       const { error, value } = reportUserSchema.validate(req.body);
 
       if (error) {
         console.error("Validation error:", error.details[0].message);
-
         return serverMessage(res, "BAD_REQUEST");
       }
 
       const { reportedUserId } = req.body;
 
       // Vérifier que l'utilisateur signalé existe
-      const reportedUser = await User.findById(reportedUserId);
+      const reportedUser = await Users.findByPk(reportedUserId);
       if (!reportedUser) {
         return serverMessage(res, "USER_NOT_FOUND");
       }
@@ -939,15 +1346,16 @@ module.exports = {
       // Vérifier qu'on ne se signale pas soi-même
       if (reportedUserId === req.user.id.toString()) {
         console.error("Tentative de signalement de soi-même:", req.user.id);
-
         return serverMessage(res, "CANNOT_REPORT_SELF");
       }
 
       // Vérifier s'il n'y a pas déjà un signalement récent
       const existingReport = await Report.findOne({
-        reporter: req.user.id,
-        reported: reportedUserId,
-        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        where: {
+          reporter_id: req.user.id,
+          reported_id: reportedUserId,
+          createdAt: { [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
       });
 
       if (existingReport) {
@@ -955,44 +1363,44 @@ module.exports = {
           "Signalement déjà existant pour l'utilisateur:",
           reportedUserId
         );
-
         return serverMessage(res, "USER_ALREADY_REPORTED");
       }
 
-      const report = new Report({
-        reporter: req.user.id,
-        reported: reportedUserId,
+      const report = await Report.create({
+        reporter_id: req.user.id,
+        reported_id: reportedUserId,
         reason: value.reason,
         details: value.details,
         severity: value.severity,
       });
 
-      await report.save();
-
       // Actions automatiques selon la gravité
       if (value.severity === "high") {
         // Bloquer automatiquement pour les cas graves
-        await Friendship.findOneAndUpdate(
-          {
-            $or: [
-              { requester: req.user.id, recipient: reportedUserId },
-              { requester: reportedUserId, recipient: req.user.id },
+        const friendship = await Friendship.findOne({
+          where: {
+            [Op.or]: [
+              { requester_id: req.user.id, recipient_id: reportedUserId },
+              { requester_id: reportedUserId, recipient_id: req.user.id },
             ],
           },
-          {
+        });
+
+        if (friendship) {
+          friendship.status = "blocked";
+          friendship.blockedAt = new Date();
+          friendship.blockedBy = req.user.id;
+          await friendship.save();
+        } else {
+          await Friendship.create({
+            requester_id: req.user.id,
+            recipient_id: reportedUserId,
             status: "blocked",
             blockedAt: new Date(),
             blockedBy: req.user.id,
-          }
-        );
+          });
+        }
       }
-
-      // res.status(201).json({
-      //   error: false,
-      //   message:
-      //     "Signalement envoyé avec succès. Notre équipe l'examinera dans les 24h.",
-      //   data: { reportId: report.id },
-      // });
 
       return serverMessage(res, "REPORT_SUBMITTED", {
         report_id: report.id,

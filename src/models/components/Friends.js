@@ -199,63 +199,130 @@ module.exports = (sequelize) => {
     });
   };
 
-  Friendship.getFriendRequests = function (user_id, requestType = "received") {
+  // Friendship.getFriendRequests = function (user_id, requestType = "received") {
+  //   let whereCondition = { status: "pending" };
+
+  //   if (requestType === "received") {
+  //     whereCondition.recipient_id = user_id;
+  //   } else if (requestType === "sent") {
+  //     whereCondition.requester_id = user_id;
+  //   }
+
+  //   // Déterminer l'association à inclure selon le type
+  //   const includeAssociation =
+  //     requestType === "received" ? "requester" : "recipient";
+
+  //   return this.findAll({
+  //     where: whereCondition,
+  //     include: [
+  //       {
+  //         association: includeAssociation, // Utiliser 'association' au lieu de 'model'
+  //         attributes: ["id", "email"],
+  //         include: [
+  //           {
+  //             model: sequelize.models.Profiles,
+  //             as: "profile",
+  //             attributes: ["fname", "lname", "image"],
+  //           },
+  //           // {
+  //           //   model: sequelize.models.UserStats,
+  //           //   as: "stats",
+  //           //   attributes: ["level"],
+  //           // },
+  //         ],
+  //       },
+  //     ],
+  //     order: [["createdAt", "DESC"]],
+  //   }).then((requests) => {
+  //     return requests.map((request) => {
+  //       const otherUser = request[includeAssociation];
+
+  //       return {
+  //         type: otherUser.type || requestType,
+  //         id: request.id,
+  //         user_id: otherUser.id,
+  //         fname: otherUser.profile?.fname || "",
+  //         lname: otherUser.profile?.lname || "",
+  //         email: otherUser.email,
+  //         image: otherUser.profile?.image || null,
+  //         stats: otherUser.stats
+  //           ? { level: otherUser.stats.level }
+  //           : { level: 0 },
+  //         status: request.status,
+  //         requestMessage: request.requestMessage,
+  //         createdAt: request.createdAt,
+  //       };
+  //     });
+  //   });
+  // };
+  // Méthode pour compter les amis communs entre deux utilisateurs
+
+  Friendship.getFriendRequests = function (user_id, requestType = "all") {
     let whereCondition = { status: "pending" };
+    let includeAssociations = [];
 
     if (requestType === "received") {
       whereCondition.recipient_id = user_id;
+      includeAssociations = ["requester"];
     } else if (requestType === "sent") {
       whereCondition.requester_id = user_id;
+      includeAssociations = ["recipient"];
+    } else if (requestType === "all") {
+      // Pour les deux types, on modifie la condition where
+      whereCondition = {
+        status: "pending",
+        [Op.or]: [{ recipient_id: user_id }, { requester_id: user_id }],
+      };
+      includeAssociations = ["requester", "recipient"];
     }
-
-    // Déterminer l'association à inclure selon le type
-    const includeAssociation =
-      requestType === "received" ? "requester" : "recipient";
 
     return this.findAll({
       where: whereCondition,
-      include: [
-        {
-          association: includeAssociation, // Utiliser 'association' au lieu de 'model'
-          attributes: ["id", "email"],
-          include: [
-            {
-              model: sequelize.models.Profiles,
-              as: "profile",
-              attributes: ["fname", "lname", "image"],
-            },
-            // {
-            //   model: sequelize.models.UserStats,
-            //   as: "stats",
-            //   attributes: ["level"],
-            // },
-          ],
-        },
-      ],
+      include: includeAssociations.map((association) => ({
+        association: association,
+        attributes: ["id", "email"],
+        include: [
+          {
+            model: sequelize.models.Profiles,
+            as: "profile",
+            attributes: ["fname", "lname", "image"],
+          },
+        ],
+      })),
       order: [["createdAt", "DESC"]],
     }).then((requests) => {
       return requests.map((request) => {
-        const otherUser = request[includeAssociation];
+        // Déterminer le type de demande et l'utilisateur concerné
+        let type;
+        let otherUser;
+
+        if (request.requester_id === user_id) {
+          type = "sent";
+          otherUser = request.recipient;
+        } else {
+          type = "received";
+          otherUser = request.requester;
+        }
 
         return {
-          type: otherUser.type || requestType,
+          type: type,
           id: request.id,
           user_id: otherUser.id,
           fname: otherUser.profile?.fname || "",
           lname: otherUser.profile?.lname || "",
           email: otherUser.email,
           image: otherUser.profile?.image || null,
-          stats: otherUser.stats
-            ? { level: otherUser.stats.level }
-            : { level: 0 },
           status: request.status,
           requestMessage: request.requestMessage,
           createdAt: request.createdAt,
+          // Informations supplémentaires sur la relation
+          requester_id: request.requester_id,
+          recipient_id: request.recipient_id,
+          is_requester: request.requester_id === user_id,
         };
       });
     });
   };
-  // Méthode pour compter les amis communs entre deux utilisateurs
   Friendship.countMutualFriendsAlt = function (user_id_1, user_id_2) {
     return this.sequelize
       .query(

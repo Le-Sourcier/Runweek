@@ -1,5 +1,11 @@
 const { serverMessage } = require("../../utils");
-const { Users, Profiles, Activities, ChatMessages } = require("./../../models");
+const {
+  Users,
+  Profiles,
+  Activities,
+  ActivityData,
+  ChatMessages,
+} = require("./../../models");
 const askAI = require("../../services/askAI");
 
 module.exports = {

@@ -374,6 +374,7 @@ module.exports = (res, key, data = []) => {
       "GOOGLE_TOKEN_EXCHANGE_FAILED",
       "BLOCKED_FRIENDS_RETRIEVAL_FAILED",
       "UNBLOCK_USER_FAILED",
+      "LOGIN_ERROR",
     ],
     502: ["STRIPE_API_ERROR"],
     503: ["STRIPE_CONNECTION_ERROR"],

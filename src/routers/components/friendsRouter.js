@@ -382,7 +382,7 @@ router
    *         name: type
    *         schema:
    *           type: string
-   *           enum: [received, sent]
+   *           enum: [all, received, sent]
    *           default: received
    *         description: Type of requests to retrieve
    *     responses:
@@ -1264,7 +1264,7 @@ router
 
   /**
    * @openapi
-   * /api/friends/conversations/{id}/messages:
+   * /api/friends/conversations/all/{id}/messages:
    *   get:
    *     tags: [Friends]
    *     summary: Get conversation messages
@@ -1398,7 +1398,178 @@ router
    *                   type: string
    *                   example: MESSAGES_RETRIEVAL_FAILED
    */
-  .get("/conversations/:id/messages", authorize, ctr.getConversationMessages) //GET /api/friends/conversations/:id/messages - Get messages from a conversation
+  .get(
+    "/conversations/all/:id/messages",
+    authorize,
+    ctr.getConversationMessages
+  ) //GET /api/friends/conversations/:id/messages - Get messages from a conversation
+  /**
+   * @openapi
+   * /api/friends/conversations/{friend_id}/messages:
+   *   get:
+   *     tags: [Friends]
+   *     summary: Get messages from a friend conversation
+   *     description: Retrieves messages from a conversation between the authenticated user and a specific friend
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: friend_id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: ID of the friend
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number for pagination
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 50
+   *         description: Number of messages per page
+   *     responses:
+   *       200:
+   *         description: Messages retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: false
+   *                 status:
+   *                   type: integer
+   *                   example: 200
+   *                 message:
+   *                   type: string
+   *                   example: MESSAGES_RETRIEVED
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       id:
+   *                         type: string
+   *                         format: uuid
+   *                         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+   *                       friend_id:
+   *                         type: string
+   *                         format: uuid
+   *                         example: "507f1f77bcf86cd799439012"
+   *                       sender:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: string
+   *                             format: uuid
+   *                             example: "507f1f77bcf86cd799439013"
+   *                           email:
+   *                             type: string
+   *                             format: email
+   *                             example: "john.doe@example.com"
+   *                           profile:
+   *                             type: object
+   *                             properties:
+   *                               fname:
+   *                                 type: string
+   *                                 example: "John"
+   *                               lname:
+   *                                 type: string
+   *                                 example: "Doe"
+   *                               image:
+   *                                 type: string
+   *                                 nullable: true
+   *                                 example: "https://example.com/profile.jpg"
+   *                       content:
+   *                         type: string
+   *                         example: "Hey, how are you doing?"
+   *                       messageType:
+   *                         type: string
+   *                         enum: [text, emoji, system, image, video, file]
+   *                         example: "text"
+   *                       createdAt:
+   *                         type: string
+   *                         format: date-time
+   *                         example: "2024-01-15T12:00:00.000Z"
+   *       400:
+   *         description: Bad request or invalid parameters
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 400
+   *                 message:
+   *                   type: string
+   *                   example: BAD_REQUEST
+   *       401:
+   *         description: Unauthorized access
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 401
+   *                 message:
+   *                   type: string
+   *                   example: UNAUTHORIZED_ACCESS
+   *       404:
+   *         description: Friend or conversation not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 404
+   *                 message:
+   *                   type: string
+   *                   example: NO_CONVERSATION_FOUND
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 error:
+   *                   type: boolean
+   *                   example: true
+   *                 status:
+   *                   type: integer
+   *                   example: 500
+   *                 message:
+   *                   type: string
+   *                   example: MESSAGES_RETRIEVAL_FAILED
+   */
+  .get(
+    "/conversations/:friend_id/messages",
+    authorize,
+    ctr.getMessagesByFriendId
+  ) //GET /api/friends/conversations/:friend_id/messages - Get messages from a conversation
 
   /**
    * @openapi

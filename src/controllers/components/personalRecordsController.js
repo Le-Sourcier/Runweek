@@ -221,7 +221,6 @@ module.exports = {
 
       const [updatedCount] = await PersonalRecord.update(value, {
         where: {
-          // Syntaxe correcte pour update
           id: req.params.id,
           user_id: req.user.id,
         },

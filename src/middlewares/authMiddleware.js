@@ -97,7 +97,7 @@ const authorize = async (req, res, next) => {
         return serverMessage(res, "ACCOUNT_NOT_FOUND");
     }
   } catch (err) {
-    console.log("MIDDLEWARE: ", err);
+    // console.log("MIDDLEWARE: ", err);
     if (err.name === "TokenExpiredError") {
       return serverMessage(res, "TOKEN_EXPIRED");
     }
