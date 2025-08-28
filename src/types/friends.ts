@@ -9,6 +9,7 @@ export interface Friend {
   lastActivity: string;
   mutualFriends: number;
   joinedDate: string;
+  isTyping?: boolean;
   stats?: {
     totalDistance: number;
     totalRuns: number;
@@ -93,12 +94,61 @@ export interface BlockedFriendsResponse {
     pages: number;
   };
 }
+
+// ******************* MESSAGE *****************************
+// export interface Message {
+//   id: string;
+//   conversation: string;
+//   sender: {
+//     id: string;
+//     fname: string;
+//     lname: string;
+//     profile_image: string;
+//   };
+//   content: string;
+//   messageType: "text" | "image" | "system";
+//   createdAt: string;
+//   // read: boolean;
+// }
+
+export interface Message {
+  id: string;
+  friend_id: string;
+  sender: {
+    id: string;
+    email: string; // ← ajouter email
+    profile: {
+      fname: string;
+      lname: string;
+      image: string;
+    };
+  };
+  content: string;
+  messageType: "text" | "image" | "system";
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  participants: string[];
+  friendName: string;
+  friendImage: string;
+  lastMessage: Message | null;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SendMessageParams {
+  friendId: string;
+  content: string;
+  messageType: "text" | "image" | "system";
+}
 // api/friends?status=online&sort=name'
 export interface FriendsState {
   // Données
   friends: Friend[];
   friendRequests: FriendRequest[];
-  sentRequests: FriendRequest[];
   friendActivities: FriendActivity[];
   friendsStats: FriendsStats | null;
   searchResults: Friend[];
@@ -128,27 +178,60 @@ export interface FriendsState {
   isBlockedFriendsLoading: boolean;
   blockedFriendsError: string | null;
 
-  // Actions pour les amis
+  // Message
+  conversations: Conversation[];
+  currentConversation: string | null;
+  messages: Message[];
+  isSendingMessage: boolean;
+  isLoadingMessages: boolean;
+  conversationError: string | null;
+
+  // Friends
   getFriends: (filters?: FriendFilter) => Promise<void>;
   getBlockedFriends: (filters?: BlockedFriendFilters) => Promise<void>;
   getFriendsRequest: (filter: FriendRequestType) => Promise<void>;
   sendFriendRequest: (email: string, message?: string) => Promise<boolean>;
-  acceptFriendRequest: (requestId: string) => void;
-  declineFriendRequest: (requestId: string) => void;
-  removeFriend: (friendId: string) => void;
+  acceptFriendRequest: (requestId: string) => Promise<void>;
+  declineFriendRequest: (requestId: string) => Promise<void>;
+  removeFriend: (friendId: string) => Promise<void>;
   searchUsers: (query: string) => Promise<void>;
   clearSearchResults: () => void;
-  blockUser: (userId: string) => void;
+  blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => void;
-  reportUser: (userId: string, reason: string) => void;
+  reportUser: (userId: string, reason: string) => Promise<void>;
   updatePrivacySettings: (settings: {
     profileVisibility: string;
     activityVisibility: string;
   }) => void;
   getFriendsStats: () => Promise<void>;
   getFriendActivities: () => void;
+
+  // Socket
   initializeSocket: (id: string) => void;
   disconnectSocket: () => void;
   refreshOnlineFriends: () => void;
   setCurrentUser: (user: { id: string } | null) => void; // Ajoutez cette méthode
+
+  // Message
+  sendMessage: (params: SendMessageParams) => Promise<Message>;
+  getConversations: () => Promise<void>;
+  getMessages: (
+    friend_id: string,
+    page?: number,
+    limit?: number
+  ) => Promise<Message[]>;
+  markAsRead: (conversationId: string, messageIds?: string[]) => Promise<void>;
+  addNewMessage: (message: Message) => void;
+  clearMessages: () => void;
+  setCurrentConversation: (conversationId: string | null) => void;
+  joinConversation: (conversationId: string) => void;
+  leaveConversation: (conversationId: string) => void;
+  sendRealTimeMessage: (messageData: Omit<Message, "id" | "createdAt">) => void;
+  findConversationByParticipant: (friendId: string) => string | null;
+
+  // Typing indicator:
+  typingTimeouts: Map<string, NodeJS.Timeout>;
+  setTypingStatus: (friendId: string, isTyping: boolean) => void;
+  startTyping: (friendId: string) => void;
+  stopTyping: (friendId: string) => void;
 }

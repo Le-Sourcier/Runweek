@@ -33,7 +33,6 @@ import { DietProvider } from "./context/DietContext";
 import { SocialProvider } from "./context/SocialContext";
 import { UserProvider } from "./providers/UserProvider";
 import { MessageProvider } from "./providers/MessageProvider";
-import { FriendsProvider } from "./context/FriendsContext";
 
 // Components
 import "react-toastify/dist/ReactToastify.css";
@@ -50,15 +49,13 @@ const MainAppLayoutContent: React.FC = () => {
           <PRProvider>
             <DietProvider>
               <SocialProvider>
-                <FriendsProvider>
-                  <FloatingCoachProvider>
-                    <Layout>
-                      <SocketManager />
+                <FloatingCoachProvider>
+                  <Layout>
+                    <SocketManager />
 
-                      <Outlet />
-                    </Layout>
-                  </FloatingCoachProvider>
-                </FriendsProvider>
+                    <Outlet />
+                  </Layout>
+                </FloatingCoachProvider>
               </SocialProvider>
             </DietProvider>
           </PRProvider>

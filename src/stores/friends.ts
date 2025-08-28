@@ -4,10 +4,13 @@ import { ApiUrl } from "../utils/api-url";
 import {
   BlockedFriendFilters,
   BlockedFriendsResponse,
+  Conversation,
   Friend,
   FriendRequestType,
   FriendsState,
   FriendsStats,
+  Message,
+  SendMessageParams,
 } from "../types/friends";
 import { io } from "socket.io-client";
 import sec from "react-secure-storage";
@@ -17,7 +20,6 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   // États initiaux
   friends: [],
   friendRequests: [],
-  sentRequests: [],
   friendActivities: [],
   friendsStats: null,
   searchResults: [],
@@ -33,6 +35,14 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   blockedFriendsPagination: null,
   isBlockedFriendsLoading: false,
   blockedFriendsError: null,
+  // Message
+  conversations: [],
+  currentConversation: null,
+  messages: [],
+  isSendingMessage: false,
+  isLoadingMessages: false,
+  conversationError: null,
+  typingTimeouts: new Map<string, NodeJS.Timeout>(),
 
   // Récupérer la liste des amis
   getFriends: async (filters = {}) => {
@@ -107,7 +117,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       throw error;
     }
   },
-  getFriendsRequest: async (filter: FriendRequestType) => {
+  getFriendsRequest: async (filter: FriendRequestType = "all") => {
     set({ isLoading: true, error: null });
 
     try {
@@ -124,7 +134,6 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
       if (error.message === "NO_FRIEND_REQUESTS_FOUND") {
         set({ error: null, isLoading: false });
-
         throw new Error();
       }
 
@@ -159,7 +168,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       await apiUtils.put(`${ApiUrl.FRIENDS_REQUESTS}/${requestId}/accept`);
 
-      // Mettre à jour l'état local
+      // Mettre à jour l'état local - MAINTENANT SEULEMENT friendRequests
       set((state) => ({
         friendRequests: state.friendRequests.filter(
           (req) => req.id !== requestId
@@ -182,7 +191,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       await apiUtils.put(`${ApiUrl.FRIENDS_REQUESTS}/${requestId}/decline`);
 
-      // Mettre à jour l'état local
+      // Mettre à jour l'état local - MAINTENANT SEULEMENT friendRequests
       set((state) => ({
         friendRequests: state.friendRequests.filter(
           (req) => req.id !== requestId
@@ -365,6 +374,206 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       throw error;
     }
   },
+
+  // ****************** MESSAGE************************
+  // Envoyer un message à un ami
+  // Dans la méthode getMessages
+  getMessages: async (friend_id: string, page = 1, limit = 50) => {
+    set({ isLoadingMessages: true, conversationError: null });
+
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      const { data } = await apiUtils.get<Message[]>(
+        `${ApiUrl.FRIENDS}/conversations/${friend_id}/messages?${params}`
+      );
+
+      console.log("API response for messages:", data);
+
+      set((state) => ({
+        messages: page === 1 ? data : [...state.messages, ...data],
+        isLoadingMessages: false,
+      }));
+
+      return data;
+    } catch (err) {
+      const error = err as ApiError;
+      console.error("Error loading messages:", error);
+      set({ conversationError: error.message, isLoadingMessages: false });
+      throw error;
+    }
+  },
+
+  // Dans la méthode sendMessage
+  sendMessage: async ({
+    friendId,
+    content,
+    messageType,
+  }: SendMessageParams) => {
+    set({ isSendingMessage: true, conversationError: null });
+
+    try {
+      const { data } = await apiUtils.post<Message>(
+        `${ApiUrl.FRIENDS}/${friendId}/message`,
+        { content, messageType }
+      );
+
+      console.log("Message sent successfully:", data);
+
+      // NE PAS ajouter le message ici - il sera ajouté via socket ou par le re-fetch
+      // Le socket ou une autre méthode se chargera de l'ajouter
+
+      set({ isSendingMessage: false });
+      return data;
+    } catch (err) {
+      const error = err as ApiError;
+      console.error("Error sending message:", error);
+      set({ conversationError: error.message, isSendingMessage: false });
+      throw error;
+    }
+  },
+
+  // Récupérer les conversations
+  getConversations: async () => {
+    set({ isLoading: true, conversationError: null });
+
+    try {
+      const { data } = await apiUtils.get<Conversation[]>(ApiUrl.CONVERSATIONS);
+      // console.log("h: ", data);
+
+      set({ conversations: data, isLoading: false });
+    } catch (err) {
+      const error = err as ApiError;
+      set({ conversationError: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
+  findConversationByParticipant: (friendId: string): string | null => {
+    console.log("HHHH: ", friendId);
+
+    const { conversations } = get();
+    const conversation = conversations.find((conv) => {
+      return conv.participants.some((participant) => participant === friendId);
+    });
+    return conversation ? conversation.id : null;
+  },
+
+  // Marquer les messages comme lus
+  markAsRead: async (conversationId: string, messageIds?: string[]) => {
+    try {
+      await apiUtils.put(`${ApiUrl.CONVERSATIONS}/${conversationId}/read`, {
+        messageIds,
+      });
+
+      // Mettre à jour l'état local
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          (!messageIds || messageIds.includes(msg.id)) && !msg.read
+            ? { ...msg, read: true }
+            : msg
+        ),
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+        ),
+      }));
+    } catch (err) {
+      const error = err as ApiError;
+      console.error("Error marking messages as read:", error);
+      throw error;
+    }
+  },
+
+  // Récupérer les messages d'une conversation
+  getMessages2: async (conversationId: string, page = 1, limit = 50) => {
+    set({ isLoadingMessages: true, conversationError: null });
+
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      const { data } = await apiUtils.get<Message[]>(
+        `${ApiUrl.CONVERSATIONS}/${conversationId}/messages?${params}`
+      );
+
+      set((state) => ({
+        messages: page === 1 ? data : [...state.messages, ...data],
+        isLoadingMessages: false,
+      }));
+
+      return data;
+    } catch (err) {
+      const error = err as ApiError;
+
+      console.log("H: ", err);
+      set({ conversationError: error.message, isLoadingMessages: false });
+      throw error;
+    }
+  },
+
+  // Mettre à jour l'état en temps réel avec les nouveaux messages
+  // addNewMessage: (message: Message) => {
+  //   set((state) => {
+  //     // Vérifier si le message existe déjà pour éviter les doublons
+  //     const messageExists = state.messages.some((msg) => msg.id === message.id);
+  //     if (messageExists) {
+  //       return state;
+  //     }
+
+  //     const updatedMessages = [...state.messages, message];
+
+  //     return {
+  //       messages: updatedMessages,
+  //     };
+  //   });
+  // },
+
+  addNewMessage: (message: Message) => {
+    set((state) => {
+      // Vérifier si le message existe déjà (par ID ou contenu + timestamp)
+      const messageExists = state.messages.some(
+        (msg) =>
+          msg.id === message.id ||
+          (msg.content === message.content &&
+            Math.abs(
+              new Date(msg.createdAt).getTime() -
+                new Date(message.createdAt).getTime()
+            ) < 1000)
+      );
+
+      if (messageExists) {
+        console.log("Message already exists, skipping:", message.id);
+        return state;
+      }
+
+      console.log("Adding new message to store:", message);
+      return {
+        messages: [...state.messages, message],
+      };
+    });
+  },
+
+  // Effacer les messages d'une conversation
+  clearMessages: () => {
+    set({ messages: [], currentConversation: null });
+  },
+
+  // Définir la conversation courante
+  setCurrentConversation: (conversationId: string | null) => {
+    set({ currentConversation: conversationId });
+
+    // Si on définit une conversation, marquer les messages comme lus
+    // if (conversationId) {
+    //   get().markAsRead(conversationId).catch(console.error);
+    // }
+  },
+  // **************************** END OF MESSAGE ***************************
+
   initializeSocket: (userId?: string) => {
     const token = sec.getItem("aspk") as string;
 
@@ -428,6 +637,21 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         );
       }
     });
+
+    // Écouter les événements de frappe
+    socket.on(
+      "user_typing",
+      (data: { userId: string; isTyping: boolean; friendId: string }) => {
+        // Mettre à jour le statut de frappe dans le store
+        get().setTypingStatus(data.userId, data.isTyping);
+
+        console.log(
+          `User ${data.userId} is ${
+            data.isTyping ? "typing" : "not typing"
+          } in conversation ${data.friendId}`
+        );
+      }
+    );
 
     socket.on("friend_online", (userId: string) => {
       set((state) => {
@@ -493,6 +717,21 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       // console.log("Disconnected from presence server:", reason);
     });
 
+    socket.on("new_message", (message: Message) => {
+      if (!message.friend_id || !message.sender || !message.content) {
+        return;
+      }
+
+      get().addNewMessage(message);
+    });
+
+    socket.on("typing_start", (message: Message) => {
+      if (!message.friend_id || !message.sender || !message.content) {
+        return;
+      }
+
+      get().addNewMessage(message);
+    });
     set({ socket });
   },
 
@@ -545,6 +784,91 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           });
         }
       );
+    }
+  },
+
+  // Méthodes pour rejoindre/quitter les conversations
+  joinConversation: (friendId: string) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit("join_conversation", friendId);
+    }
+  },
+
+  leaveConversation: (friendId: string) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit("leave_conversation", friendId);
+    }
+  },
+
+  // Méthode pour envoyer des messages via socket
+  sendRealTimeMessage: (
+    messageData: Omit<Message, "id" | "createdAt"> & { friend_id: string }
+  ) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit(
+        "send_message",
+        messageData,
+        (response: { success: boolean; error?: string }) => {
+          if (!response.success) {
+            console.error("Failed to send message:", response.error);
+          }
+        }
+      );
+    }
+  },
+
+  // Typing streaming
+  // Dans votre store Zustand
+  setTypingStatus: (friendId: string, isTyping: boolean) => {
+    set((state) => ({
+      friends: state.friends.map((friend) =>
+        friend.id === friendId ? { ...friend, isTyping } : friend
+      ),
+    }));
+  },
+
+  // Méthodes pour gérer la frappe
+  startTyping: (friendId: string) => {
+    const { socket, currentUser, typingTimeouts } = get();
+
+    // Clear existing timeout
+    if (typingTimeouts.has(friendId)) {
+      clearTimeout(typingTimeouts.get(friendId));
+      typingTimeouts.delete(friendId);
+    }
+
+    if (socket && currentUser) {
+      socket.emit("typing_start", {
+        friendId,
+        userId: currentUser.id,
+      });
+
+      // Set new timeout to automatically stop typing after 3 seconds
+      const timeout = setTimeout(() => {
+        get().stopTyping(friendId);
+      }, 3000);
+
+      typingTimeouts.set(friendId, timeout);
+    }
+  },
+
+  stopTyping: (friendId: string) => {
+    const { socket, currentUser, typingTimeouts } = get();
+
+    // Clear timeout if exists
+    if (typingTimeouts.has(friendId)) {
+      clearTimeout(typingTimeouts.get(friendId));
+      typingTimeouts.delete(friendId);
+    }
+
+    if (socket && currentUser) {
+      socket.emit("typing_stop", {
+        friendId,
+        userId: currentUser.id,
+      });
     }
   },
 }));

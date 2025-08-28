@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Friend } from "../../types/friends";
 import {
   Eye,
@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Badge from "../ui/Badge";
+import FriendProfileModal from "./FriendProfileModal";
+import ConversationModal from "./ConversationModal";
 
 interface UserSearchResultsProps {
   results: Friend[];
@@ -60,6 +62,9 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
 
     return Math.min(100, Math.round(score));
   };
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   const getCompatibilityLabel = (score: number) => {
     if (score >= 80) return { label: "Excellent", color: "text-green-500" };
@@ -110,11 +115,22 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
           >
             <div className="flex items-start gap-4">
               <div className="relative">
-                <img
-                  src={user.profileImage}
-                  alt={user.name}
-                  className="w-16 h-16 rounded-full object-cover ring-2 ring-background"
-                />
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={user.name}
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-background"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full object-cover ring-2 ring-background border dark:border-gray-700 border-gray-200 flex items-center justify-center font-bold gap-1">
+                    <span className="capitalize">
+                      {user.name.split(" ")[0].slice(0, 1)}
+                    </span>{" "}
+                    <span className="capitalize">
+                      {user.name.split(" ")[1].slice(0, 1)}
+                    </span>
+                  </div>
+                )}
                 {user.isOnline && (
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-background"></div>
                 )}
@@ -251,7 +267,7 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
                 {/* Actions */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => onViewProfile(user)}
+                    onClick={() => setIsProfileModalOpen(true)}
                     className="btn btn-outline btn-sm flex items-center gap-1 flex-1"
                   >
                     <Eye size={14} />
@@ -267,6 +283,27 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
                 </div>
               </div>
             </div>
+
+            <FriendProfileModal
+              friend={user}
+              isOpen={isProfileModalOpen}
+              onClose={() => setIsProfileModalOpen(false)}
+              onSendMessage={function (friendId: string): void {
+                throw new Error("Function not implemented.");
+              }}
+              // onRemoveFriend={function (friendId: string): void {
+              //   throw new Error("Function not implemented.");
+              // }}
+              // onBlockUser={function (userId: string): void {
+              //   throw new Error("Function not implemented.");
+              // }}
+            />
+
+            <ConversationModal
+              friend={user}
+              isOpen={isChatModalOpen}
+              onClose={() => setIsChatModalOpen(false)}
+            />
           </motion.div>
         );
       })}

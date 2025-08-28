@@ -8,6 +8,7 @@ import {
 import Card from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import {
+  Trophy,
   PlusCircle,
   Edit2,
   Trash2,
@@ -18,7 +19,6 @@ import {
   ArrowDownUp,
 } from "lucide-react";
 import { usePRStore } from "../stores/usePRStore";
-import PRFormModal from "../components/pr/PRFormModal";
 
 const DISTANCE_FILTER_OPTIONS = [
   { label: "All Records", value: "all" },
@@ -34,7 +34,7 @@ const PersonalRecords: React.FC = () => {
   const {
     processedPRs,
     createRecord,
-    deleteRecord,
+    deletePR,
     updateRecord,
     setSortConfig,
     sortConfig,
@@ -44,6 +44,13 @@ const PersonalRecords: React.FC = () => {
     isLoading,
     error,
   } = usePRStore();
+
+  // State for the form inputs
+  const [distance, setDistance] = useState<number | "">("");
+  const [time, setTime] = useState<string>("");
+  const [date, setDate] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+
   // Modal states
   const [isPREditorModalOpen, setIsPREditorModalOpen] = useState(false);
   const [editingPR, setEditingPR] = useState<PersonalRecord | null>(null);
@@ -55,10 +62,59 @@ const PersonalRecords: React.FC = () => {
     getAllRecords();
   }, [getAllRecords]);
 
+  useEffect(() => {
+    if (isPREditorModalOpen) {
+      if (editingPR) {
+        setDistance(editingPR.distance);
+        setTime(editingPR.time);
+        setDate(editingPR.date);
+        setNotes(editingPR.notes || "");
+      } else {
+        setDistance("");
+        setTime("");
+        setDate("");
+        setNotes("");
+      }
+    }
+  }, [isPREditorModalOpen, editingPR]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (distance === "" || !time || !date) {
+      alert("Please fill in distance (in meters), time, and date.");
+      return;
+    }
+
+    const prData: PersonalRecord = {
+      distance: Number(distance),
+      time,
+      date,
+      notes,
+    };
+
+    try {
+      if (editingPR) {
+        await updateRecord(prData);
+      } else {
+        await createRecord(prData);
+      }
+
+      setIsPREditorModalOpen(false);
+      setEditingPR(null);
+      setDistance("");
+      setTime("");
+      setDate("");
+      setNotes("");
+    } catch (error) {
+      console.error("Error saving PR:", error);
+      alert("Error saving record. Please try again.");
+    }
+  };
+
   const handleDeleteConfirm = async () => {
     if (showDeleteConfirmModal) {
       try {
-        await deleteRecord(showDeleteConfirmModal.id!);
+        await deletePR(showDeleteConfirmModal.id);
         setShowDeleteConfirmModal(null);
       } catch (error) {
         console.error("Error deleting PR:", error);
@@ -110,28 +166,95 @@ const PersonalRecords: React.FC = () => {
         title={editingPR ? "Edit Personal Record" : "Add New Personal Record"}
         size="md"
       >
-        <PRFormModal
-          isOpen={isPREditorModalOpen}
-          onClose={() => {
-            setIsPREditorModalOpen(false);
-            setEditingPR(null);
-          }}
-          onSubmit={async (data) => {
-            try {
-              if (editingPR) {
-                await updateRecord(data);
-              } else {
-                await createRecord(data);
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="modal-distance"
+              className="block mb-1 font-medium text-sm text-muted-foreground"
+            >
+              Distance (meters):
+            </label>
+            <input
+              type="number"
+              id="modal-distance"
+              placeholder="e.g., 5000 for 5km"
+              value={distance}
+              onChange={(e) =>
+                setDistance(
+                  e.target.value === "" ? "" : parseFloat(e.target.value)
+                )
               }
-              setIsPREditorModalOpen(false);
-              setEditingPR(null);
-            } catch (error) {
-              console.error("Error saving PR:", error);
-              alert("Error saving record. Please try again.");
-            }
-          }}
-          // editingPR={editingPR}
-        />
+              className="input bg-background text-foreground border-border focus:ring-primary focus:border-primary w-full"
+              required
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 justify-between">
+            <div className="md:w-1/2 w-fu">
+              <label
+                htmlFor="modal-time"
+                className="block mb-1 font-medium text-sm text-muted-foreground"
+              >
+                Time (HH:MM:SS):
+              </label>
+              <input
+                type="text"
+                id="modal-time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                placeholder="HH:MM:SS"
+                className="input bg-background text-foreground border-border focus:ring-primary focus:border-primary w-full"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="modal-date"
+                className="block mb-1 font-medium text-sm text-muted-foreground"
+              >
+                Date:
+              </label>
+              <input
+                type="date"
+                id="modal-date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="input bg-background text-foreground border-border focus:ring-primary focus:border-primary w-full"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="modal-notes"
+              className="block mb-1 font-medium text-sm text-muted-foreground"
+            >
+              Notes (optional):
+            </label>
+            <textarea
+              id="modal-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="input bg-background text-foreground border-border focus:ring-primary focus:border-primary w-full"
+              rows={3}
+            />
+          </div>
+          <div className="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsPREditorModalOpen(false);
+                setEditingPR(null);
+              }}
+              className="btn btn-outline dark:border-muted dark:text-muted-foreground"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {editingPR ? "Save Changes" : "Add PR"}
+            </button>
+          </div>
+        </form>
       </Modal>
 
       {/* Delete Confirmation Modal */}

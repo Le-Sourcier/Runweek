@@ -28,7 +28,7 @@ const FriendsTab: React.FC = () => {
       try {
         await getFriends({ status: friendsFilter, sort: sortBy });
       } catch (error) {
-        toast.error("Erreur lors du chargement des amis");
+        // toast.error("Erreur lors du chargement des amis");
       }
     };
 

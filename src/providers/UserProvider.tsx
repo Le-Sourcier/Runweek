@@ -283,13 +283,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
           language: "fr",
         }
       );
-    } catch (error) {
-      const _message = extractErrorMessage(error);
 
-      setMessage(_message.message);
+      console.log(message);
+    } catch (err) {
+      const error = extractErrorMessage(err);
+
+      setMessage(error.message);
 
       showMessage(
-        _message.message as MessageCode,
+        error.message as MessageCode,
         {},
         {
           language: "fr",
@@ -306,8 +308,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await apiUtils.post(ApiUrl.REGISTER, props);
-    } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
+    } catch (err) {
+      const error = extractErrorMessage(err);
+
+      setMessage(error.message);
+
+      showMessage(
+        error.message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+      console.error("Erreur lors de la creation de compte (message) :", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -361,8 +374,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });
-    } catch (error) {
-      console.error("Erreur lors de l'envoie du mail de confirmation:", error);
+    } catch (err) {
+      const error = extractErrorMessage(err);
+
+      setMessage(error.message);
+
+      showMessage(
+        error.message as MessageCode,
+        {},
+        {
+          language: "fr",
+        }
+      );
+      console.error(
+        "Erreur lors d'envoi lien de verification de compte (message) :",
+        error
+      );
       throw error;
     } finally {
       setIsLoading(false);

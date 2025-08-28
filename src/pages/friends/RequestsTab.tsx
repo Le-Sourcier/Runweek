@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import { Users } from "lucide-react";
 import { useFriendsStore } from "../../stores/friends";
 import FriendRequestCard from "../../components/friends/FriendRequestCard";
@@ -11,8 +10,7 @@ type RequestFilter = "all" | "received" | "sent";
 
 const RequestsTab: React.FC = () => {
   const {
-    friendRequests,
-    sentRequests,
+    friendRequests, // Contient toutes les demandes avec champ 'type'
     getFriendsRequest,
     acceptFriendRequest,
     declineFriendRequest,
@@ -26,18 +24,10 @@ const RequestsTab: React.FC = () => {
     const loadRequests = async () => {
       setLocalLoading(true);
       try {
-        if (activeFilter === "all") {
-          // Charger à la fois les demandes reçues et envoyées
-          await Promise.all([
-            getFriendsRequest("received"),
-            getFriendsRequest("sent"),
-          ]);
-        } else {
-          // Charger seulement le type sélectionné
-          await getFriendsRequest(activeFilter);
-        }
+        // Charger seulement le type sélectionné
+        await getFriendsRequest(activeFilter);
       } catch (err) {
-        // toast.error(err.message);
+        console.error("Error loading requests:", err);
       } finally {
         setLocalLoading(false);
       }
@@ -46,8 +36,19 @@ const RequestsTab: React.FC = () => {
     loadRequests();
   }, [getFriendsRequest, activeFilter]);
 
-  // Combiner les demandes pour le filtre "all"
-  const allRequests = [...friendRequests, ...sentRequests];
+  // Filtrer les demandes selon le filtre actif
+  const filteredRequests = friendRequests.filter((request) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "received") return request.type === "received";
+    if (activeFilter === "sent") return request.type === "sent";
+    return true;
+  });
+
+  // Compter les demandes par type pour les badges
+  const receivedCount = friendRequests.filter(
+    (r) => r.type === "received"
+  ).length;
+  const sentCount = friendRequests.filter((r) => r.type === "sent").length;
 
   if (isLoading || localLoading) {
     return (
@@ -67,17 +68,17 @@ const RequestsTab: React.FC = () => {
             {
               id: "all" as RequestFilter,
               label: "Toutes",
-              count: allRequests.length,
+              count: friendRequests.length,
             },
             {
               id: "received" as RequestFilter,
               label: "Reçues",
-              count: friendRequests.length,
+              count: receivedCount,
             },
             {
               id: "sent" as RequestFilter,
               label: "Envoyées",
-              count: sentRequests.length,
+              count: sentCount,
             },
           ].map((tab) => (
             <button
@@ -101,40 +102,18 @@ const RequestsTab: React.FC = () => {
       </Card>
 
       {/* Contenu en fonction du filtre */}
-      {activeFilter === "all" && allRequests.length > 0 && (
-        <Card title="Toutes les demandes">
+      {filteredRequests.length > 0 && (
+        <Card
+          title={
+            activeFilter === "all"
+              ? "Toutes les demandes"
+              : activeFilter === "received"
+              ? "Demandes reçues"
+              : "Demandes envoyées"
+          }
+        >
           <div className="space-y-4">
-            {allRequests.map((request) => (
-              <FriendRequestCard
-                key={request.id}
-                request={request}
-                onAccept={acceptFriendRequest}
-                onDecline={declineFriendRequest}
-              />
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {activeFilter === "received" && friendRequests.length > 0 && (
-        <Card title="Demandes reçues">
-          <div className="space-y-4">
-            {friendRequests.map((request) => (
-              <FriendRequestCard
-                key={request.id}
-                request={request}
-                onAccept={acceptFriendRequest}
-                onDecline={declineFriendRequest}
-              />
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {activeFilter === "sent" && sentRequests.length > 0 && (
-        <Card title="Demandes envoyées">
-          <div className="space-y-4">
-            {sentRequests.map((request) => (
+            {filteredRequests.map((request) => (
               <FriendRequestCard
                 key={request.id}
                 request={request}
@@ -147,9 +126,7 @@ const RequestsTab: React.FC = () => {
       )}
 
       {/* Aucune demande */}
-      {(activeFilter === "all" && allRequests.length === 0) ||
-      (activeFilter === "received" && friendRequests.length === 0) ||
-      (activeFilter === "sent" && sentRequests.length === 0) ? (
+      {filteredRequests.length === 0 && (
         <div className="text-center py-12">
           <Users size={48} className="mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -167,7 +144,7 @@ const RequestsTab: React.FC = () => {
               : "Les demandes d'amis que vous envoyez apparaîtront ici"}
           </p>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

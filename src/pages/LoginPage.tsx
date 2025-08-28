@@ -52,11 +52,11 @@ const LoginPage: React.FC = () => {
       await login(formData);
       navigateWithParams(ROUTES.HOME);
     } catch (error) {
-
       if (extractErrorMessage(error).message === "ACCOUNT_UNVERIFIED") {
         navigateWithQuery(ROUTES.VERIFY_EMAIL, { email: formData.email });
       }
-      console.error("Login failed:", extractErrorMessage(error));
+
+      console.error(error);
       // Error is already handled in the UserProvider
     }
   };

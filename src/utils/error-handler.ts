@@ -1,3 +1,4 @@
+import { ApiError } from "../types";
 import { Language, MessageCode } from "../types/message";
 
 export const MESSAGE_MAPPINGS = {
@@ -300,6 +301,8 @@ export const MESSAGE_MAPPINGS = {
       "Our payment processor is currently receiving too many requests. Please try your transaction again shortly.",
 
     // Server Errors (5xx)
+    LOGIN_ERROR:
+      "An unexpected error occurred while logging in. Please try again later or check your credentials.",
     SERVER_ERROR:
       "We encountered an unexpected error while processing your request. Our team has been notified.",
     FAILED_TO_GET_JOB:
@@ -681,6 +684,8 @@ export const MESSAGE_MAPPINGS = {
       "Notre processeur de paiement reçoit actuellement trop de demandes. Veuillez réessayer votre transaction sous peu.",
 
     // Server Errors (5xx)
+    LOGIN_ERROR:
+      "Une erreur inattendue s'est produite lors de la connexion. Veuillez réessayer plus tard ou vérifier vos informations d'identification.",
     SERVER_ERROR:
       "Nous avons rencontré une erreur inattendue lors du traitement de votre demande. Notre équipe a été notifiée.",
     FAILED_TO_GET_JOB:
@@ -764,32 +769,7 @@ export const getBaseMessage = (language: Language, code: MessageCode) => {
   );
 };
 
-export function extractErrorMessage(
-  error: any,
-  defaultMessage: string = "UNKNOWN_ERROR"
-): {
-  message: string;
-  code?: string;
-} {
-  const code: string = error.status;
-
-  // Vérifier si error.response existe
-  if (!error.response || !error.response.data) {
-    return { message: defaultMessage!, code };
-  }
-
-  const { message } = error.response.data;
-
-  // Cas 1 : message est une chaîne
-  if (typeof message === "string") {
-    return { message: message.trim(), code };
-  }
-
-  // Cas 2 : message est un tableau
-  if (Array.isArray(message) && message.length > 0) {
-    return { message: message[0].trim(), code };
-  }
-
-  // Cas 3 : aucun message valide trouvé
-  return { message: defaultMessage!, code };
+export function extractErrorMessage(err: unknown) {
+  const error = err as ApiError;
+  return { message: error.message, code: error.status };
 }

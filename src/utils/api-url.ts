@@ -27,6 +27,12 @@ export const ApiUrl = {
   FRIENDS_REPORT: "/friends/report",
   FRIENDS_STATS: "/friends/stats",
 
+  // achievements
+  ACHIEVEMENTS: "/api/achievements",
+
+  // Message
+  CONVERSATIONS: "/conversations",
+
   /**
    * Fonction pour les url à paramètres sous la forme url/:id
    */

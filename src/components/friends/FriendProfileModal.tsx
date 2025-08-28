@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Friend } from "../../types/friends";
 import Button from "../ui/Button";
 import Badge from "../ui/Badge";
@@ -22,32 +22,38 @@ import {
 import { motion } from "framer-motion";
 import { Modal } from "../ui/Modal";
 import { formatTimeAgo } from "../../utils/date-formatter";
+import ReportUserModal from "./ReportUserModal";
+import { useFriendsStore } from "../../stores/friends";
+import ConversationModal from "./ConversationModal";
 
 interface FriendProfileModalProps {
   friend: Friend | null;
   isOpen: boolean;
   onClose: () => void;
-  onSendMessage: (friendId: string) => void;
-  onRemoveFriend: (friendId: string) => void;
-  onBlockUser: (userId: string) => void;
-  onReportUser: (userId: string, reason: string) => void;
 }
 
 const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
   friend,
   isOpen,
   onClose,
-  onSendMessage,
-  onRemoveFriend,
-  onBlockUser,
-  onReportUser,
 }) => {
   const [activeTab, setActiveTab] = useState<"overview" | "stats" | "activity">(
     "overview"
   );
+
+  const { blockUser, removeFriend, getMessages } = useFriendsStore();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isOpenReportModal, setIsOpenReportModal] = useState(false);
+  const [isOpenChatModal, setIsOpenChatModal] = useState(false);
+
+  useEffect(() => {
+    if (isOpenChatModal && friend) getMessages(friend.id);
+  }, [isOpenChatModal, friend, getMessages]);
 
   if (!friend) return null;
+
+  const handlRemoveFriend = async (id: string) => await removeFriend(id);
+  const handlBlockFriend = async (id: string) => await blockUser(id);
 
   // const formatTimeAgo = (timestamp: string) => {
   //   const now = new Date();
@@ -63,41 +69,41 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
   //   return time.toLocaleDateString("fr-FR");
   // };
 
-  const handleReportUser = () => {
-    const reasons = [
-      "Contenu inapproprié",
-      "Harcèlement",
-      "Spam",
-      "Faux profil",
-      "Comportement abusif",
-      "Autre",
-    ];
+  // const handleReportUser = () => {
+  //   const reasons = [
+  //     "Contenu inapproprié",
+  //     "Harcèlement",
+  //     "Spam",
+  //     "Faux profil",
+  //     "Comportement abusif",
+  //     "Autre",
+  //   ];
 
-    const reasonInput = prompt(
-      `Raison du signalement:\n${reasons
-        .map((r, i) => `${i + 1}. ${r}`)
-        .join("\n")}\n\nEntrez le numéro (1-${
-        reasons.length
-      }) ou décrivez une autre raison:`
-    );
+  //   const reasonInput = prompt(
+  //     `Raison du signalement:\n${reasons
+  //       .map((r, i) => `${i + 1}. ${r}`)
+  //       .join("\n")}\n\nEntrez le numéro (1-${
+  //       reasons.length
+  //     }) ou décrivez une autre raison:`
+  //   );
 
-    if (reasonInput) {
-      const reasonIndex = parseInt(reasonInput) - 1;
-      const selectedReason = reasons[reasonIndex] || reasonInput;
+  //   if (reasonInput) {
+  //     const reasonIndex = parseInt(reasonInput) - 1;
+  //     const selectedReason = reasons[reasonIndex] || reasonInput;
 
-      // Add additional context if it's a serious report
-      const additionalInfo =
-        selectedReason.includes("Harcèlement") ||
-        selectedReason.includes("Comportement abusif")
-          ? prompt("Pouvez-vous fournir plus de détails sur cet incident ?")
-          : null;
+  //     // Add additional context if it's a serious report
+  //     const additionalInfo =
+  //       selectedReason.includes("Harcèlement") ||
+  //       selectedReason.includes("Comportement abusif")
+  //         ? prompt("Pouvez-vous fournir plus de détails sur cet incident ?")
+  //         : null;
 
-      const fullReason = additionalInfo
-        ? `${selectedReason} - ${additionalInfo}`
-        : selectedReason;
-      onReportUser(friend.id, fullReason);
-    }
-  };
+  //     const fullReason = additionalInfo
+  //       ? `${selectedReason} - ${additionalInfo}`
+  //       : selectedReason;
+  //     // onReportUser(friend.id, fullReason);
+  //   }
+  // };
 
   const mockRecentActivities = [
     {
@@ -123,11 +129,22 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
         {/* En-tête du profil */}
         <div className="flex items-start gap-6">
           <div className="relative">
-            <img
-              src={friend.profileImage}
-              alt={friend.name}
-              className="w-24 h-24 rounded-full object-cover ring-4 ring-background shadow-lg"
-            />
+            {friend.profileImage ? (
+              <img
+                src={friend.profileImage}
+                alt={friend.name}
+                className="w-24 h-24 rounded-full object-cover ring-4 ring-background shadow-lg"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full object-cover ring-4 ring-background shadow-lg border dark:border-gray-700 border-gray-200 flex items-center justify-center gap-1 font-bold text-lg ">
+                <span className=" capitalize">
+                  {friend.name.split(" ")[0].slice(0, 1)}
+                </span>
+                <span className=" capitalize">
+                  {friend.name.split(" ")[1].slice(0, 1)}
+                </span>
+              </div>
+            )}
             {friend.isOnline && (
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-background flex items-center justify-center">
                 <div className="w-3 h-3 bg-white rounded-full"></div>
@@ -493,7 +510,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
         {/* Actions principales */}
         <div className="flex gap-3 pt-4 border-t border-border">
           <Button
-            onClick={() => onSendMessage(friend.id)}
+            onClick={() => setIsOpenChatModal(true)}
             className="flex-1 flex items-center gap-2"
           >
             <MessageCircle size={16} />
@@ -503,11 +520,15 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
             variant="outline"
             className="flex-1 flex items-center gap-2"
             onClick={() => {
-              navigator.share?.({
-                title: `Profil de ${friend.name}`,
-                text: `Découvrez le profil de ${friend.name} sur Runweek`,
-                url: window.location.href,
-              }) || navigator.clipboard.writeText(window.location.href);
+              if (navigator.share) {
+                navigator.share({
+                  title: `Profil de ${friend.name}`,
+                  text: `Découvrez le profil de ${friend.name} sur Runweek`,
+                  url: window.location.href,
+                });
+              } else {
+                navigator.clipboard.writeText(window.location.href);
+              }
             }}
           >
             <Share2 size={16} />
@@ -519,7 +540,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
         <div className="flex justify-center gap-6 pt-2 text-sm">
           <button
             onClick={() => {
-              onRemoveFriend(friend.id);
+              handlRemoveFriend(friend.id);
               onClose();
             }}
             className="text-destructive hover:underline flex items-center gap-1"
@@ -529,7 +550,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
           </button>
           <button
             onClick={() => {
-              onBlockUser(friend.id);
+              handlBlockFriend(friend.id);
               onClose();
             }}
             className="text-muted-foreground hover:text-destructive hover:underline flex items-center gap-1"
@@ -538,7 +559,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
             Bloquer
           </button>
           <button
-            onClick={handleReportUser}
+            onClick={() => setIsOpenReportModal(true)}
             className="text-muted-foreground hover:text-destructive hover:underline flex items-center gap-1"
           >
             <Flag size={14} />
@@ -546,6 +567,29 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Report user modal */}
+      <ReportUserModal
+        isOpen={isOpenReportModal}
+        onClose={() => setIsOpenReportModal(false)}
+        friend={friend}
+        onReportUser={() => {}}
+
+        // onReportUser={function (
+        //   userId: string,
+        //   reason: string,
+        //   details: string,
+        //   severity: "low" | "medium" | "high"
+        // ): void {
+        //   throw new Error("Function not implemented.");
+        // }}
+      />
+      {/* Chat message modal */}
+      <ConversationModal
+        isOpen={isOpenReportModal}
+        onClose={() => setIsOpenChatModal(false)}
+        friend={friend}
+      />
     </Modal>
   );
 };

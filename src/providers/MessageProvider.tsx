@@ -10,10 +10,14 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const getMessage = (
-    code: MessageCode,
+    code: MessageCode | null | undefined,
     variables: Record<string, string | number> = {},
     language: Language = "en"
   ) => {
+    if (!code) {
+      return "UNKNOWN_ERROR";
+    }
+
     // Fallback to English if translation missing
     const baseMessage = getBaseMessage(language, code);
 
@@ -23,29 +27,13 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return message;
   };
+
   const { theme: appTheme } = useTheme();
 
-  // const { code: browserLanguageCode } = useBrowserLanguage();
   const [currentLanguage, setCurrentLanguage] = React.useState<Language>("en");
 
-  // Déterminer la langue automatiquement basée sur le navigateur
-  // React.useEffect(() => {
-  //   const supportedLanguages: Language[] = ["en", "fr"];
-
-  //   // Vérifier si la langue du navigateur est supportée
-  //   if (
-  //     browserLanguageCode &&
-  //     supportedLanguages.includes(browserLanguageCode as Language)
-  //   ) {
-  //     setCurrentLanguage(browserLanguageCode as Language);
-  //   } else {
-  //     // Fallback vers l'anglais si la langue n'est pas supportée
-  //     setCurrentLanguage("en");
-  //   }
-  // }, [browserLanguageCode]);
-
   const showMessage = (
-    code: MessageCode,
+    code: MessageCode | null | undefined,
     variables: Record<string, string | number> = {},
     options: {
       language?: Language;
@@ -54,23 +42,29 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     } = {}
   ) => {
     const { language = currentLanguage || "en", toastId, autoClose } = options;
-    const message = getMessage(code, variables, language);
+
+    // Si le code est null ou undefined, utiliser un code d'erreur par défaut
+    const effectiveCode = code || "UNKNOWN_ERROR";
+    const message = getMessage(effectiveCode, variables, language);
 
     // Determine message type based on code
-    if (code.startsWith("STRIPE_") || code === "INSUFFICIENT_FUNDS") {
+    if (
+      effectiveCode.startsWith("STRIPE_") ||
+      effectiveCode === "INSUFFICIENT_FUNDS"
+    ) {
       toast.warn(message, { toastId, autoClose });
     } else if (
-      code === "UNKNOWN_ERROR" ||
-      code.startsWith("SERVER_") ||
-      code.startsWith("FAILED_") ||
-      code.endsWith("_ERROR")
+      effectiveCode === "UNKNOWN_ERROR" ||
+      effectiveCode.startsWith("SERVER_") ||
+      effectiveCode.startsWith("FAILED_") ||
+      effectiveCode.endsWith("_ERROR")
     ) {
       toast.error(message, { toastId, autoClose });
     } else if (
-      code.endsWith("_SUCCESS") ||
-      code === "SUCCESS" ||
-      code.endsWith("_CREATED") ||
-      code.endsWith("_UPDATED")
+      effectiveCode.endsWith("_SUCCESS") ||
+      effectiveCode === "SUCCESS" ||
+      effectiveCode.endsWith("_CREATED") ||
+      effectiveCode.endsWith("_UPDATED")
     ) {
       toast.success(message, { toastId, autoClose });
     } else {

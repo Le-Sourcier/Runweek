@@ -1,36 +1,50 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { DailyNutrition } from '../../types/diet';
-import { format, subDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import React from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import { DailyNutrition } from "../../types/diet";
+import { format, subDays } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface WeeklyNutritionTrendProps {
   dailyNutrition: DailyNutrition[];
-  type: 'calories' | 'protein' | 'water';
+  type: "calories" | "protein" | "water";
 }
 
-const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({ dailyNutrition, type }) => {
+const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({
+  dailyNutrition,
+  type,
+}) => {
   // Generate last 7 days data
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = format(subDays(new Date(), 6 - i), 'yyyy-MM-dd');
-    const dayData = dailyNutrition.find(d => d.date === date);
-    
+    const date = format(subDays(new Date(), 6 - i), "yyyy-MM-dd");
+    const dayData =
+      dailyNutrition && dailyNutrition.find((d) => d.date === date);
+
     let value = 0;
     switch (type) {
-      case 'calories':
+      case "calories":
         value = dayData?.totalCalories || 0;
         break;
-      case 'protein':
+      case "protein":
         value = dayData?.totalProtein || 0;
         break;
-      case 'water':
+      case "water":
         value = dayData?.waterIntake || 0;
         break;
     }
 
     return {
       date,
-      day: format(subDays(new Date(), 6 - i), 'EEE', { locale: fr }),
+      day: format(subDays(new Date(), 6 - i), "EEE", { locale: fr }),
       value,
       hasData: !!dayData,
     };
@@ -38,19 +52,27 @@ const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({ dailyNutrit
 
   const getColor = () => {
     switch (type) {
-      case 'calories': return '#3B82F6';
-      case 'protein': return '#10B981';
-      case 'water': return '#06B6D4';
-      default: return '#6366F1';
+      case "calories":
+        return "#3B82F6";
+      case "protein":
+        return "#10B981";
+      case "water":
+        return "#06B6D4";
+      default:
+        return "#6366F1";
     }
   };
 
   const getUnit = () => {
     switch (type) {
-      case 'calories': return 'cal';
-      case 'protein': return 'g';
-      case 'water': return 'ml';
-      default: return '';
+      case "calories":
+        return "cal";
+      case "protein":
+        return "g";
+      case "water":
+        return "ml";
+      default:
+        return "";
     }
   };
 
@@ -72,37 +94,27 @@ const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({ dailyNutrit
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
-        {type === 'water' ? (
+        {type === "water" ? (
           <BarChart data={last7Days}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis 
-              dataKey="day" 
-              stroke="hsl(var(--muted-foreground))" 
+            <XAxis
+              dataKey="day"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={12}
             />
-            <YAxis 
-              stroke="hsl(var(--muted-foreground))" 
-              fontSize={12}
-            />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar 
-              dataKey="value" 
-              fill={getColor()}
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey="value" fill={getColor()} radius={[4, 4, 0, 0]} />
           </BarChart>
         ) : (
           <LineChart data={last7Days}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis 
-              dataKey="day" 
-              stroke="hsl(var(--muted-foreground))" 
+            <XAxis
+              dataKey="day"
+              stroke="hsl(var(--muted-foreground))"
               fontSize={12}
             />
-            <YAxis 
-              stroke="hsl(var(--muted-foreground))" 
-              fontSize={12}
-            />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
             <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"

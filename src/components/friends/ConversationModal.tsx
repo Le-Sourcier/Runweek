@@ -1,48 +1,41 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { DraggableModal } from "../ui/Modal";
 import Button from "../ui/Button";
 import { Send, Smile, Phone, Video, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Friend } from "../../types/friends";
-
-interface Message {
-  id: string;
-  senderId: string;
-  text: string;
-  timestamp: string;
-  read: boolean;
-  type: "text" | "emoji" | "system";
-}
-
-interface Conversation {
-  id: string;
-  participants: string[];
-  friendName: string;
-  friendImage: string;
-  lastMessage: Message | null;
-  messages: Message[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { useFriendsStore } from "../../stores/friends";
+import { useUserContext } from "../../hooks/useUser";
 
 interface ConversationModalProps {
   isOpen: boolean;
   onClose: () => void;
   friend: Friend | null;
-  onSendMessage: (friendId: string, message: string) => void;
 }
 
 const ConversationModal: React.FC<ConversationModalProps> = ({
   isOpen,
   onClose,
   friend,
-  onSendMessage,
 }) => {
   const [message, setMessage] = useState("");
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  const { user } = useUserContext();
+  const {
+    isSendingMessage,
+    messages,
+    sendMessage,
+    getMessages,
+    currentUser,
+    sendRealTimeMessage,
+    startTyping,
+    stopTyping,
+    friends,
+  } = useFriendsStore();
 
   const emojis = [
     "😊",
@@ -59,135 +52,115 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     "🏆",
   ];
 
-  // Charger ou créer la conversation
-  useEffect(() => {
-    if (!friend) {
-      return;
-    }
+  // Filtrer les messages pour l'ami courant
+  const currentMessages = messages.filter(
+    (msg) => msg.friend_id === friend?.id
+  );
 
-    if (isOpen) {
-      const conversations = JSON.parse(
-        localStorage.getItem("runweek_conversations") || "[]"
-      );
-      let existingConversation = conversations.find((conv: Conversation) =>
-        conv.participants.includes(friend.id)
-      );
+  // Trouver l'ami avec le statut de frappe actuel
+  const currentFriend = friends.find((f) => f.id === friend?.id);
 
-      if (!existingConversation) {
-        existingConversation = {
-          id: `conv_${Date.now()}`,
-          participants: ["current_user", friend.id],
-          friendName: friend.name,
-          friendImage: friend.profileImage,
-          lastMessage: null,
-          messages: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        conversations.push(existingConversation);
-        localStorage.setItem(
-          "runweek_conversations",
-          JSON.stringify(conversations)
-        );
+  // Gestion de la frappe avec debounce
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setMessage(value);
+
+      if (!friend || !currentUser) return;
+
+      // Déclencher l'événement de frappe
+      if (value.length > 0 && !isTyping) {
+        startTyping(friend.id);
+        setIsTyping(true);
       }
 
-      setConversation(existingConversation);
+      console.log("isTyping: ", isTyping);
+
+      // Reset le timeout à chaque frappe
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Arrêter la frappe après 2 secondes d'inactivité
+      typingTimeoutRef.current = setTimeout(() => {
+        if (isTyping) {
+          stopTyping(friend.id);
+          setIsTyping(false);
+        }
+      }, 2000);
+    },
+    [friend, currentUser, isTyping, startTyping, stopTyping]
+  );
+
+  // Nettoyer le timeout à la fermeture
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (friend && isTyping) {
+        stopTyping(friend.id);
+      }
+    };
+  }, [friend, isTyping, stopTyping]);
+
+  // 1. Charger les messages quand le modal s'ouvre
+  useEffect(() => {
+    if (isOpen && friend) {
+      console.log("Loading messages for friend:", friend.id);
+      getMessages(friend.id, 1, 50).catch((err) => {
+        console.error("Error loading messages:", err);
+      });
     }
-  }, [isOpen, friend]);
+  }, [isOpen, friend, getMessages]);
 
   // Scroll vers le bas quand de nouveaux messages arrivent
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages]);
+  }, [currentMessages]);
 
+  // Modifiez le handleSendMessage pour éviter les doublons
   const handleSendMessage = async () => {
-    if (!message.trim() || !conversation) return;
+    if (!message.trim() || !friend || !currentUser) return;
 
-    setIsLoading(true);
+    // Arrêter la frappe
+    if (isTyping) {
+      stopTyping(friend.id);
+      setIsTyping(false);
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
     try {
-      const newMessage: Message = {
-        id: `msg_${Date.now()}`,
-        senderId: "current_user",
-        text: message,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: "text",
-      };
+      // NE PAS ajouter de message temporaire pour éviter les doublons
+      // Le socket se chargera de l'ajouter
 
-      // Mettre à jour la conversation localement
-      const updatedConversation = {
-        ...conversation,
-        messages: [...conversation.messages, newMessage],
-        lastMessage: newMessage,
-        updatedAt: new Date().toISOString(),
-      };
+      // Envoyer le message via Socket.io pour une diffusion immédiate
+      sendRealTimeMessage({
+        friend_id: friend.id,
+        sender: {
+          id: currentUser.id,
+          email: user?.email || "",
+          profile: {
+            fname: "Vous",
+            lname: user?.lname || "",
+            image: user?.image || "",
+          },
+        },
+        content: message,
+        messageType: "text",
+      });
 
-      setConversation(updatedConversation);
+      // Envoyer aussi via l'API pour la persistance
+      await sendMessage({
+        friendId: friend.id,
+        content: message,
+        messageType: "text",
+      });
 
-      // Sauvegarder dans localStorage
-      const conversations = JSON.parse(
-        localStorage.getItem("runweek_conversations") || "[]"
-      );
-      const conversationIndex = conversations.findIndex(
-        (conv: Conversation) => conv.id === conversation.id
-      );
-      if (conversationIndex >= 0) {
-        conversations[conversationIndex] = updatedConversation;
-      } else {
-        conversations.push(updatedConversation);
-      }
-      localStorage.setItem(
-        "runweek_conversations",
-        JSON.stringify(conversations)
-      );
-
-      // Simuler la réponse de l'ami (pour la démo)
-      setTimeout(() => {
-        if (!friend) return;
-        const friendResponse: Message = {
-          id: `msg_${Date.now() + 1}`,
-          senderId: friend.id,
-          text: getRandomResponse(),
-          timestamp: new Date().toISOString(),
-          read: false,
-          type: "text",
-        };
-
-        const finalConversation = {
-          ...updatedConversation,
-          messages: [...updatedConversation.messages, friendResponse],
-          lastMessage: friendResponse,
-          updatedAt: new Date().toISOString(),
-        };
-
-        setConversation(finalConversation);
-
-        // Sauvegarder la réponse
-        const latestConversations = JSON.parse(
-          localStorage.getItem("runweek_conversations") || "[]"
-        );
-        const latestIndex = latestConversations.findIndex(
-          (conv: Conversation) => conv.id === conversation.id
-        );
-        if (latestIndex >= 0) {
-          latestConversations[latestIndex] = finalConversation;
-          localStorage.setItem(
-            "runweek_conversations",
-            JSON.stringify(latestConversations)
-          );
-        }
-      }, 2000 + Math.random() * 3000); // Réponse entre 2-5 secondes
-
-      if (!friend) {
-        return null;
-      }
-
-      onSendMessage(friend.id, message);
       setMessage("");
     } catch (error) {
       console.error("Erreur lors de l'envoi du message:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -204,26 +177,48 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     });
   };
 
-  const getRandomResponse = () => {
-    const responses = [
-      "Merci pour ton message ! 😊",
-      "C'est une excellente idée !",
-      "Je suis d'accord avec toi 👍",
-      "On pourrait en discuter lors de notre prochaine course !",
-      "Merci de m'avoir écrit ! À bientôt 🏃‍♂️",
-      "Super ! J'ai hâte de voir ça",
-      "Excellente suggestion ! 💪",
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
+  const TypingIndicator = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      className="flex justify-start mb-2"
+    >
+      <div className="bg-muted text-foreground rounded-2xl px-4 py-2 max-w-[70%]">
+        <div className="flex items-center space-x-1">
+          <div className="flex space-x-1">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-muted-foreground rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground ml-1">
+            {currentFriend?.isTyping ? "écrit..." : "écrivent..."}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
 
   if (!friend) {
     return null;
   }
+
   return (
     <DraggableModal isOpen={isOpen} onClose={onClose} title="Chat" size="lg">
       <div className="flex flex-col h-[600px]">
-        {/* En-tête de la conversation */}
+        {/* En-tête */}
         <div className="flex items-center justify-between p-4 mt-1 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -234,12 +229,17 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full border dark:border-gray-700 border-gray-200 object-cover flex items-center justify-center ">
-                  <span className=" capitalize">{friend.name.slice(0, 1)}</span>
+                <div className="w-10 h-10 rounded-full border dark:border-gray-700 border-gray-200 flex items-center justify-center gap-1">
+                  <span className="capitalize">
+                    {friend.name.split(" ")[0].slice(0, 1)}
+                  </span>
+                  <span className="capitalize">
+                    {friend.name.split(" ")[1].slice(0, 1)}
+                  </span>
                 </div>
               )}
               {friend.isOnline && (
-                <div className="absolute -bottom-0 -right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                <div className="absolute -bottom-0 -right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
               )}
             </div>
             <div>
@@ -262,9 +262,9 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
           </div>
         </div>
 
-        {/* Zone des messages */}
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {conversation?.messages.length === 0 ? (
+          {currentMessages.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Send size={24} className="text-primary" />
@@ -278,38 +278,47 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
             </div>
           ) : (
             <AnimatePresence>
-              {conversation?.messages.map((msg, index) => (
+              {currentMessages.map((msg) => (
                 <motion.div
                   key={msg.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ duration: 0.2 }}
                   className={`flex ${
-                    msg.senderId === "current_user"
+                    msg.sender.id === currentUser?.id
                       ? "justify-end"
                       : "justify-start"
                   }`}
                 >
                   <div
                     className={`max-w-[70%] ${
-                      msg.senderId === "current_user"
+                      msg.sender.id === currentUser?.id
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
                     } rounded-2xl px-4 py-2 relative`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        msg.senderId === "current_user"
+                        msg.sender.id === currentUser?.id
                           ? "text-primary-foreground/70"
                           : "text-muted-foreground"
                       }`}
                     >
-                      {formatTime(msg.timestamp)}
+                      {formatTime(msg.createdAt)}
                     </p>
+
+                    {/* Afficher le nom de l'expéditeur pour les messages de l'ami */}
+                    {msg.sender.id !== currentUser?.id &&
+                      msg.sender.profile && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {msg.sender.profile.fname}
+                        </p>
+                      )}
                   </div>
                 </motion.div>
               ))}
+              {currentFriend?.isTyping && <TypingIndicator />}
             </AnimatePresence>
           )}
           <div ref={messagesEndRef} />
@@ -317,7 +326,6 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
 
         {/* Zone de saisie */}
         <div className="border-t border-border p-4">
-          {/* Picker d'emojis */}
           <AnimatePresence>
             {showEmojiPicker && (
               <motion.div
@@ -345,7 +353,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
             <div className="flex-1">
               <textarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={handleInputChange}
                 placeholder="Tapez votre message..."
                 className="input w-full resize-none dark:border-gray-600 placeholder:text-gray-500 dark:bg-gray-800"
                 rows={1}
@@ -367,11 +375,11 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
               </button>
               <Button
                 onClick={handleSendMessage}
-                disabled={!message.trim() || isLoading}
+                disabled={!message.trim() || isSendingMessage}
                 className="px-3 py-2"
               >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                {isSendingMessage ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                 ) : (
                   <Send size={16} />
                 )}

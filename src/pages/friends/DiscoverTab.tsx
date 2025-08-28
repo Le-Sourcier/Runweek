@@ -5,7 +5,6 @@ import { useFriendsStore } from "../../stores/friends";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import UserSearchResults from "../../components/friends/UserSearchResults";
-import { Friend } from "../../types/friends";
 
 const DiscoverTab: React.FC = () => {
   const {
@@ -62,9 +61,6 @@ const DiscoverTab: React.FC = () => {
             isSearching={isSearching}
             onSendFriendRequest={handleSendFriendRequest}
             searchQuery={searchQuery}
-            onViewProfile={function (user: Friend): void {
-              throw new Error("Function not implemented.");
-            }}
           />
         </div>
       </Card>
