@@ -124,6 +124,7 @@ const Diet: React.FC = () => {
     getWeeklyNutrition,
     today,
   ]);
+ 
 
   // Mettre à jour l'eau locale quand le store change
   useEffect(() => {
@@ -147,7 +148,7 @@ const Diet: React.FC = () => {
 
   const handleFoodSearch = async (query: string) => {
     setFoodSearchQuery(query);
-    if (query.trim().length > 1) {    
+    if (query.trim().length > 1) {
       await searchFoods(query);
       setSearchResults(useDietsStore.getState().foodItems);
     } else {
@@ -329,7 +330,7 @@ const Diet: React.FC = () => {
     totalFat: 0,
     waterIntake: 0,
     user_id: user?.id || "",
-  };
+  } as DailyNutrition;
 
   const defaultNutritionGoals: NutritionGoals = {
     dailyCalories: 2200,
@@ -560,13 +561,12 @@ const Diet: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-4 h-4 rounded-full ${
-                        dietAnalysis.overallScore >= 80
+                      className={`w-4 h-4 rounded-full ${dietAnalysis.overallScore >= 80
                           ? "bg-green-500"
                           : dietAnalysis.overallScore >= 60
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
                     ></div>
                     <span className="text-lg font-semibold text-foreground">
                       Score: {dietAnalysis.overallScore}/100
@@ -577,35 +577,34 @@ const Diet: React.FC = () => {
                       dietAnalysis.weeklyTrend === "improving"
                         ? "success"
                         : dietAnalysis.weeklyTrend === "declining"
-                        ? "error"
-                        : "default"
+                          ? "error"
+                          : "default"
                     }
                   >
                     {dietAnalysis.weeklyTrend === "improving"
                       ? "📈 En amélioration"
                       : dietAnalysis.weeklyTrend === "declining"
-                      ? "📉 En baisse"
-                      : "➡️ Stable"}
+                        ? "📉 En baisse"
+                        : "➡️ Stable"}
                   </Badge>
                 </div>
 
                 <AnimatePresence>
-                  {dietAnalysis.recommendations.map((rec, index) => (
+                  {dietAnalysis?.recommendations?.map((rec, index) => (
                     <motion.div
-                      key={rec.id}
+                      key={index}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        rec.type === "warning"
+                      className={`p-4 rounded-lg border-l-4 ${rec.type === "warning"
                           ? "border-red-500 bg-red-50/50 dark:bg-red-900/10"
                           : rec.type === "improvement"
-                          ? "border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10"
-                          : rec.type === "achievement"
-                          ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
-                          : "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
-                      }`}
+                            ? "border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10"
+                            : rec.type === "achievement"
+                              ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
+                              : "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
+                        }`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-3 flex-1">
@@ -665,7 +664,7 @@ const Diet: React.FC = () => {
             </Card>
             <Card title="Tendance des calories (7 jours)">
               <WeeklyNutritionTrend
-                dailyNutrition={dailyNutrition}
+                dailyNutrition={dailyNutrition!}
                 type="calories"
               />
             </Card>
@@ -674,7 +673,7 @@ const Diet: React.FC = () => {
           {/* Repas du jour */}
           <Card title="Repas d'aujourd'hui">
             {currentDayNutrition?.meals &&
-            currentDayNutrition.meals.length > 0 ? (
+              currentDayNutrition.meals.length > 0 ? (
               <div className="space-y-4">
                 {["breakfast", "lunch", "dinner", "snack"].map((mealType) => {
                   const mealsOfType = currentDayNutrition.meals.filter(
@@ -709,10 +708,10 @@ const Diet: React.FC = () => {
                             {mealType === "breakfast"
                               ? "Petit-déjeuner"
                               : mealType === "lunch"
-                              ? "Déjeuner"
-                              : mealType === "dinner"
-                              ? "Dîner"
-                              : "Collation"}
+                                ? "Déjeuner"
+                                : mealType === "dinner"
+                                  ? "Dîner"
+                                  : "Collation"}
                           </h4>
                         </div>
                         <div className="text-right">
@@ -743,16 +742,16 @@ const Diet: React.FC = () => {
                               <div className="text-xs text-muted-foreground mt-1">
                                 {Math.round(
                                   meal.foodItem.calories *
-                                    (meal.unit === "g"
-                                      ? meal.quantity / 100
-                                      : meal.quantity)
+                                  (meal.unit === "g"
+                                    ? meal.quantity / 100
+                                    : meal.quantity)
                                 )}{" "}
                                 cal •
                                 {Math.round(
                                   meal.foodItem.protein *
-                                    (meal.unit === "g"
-                                      ? meal.quantity / 100
-                                      : meal.quantity)
+                                  (meal.unit === "g"
+                                    ? meal.quantity / 100
+                                    : meal.quantity)
                                 )}
                                 g protéines
                               </div>
@@ -859,13 +858,12 @@ const Diet: React.FC = () => {
             <div className="space-y-4">
               <div className="text-center">
                 <div
-                  className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2 ${
-                    dietAnalysis && dietAnalysis.overallScore >= 80
+                  className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2 ${dietAnalysis && dietAnalysis.overallScore >= 80
                       ? "bg-green-500"
                       : dietAnalysis && dietAnalysis.overallScore >= 60
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                  }`}
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                    }`}
                 >
                   {dietAnalysis && dietAnalysis.overallScore}
                 </div>
@@ -1027,11 +1025,10 @@ const Diet: React.FC = () => {
                   <div className="flex items-center gap-4 text-xs">
                     <button
                       onClick={() => likeMeal(sharedMeal.id)}
-                      className={`flex items-center gap-1 transition-colors ${
-                        sharedMeal.isLiked
+                      className={`flex items-center gap-1 transition-colors ${sharedMeal.isLiked
                           ? "text-red-500"
                           : "text-muted-foreground hover:text-red-500"
-                      }`}
+                        }`}
                     >
                       <Heart
                         size={12}
@@ -1098,11 +1095,10 @@ const Diet: React.FC = () => {
                 <button
                   key={type.value}
                   onClick={() => setSelectedMealType(type.value as any)}
-                  className={`p-3 rounded-lg border flex items-center gap-2 text-sm transition-all ${
-                    selectedMealType === type.value
+                  className={`p-3 rounded-lg border flex items-center gap-2 text-sm transition-all ${selectedMealType === type.value
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  }`}
+                    }`}
                 >
                   {type.icon}
                   {type.label}
@@ -1138,22 +1134,27 @@ const Diet: React.FC = () => {
 
           {/* Recherche d'aliment */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Rechercher un aliment
-            </label>
-            <div className="relative">
-              <Input
-                type="text"
-                value={foodSearchQuery}
-                onChange={(e) => handleFoodSearch(e.target.value)}
-                placeholder="Ex: pizza, salade, poulet..."
-                className="pl-10"
-              />
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                size={16}
-              />
-            </div>
+            {
+              true && (
+              <>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Rechercher un aliment
+                </label>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    value={foodSearchQuery}
+                    onChange={(e) => handleFoodSearch(e.target.value)}
+                    placeholder="Ex: pizza, salade, poulet..."
+                    className="pl-10"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    size={16}
+                  />
+                </div>
+              </>
+            )}
 
             {searchResults.length > 0 && (
               <div className="mt-2 max-h-48 overflow-y-auto border border-border rounded-lg bg-background">
@@ -1163,7 +1164,7 @@ const Diet: React.FC = () => {
                     onClick={() => {
                       setSelectedFood(food);
                       setSearchResults([]);
-                      setFoodSearchQuery(food.name);
+                      setFoodSearchQuery("");
                     }}
                     className="w-full p-3 text-left hover:bg-muted flex justify-between items-center transition-colors"
                   >
@@ -1242,7 +1243,7 @@ const Diet: React.FC = () => {
                   <span className="font-semibold">
                     {Math.round(
                       selectedFood.calories *
-                        (unit === "g" ? quantity / 100 : quantity)
+                      (unit === "g" ? quantity / 100 : quantity)
                     )}
                   </span>
                 </div>
@@ -1251,7 +1252,7 @@ const Diet: React.FC = () => {
                   <span className="font-semibold">
                     {Math.round(
                       selectedFood.protein *
-                        (unit === "g" ? quantity / 100 : quantity)
+                      (unit === "g" ? quantity / 100 : quantity)
                     )}
                     g
                   </span>
@@ -1261,7 +1262,7 @@ const Diet: React.FC = () => {
                   <span className="font-semibold">
                     {Math.round(
                       selectedFood.carbs *
-                        (unit === "g" ? quantity / 100 : quantity)
+                      (unit === "g" ? quantity / 100 : quantity)
                     )}
                     g
                   </span>
@@ -1271,7 +1272,7 @@ const Diet: React.FC = () => {
                   <span className="font-semibold">
                     {Math.round(
                       selectedFood.fat *
-                        (unit === "g" ? quantity / 100 : quantity)
+                      (unit === "g" ? quantity / 100 : quantity)
                     )}
                     g
                   </span>

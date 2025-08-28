@@ -56,7 +56,11 @@ export const MESSAGE_MAPPINGS = {
     "INVALID_GOAL": "Invalid goal selected",
     "RECORD_CREATED": "Personal record added successfully",
     "RECORD_DELETED": "Personal record deleted successfully",
-    "RECORD_UPDATED": "Personal record updated successfully"
+    "RECORD_UPDATED": "Personal record updated successfully",
+    "SEARCH_QUERY_TOO_SHORT": "Search query must be at least 2 characters long",
+    "GOALS_CREATED": "Nutrition goals created successfully",
+    "GOALS_UPDATED": "Nutrition goals updated successfully",
+    "MEAL_ADDED": "Meal added successfully"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -112,7 +116,11 @@ export const MESSAGE_MAPPINGS = {
     "INVALID_GOAL": "Objectif invalide sélectionné",
     "RECORD_CREATED": "Record personnel ajouté avec succès",
     "RECORD_DELETED": "Record personnel supprimé avec succès",
-    "RECORD_UPDATED": "Record personnel mis à jour avec succès"
+    "RECORD_UPDATED": "Record personnel mis à jour avec succès",
+    "SEARCH_QUERY_TOO_SHORT": "La requête de recherche doit contenir au moins 2 caractères",
+    "GOALS_CREATED": "Objectifs nutritionnels créés avec succès",
+    "GOALS_UPDATED": "Objectifs nutritionnels mis à jour avec succès",
+    "MEAL_ADDED": "Repas ajouté avec succès"
   }
 };
 

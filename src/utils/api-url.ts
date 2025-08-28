@@ -58,8 +58,6 @@ export const ApiUrl = {
    * Fonction pour les url à paramètres sous la forme url/:id
    */
   parameterized: (item: string, parameters: Record<string, string | number> | string | number) => {
-    console.log("Params:", parameters);
-    
     // Si on passe directement un string ou un number → c'est l'id par défaut
     if (typeof parameters === "string" || typeof parameters === "number") {
       return item.replace(":id", parameters.toString());
@@ -73,11 +71,20 @@ export const ApiUrl = {
     return item;
   },
 
-  queryable: (item: string, queries: Array<{ key: any; value: string }>) => {
-    item += "?";
-    queries.forEach((query) => {
-      item += `${query.key}=${query.value}&`;
-    });
-    return item.slice(0, -1);
+  /**
+ * Fonction pour les query strings sous la forme url?key=value
+ */
+  queryable: (item: string, queries: Record<string, string | number> | string | number) => {
+    // Si on passe directement un string ou un number → c'est le paramètre 'id' par défaut
+    if (typeof queries === "string" || typeof queries === "number") {
+      return `${item}?q=${encodeURIComponent(queries.toString())}`;
+    }
+
+    // Sinon on construit les query strings à partir de l'objet
+    const queryString = Object.entries(queries)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value.toString())}`)
+      .join('&');
+
+    return queryString ? `${item}?${queryString}` : item;
   },
 } as const;

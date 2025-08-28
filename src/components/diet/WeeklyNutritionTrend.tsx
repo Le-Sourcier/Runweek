@@ -15,7 +15,7 @@ import { format, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
 
 interface WeeklyNutritionTrendProps {
-  dailyNutrition: DailyNutrition[];
+  dailyNutrition: DailyNutrition;
   type: "calories" | "protein" | "water";
 }
 
@@ -26,8 +26,7 @@ const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({
   // Generate last 7 days data
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = format(subDays(new Date(), 6 - i), "yyyy-MM-dd");
-    const dayData =
-      dailyNutrition && dailyNutrition.find((d) => d.date === date);
+    const dayData = dailyNutrition;
 
     let value = 0;
     switch (type) {

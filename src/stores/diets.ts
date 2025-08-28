@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { apiUtils } from "../hooks/useApi";
 // import { ApiUrl } from "../utils/api-url";
 import {
+  DailyNutrition,
+  DietAnalysis,
   FoodItem,
   NutritionRecommendation,
   NutritionState,
@@ -28,11 +30,11 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
       const { data } = await apiUtils.get<FoodItem[]>(
         ApiUrl.queryable(
           ApiUrl.NUTRITION_SEARCH,
-          [
-            { key: "q", value: query },
-            { key: "category", value: category },
-            { key: "limit", value: limit.toString() },
-          ]
+          {
+            q: query,
+            category: category,
+            limit: limit.toString(),
+          }
         )
       );
 
@@ -75,7 +77,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get(
+      const { data } = await apiUtils.get<DailyNutrition>(
         ApiUrl.parameterized(ApiUrl.NUTRITION_DAILY, { date })
       );
 
@@ -230,8 +232,8 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get(ApiUrl.parameterized(ApiUrl.NUTRITION_GET_WEEKLY_ANALYSIS, { date }));
-
+      const { data } = await apiUtils.get<DietAnalysis>(ApiUrl.parameterized(ApiUrl.NUTRITION_GET_WEEKLY_ANALYSIS, { date }));
+      
       set({
         dietAnalysis: data,
         isLoading: false,

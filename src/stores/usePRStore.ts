@@ -30,27 +30,15 @@ export const usePRStore = create<PRState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const params = new URLSearchParams();
-      if (distance && distance !== "all") params.append("distance", distance);
-      if (sort) params.append("sort", sort);
-      if (order) params.append("order", order);
-      if (limit) params.append("limit", `${limit}`);
-
-      const url = `/personal-records?${params.toString()}`;
       const { data } = await apiUtils.get<PersonalRecord[]>(
         ApiUrl.queryable(
           ApiUrl.PERSONAL_RECORDS,
-          [
-            {
-              key: "distance", value: distance?.toString() || ""
-            }, {
-              key: "sort", value: sort
-            }, {
-              key: "order", value: order
-            }, {
-              key: "limit", value: limit.toString()
-            }
-          ]
+          {
+            distance: distance?.toString() || "",
+            sort,
+            order,
+            limit: limit.toString(),
+          }
         )
       );
 
