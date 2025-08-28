@@ -33,6 +33,10 @@ export const ApiUrl = {
   // Message
   CONVERSATIONS: "/conversations",
 
+  // Personal Records
+  PERSONAL_RECORDS: "/personal-records",
+  PERSONAL_RECORDS_SEARCH: "/personal-records/search",
+  PERSONAL_RECORDS_UPDATE: "/personal-records/:id",
 
   // Nutritions
   NUTRITION_SEARCH: "/nutrition/foods/search",
@@ -54,6 +58,8 @@ export const ApiUrl = {
    * Fonction pour les url à paramètres sous la forme url/:id
    */
   parameterized: (item: string, parameters: Record<string, string | number> | string | number) => {
+    console.log("Params:", parameters);
+    
     // Si on passe directement un string ou un number → c'est l'id par défaut
     if (typeof parameters === "string" || typeof parameters === "number") {
       return item.replace(":id", parameters.toString());

@@ -76,7 +76,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
       set({ isLoading: true, error: null });
 
       const { data } = await apiUtils.get(
-        ApiUrl.parameterized(ApiUrl.NUTRITION_DAILY, { key: "date", value: date })
+        ApiUrl.parameterized(ApiUrl.NUTRITION_DAILY, { date })
       );
 
       set({

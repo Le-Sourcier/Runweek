@@ -1,18 +1,20 @@
-// MessageContext.tsx
 import React from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { getBaseMessage } from "../utils/error-handler";
-import { Language, MessageCode } from "../types/message";
+import { MessageCode } from "../types/message";
 import { MessageContext } from "../context/MessageContext";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "./LanguageProvider";
 
 export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Initialize language from localStorage or system language
+  const {currentLanguage: language} = useLanguage();
+
   const getMessage = (
     code: MessageCode | null | undefined,
     variables: Record<string, string | number> = {},
-    language: Language = "en"
   ) => {
     if (!code) {
       return "UNKNOWN_ERROR";
@@ -30,26 +32,25 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const { theme: appTheme } = useTheme();
 
-  const [currentLanguage, setCurrentLanguage] = React.useState<Language>("en");
-
   const showMessage = (
     code: MessageCode | null | undefined,
     variables: Record<string, string | number> = {},
     options: {
-      language?: Language;
       toastId?: string | number;
       autoClose?: number | false;
     } = {}
   ) => {
-    const { language = currentLanguage || "en", toastId, autoClose } = options;
+    const { toastId, autoClose } = options;
 
     // Si le code est null ou undefined, utiliser un code d'erreur par défaut
     const effectiveCode = code || "UNKNOWN_ERROR";
-    const message = getMessage(effectiveCode, variables, language);
+    // @ts-ignore
+    const message = getMessage(effectiveCode, variables);
 
     // Determine message type based on code
     if (
       effectiveCode.startsWith("STRIPE_") ||
+      // @ts-ignore
       effectiveCode === "INSUFFICIENT_FUNDS"
     ) {
       toast.warn(message, { toastId, autoClose });
@@ -62,6 +63,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
       toast.error(message, { toastId, autoClose });
     } else if (
       effectiveCode.endsWith("_SUCCESS") ||
+      // @ts-ignore
       effectiveCode === "SUCCESS" ||
       effectiveCode.endsWith("_CREATED") ||
       effectiveCode.endsWith("_UPDATED")

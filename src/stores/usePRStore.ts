@@ -8,6 +8,8 @@ import {
   SortablePRKey,
   SortDirection,
 } from "../types/PsRecor";
+import { extractErrorMessage } from "../utils/error-handler";
+import { ApiUrl } from "../utils/api-url";
 
 export const usePRStore = create<PRState>((set, get) => ({
   // États initiaux
@@ -79,7 +81,7 @@ export const usePRStore = create<PRState>((set, get) => ({
   // Créer un nouveau record personnel
   createRecord: async (prData: PersonalRecord) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
       const { data } = await apiUtils.post<PersonalRecord>(
         "/personal-records",
         prData
@@ -103,6 +105,8 @@ export const usePRStore = create<PRState>((set, get) => ({
       return data;
     } catch (err) {
       const error = err as ApiError;
+      console.log("error.message:", extractErrorMessage(error));
+
       set({ error: error.message, isLoading: false });
       throw new Error(error.message || "Erreur lors de la création du record");
     }
@@ -110,10 +114,11 @@ export const usePRStore = create<PRState>((set, get) => ({
 
   // Mettre à jour un record
   updateRecord: async (pr: PersonalRecord) => {
+   
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
       const { data } = await apiUtils.put<PersonalRecord>(
-        `/personal-records/${pr.id}`,
+        ApiUrl.parameterized(ApiUrl.PERSONAL_RECORDS_UPDATE, pr.id!),
         pr
       );
 
@@ -137,7 +142,7 @@ export const usePRStore = create<PRState>((set, get) => ({
       return data;
     } catch (err) {
       const error = err as ApiError;
-      set({ error: error.message, isLoading: false });
+      set({ error: error.message });
       throw new Error(
         error.message || "Erreur lors de la mise à jour du record"
       );
@@ -147,7 +152,7 @@ export const usePRStore = create<PRState>((set, get) => ({
   // Supprimer un record
   deleteRecord: async (id: string) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
       await apiUtils.del(`/personal-records/${id}`);
 
       set((state) => {
@@ -168,7 +173,7 @@ export const usePRStore = create<PRState>((set, get) => ({
       });
     } catch (err) {
       const error = err as ApiError;
-      set({ error: error.message, isLoading: false });
+      set({ error: error.message });
       throw new Error(
         error.message || "Erreur lors de la suppression du record"
       );
@@ -233,7 +238,7 @@ export const usePRStore = create<PRState>((set, get) => ({
     const newDirection =
       direction ||
       (get().sortConfig?.key === key &&
-      get().sortConfig?.direction === "ascending"
+        get().sortConfig?.direction === "ascending"
         ? "descending"
         : "ascending");
 

@@ -56,7 +56,7 @@ const Diet: React.FC = () => {
     weeklyNutrition,
     nutritionStats,
     dietAnalysis,
-    isLoading,
+    isLoading: storeIsLoading,
     error,
     searchFoods,
     createFood,
@@ -74,6 +74,7 @@ const Diet: React.FC = () => {
 
   // États locaux
   const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(storeIsLoading);
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
   const [isCreateFoodModalOpen, setIsCreateFoodModalOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<
@@ -114,6 +115,7 @@ const Diet: React.FC = () => {
     getNutritionAnalysis(today);
     getWeeklyNutrition();
     getNutritionStats();
+    setIsLoading(false);
   }, [
     getDailyNutrition,
     getNutritionAnalysis,
@@ -145,9 +147,9 @@ const Diet: React.FC = () => {
 
   const handleFoodSearch = async (query: string) => {
     setFoodSearchQuery(query);
-    if (query.length > 1) {
+    if (query.trim().length > 1) {    
       await searchFoods(query);
-      setSearchResults(foodItems);
+      setSearchResults(useDietsStore.getState().foodItems);
     } else {
       setSearchResults([]);
     }

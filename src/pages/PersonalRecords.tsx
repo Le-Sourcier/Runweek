@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FC } from "react";
 import { PersonalRecord } from "../types";
 import {
   calculatePace,
@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 import { usePRStore } from "../stores/usePRStore";
 import PRFormModal from "../components/pr/PRFormModal";
+import { useMessages } from "../hooks/useMessage";
+import { extractErrorMessage } from "../utils/error-handler";
+import Spiner from "../components/ui/Spiner";
 
 const DISTANCE_FILTER_OPTIONS = [
   { label: "All Records", value: "all" },
@@ -29,7 +32,7 @@ const DISTANCE_FILTER_OPTIONS = [
   { label: "Marathon", value: "42195" },
 ];
 
-const PersonalRecords: React.FC = () => {
+const PersonalRecords: FC = () => {
   // Utilisation du store au lieu du contexte
   const {
     processedPRs,
@@ -42,10 +45,15 @@ const PersonalRecords: React.FC = () => {
     distanceFilter,
     getAllRecords,
     isLoading,
-    error,
+    error
   } = usePRStore();
+
+  const { showMessage } = useMessages();
+
   // Modal states
+  const [isPRSaving, setIsPRSaving] = useState(false);
   const [isPREditorModalOpen, setIsPREditorModalOpen] = useState(false);
+  const [isPRDeleting, setIsPRDeleting] = useState(false);
   const [editingPR, setEditingPR] = useState<PersonalRecord | null>(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] =
     useState<PersonalRecord | null>(null);
@@ -55,14 +63,24 @@ const PersonalRecords: React.FC = () => {
     getAllRecords();
   }, [getAllRecords]);
 
+  useEffect(() => {
+    if (error) {
+      showMessage(extractErrorMessage(error).message);
+    }
+  }, [error])
+
   const handleDeleteConfirm = async () => {
     if (showDeleteConfirmModal) {
       try {
+        setIsPRDeleting(true);
         await deleteRecord(showDeleteConfirmModal.id!);
         setShowDeleteConfirmModal(null);
+        showMessage("RECORD_DELETED");
       } catch (error) {
-        console.error("Error deleting PR:", error);
-        alert("Error deleting record. Please try again.");
+        showMessage(extractErrorMessage(error).message);
+        setShowDeleteConfirmModal(null);
+      } finally {
+        setIsPRDeleting(false);
       }
     }
   };
@@ -71,19 +89,25 @@ const PersonalRecords: React.FC = () => {
     return <div className="p-4 text-center">Loading...</div>;
   }
 
-  // if (error) {
-  //   return (
-  //     <div className="p-4 text-center text-red-500">
-  //       Error: {error}
-  //       <button
-  //         onClick={() => window.location.reload()}
-  //         className="ml-2 text-blue-500"
-  //       >
-  //         Retry
-  //       </button>
-  //     </div>
-  //   );
-  // }
+  const handlePRSaving = async (data: PersonalRecord) => {
+    try {
+      setIsPRSaving(true);
+      if (editingPR) {
+        await updateRecord(data);
+      } else {
+        await createRecord(data);
+        showMessage("RECORD_CREATED");
+      }
+      setIsPREditorModalOpen(false);
+      setEditingPR(null);
+    } catch (error) {
+      setIsPREditorModalOpen(true);
+      showMessage(extractErrorMessage(error).message);
+      return;
+    } finally {
+      setIsPRSaving(false);
+    }
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -112,25 +136,10 @@ const PersonalRecords: React.FC = () => {
       >
         <PRFormModal
           isOpen={isPREditorModalOpen}
-          onClose={() => {
-            setIsPREditorModalOpen(false);
-            setEditingPR(null);
-          }}
-          onSubmit={async (data) => {
-            try {
-              if (editingPR) {
-                await updateRecord(data);
-              } else {
-                await createRecord(data);
-              }
-              setIsPREditorModalOpen(false);
-              setEditingPR(null);
-            } catch (error) {
-              console.error("Error saving PR:", error);
-              alert("Error saving record. Please try again.");
-            }
-          }}
-          // editingPR={editingPR}
+          isPRSaving={isPRSaving}
+          onClose={() => { setIsPREditorModalOpen(false); }}
+          onSubmit={handlePRSaving}
+          editingPR={editingPR}
         />
       </Modal>
 
@@ -157,7 +166,7 @@ const PersonalRecords: React.FC = () => {
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="btn btn-destructive"
+                className="btn btn-destructive text-red-500 hover:text-red-500 border border-red-500 hover:border-red-500"
               >
                 <Trash2 size={16} className="mr-2" /> Delete
               </button>
@@ -224,11 +233,10 @@ const PersonalRecords: React.FC = () => {
         {processedPRs.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">
             {distanceFilter && distanceFilter !== "all"
-              ? `No records found for ${
-                  DISTANCE_FILTER_OPTIONS.find(
-                    (opt) => opt.value === distanceFilter
-                  )?.label || "this distance"
-                }. Try a different filter.`
+              ? `No records found for ${DISTANCE_FILTER_OPTIONS.find(
+                (opt) => opt.value === distanceFilter
+              )?.label || "this distance"
+              }. Try a different filter.`
               : "No personal records yet. Add one!"}
           </p>
         ) : (
@@ -303,7 +311,7 @@ const PersonalRecords: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-border flex justify-end space-x-2">
+                  <div className="mt-3 p-2 border-t border-border flex justify-end space-x-2">
                     <button
                       onClick={() => {
                         setEditingPR(pr);
@@ -317,7 +325,12 @@ const PersonalRecords: React.FC = () => {
                       onClick={() => setShowDeleteConfirmModal(pr)}
                       className="btn btn-ghost btn-sm text-xs p-1 h-auto text-destructive hover:bg-destructive/10"
                     >
-                      <Trash2 size={14} className="mr-1" /> Delete
+                      {isPRDeleting ? (
+                        <Spiner />
+                      ) : (
+                        <Trash2 size={14} className="mr-1" />
+                      )}
+                      {isPRDeleting ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </li>

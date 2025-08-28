@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar for desktop */}
-      <Sidebar className="hidden md:block sticky top-0 h-screen" />
+      <Sidebar className="hidden md:block sticky top-2 h-screen" />
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         <Header onMenuClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />

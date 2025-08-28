@@ -587,9 +587,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       existingSocket.disconnect();
     }
 
-    const socket = io("http://localhost:3001", {
+    const socket = io(import.meta.env.VITE_SOCKET_URL as string, {
       auth: {
-        token: token,
+        token,
       },
       reconnection: true,
       reconnectionAttempts: Infinity,

@@ -40,6 +40,7 @@ import ProtectedRoute from "./components/layout/ProtectRouteLayout";
 import { ROUTES } from "./hooks/useAppNavigation";
 import FriendsLayout from "./components/layout/FriendsLayout";
 import SocketManager from "./utils/SocketManager";
+import { LanguageProvider } from "./providers/LanguageProvider";
 
 const MainAppLayoutContent: React.FC = () => {
   return (
@@ -114,11 +115,13 @@ const AuthRoutesHandler = () => {
 function App() {
   return (
     <ThemeProvider>
-      <MessageProvider>
-        <UserProvider>
-          <AuthRoutesHandler />
-        </UserProvider>
-      </MessageProvider>
+      <LanguageProvider>
+        <MessageProvider>
+          <UserProvider>
+            <AuthRoutesHandler />
+          </UserProvider>
+        </MessageProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

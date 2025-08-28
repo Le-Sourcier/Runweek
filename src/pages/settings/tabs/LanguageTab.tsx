@@ -5,10 +5,13 @@ import { Check, Save } from "lucide-react";
 import Button from "../../../components/ui/Button";
 import { useUserContext } from "../../../hooks/useUser";
 import { toast } from "react-toastify";
+import { useLanguage } from "../../../providers/LanguageProvider";
+import { Language } from "../../../types/message";
 
 export const LanguageTab: FC = () => {
 
-  const {user, updateUserPreferences } = useUserContext();
+  const { user, updateUserPreferences } = useUserContext();
+  const { setLanguage } = useLanguage();
 
   const [languageForm, setLanguageForm] = useState({
     language: user?.preferences?.language || 'fr',
@@ -18,15 +21,18 @@ export const LanguageTab: FC = () => {
     timeFormat: '24h',
   });
 
-   // Initialize forms when user data changes
-   useEffect(() => {
+  // Initialize forms when user data changes
+  useEffect(() => {
     if (user) {
 
       setLanguageForm({
         language: user.preferences?.language || 'fr',
         region: user.preferences?.region || 'FR',
+        // @ts-ignore
         timezone: user.preferences?.timezone || 'Europe/Paris',
+        // @ts-ignore
         dateFormat: user.preferences?.dateFormat || 'DD/MM/YYYY',
+        // @ts-ignore
         timeFormat: user.preferences?.timeFormat || '24h',
       });
     }
@@ -41,14 +47,15 @@ export const LanguageTab: FC = () => {
   ];
 
   const languages = [
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷', enabled: true },
+    { code: 'en', name: 'English', flag: '🇺🇸', enabled: true },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'it', name: 'Italiano', flag: '🇮🇹' },
   ];
 
-  const handleLanguageUpdate = () => {
+  const handleLanguageUpdate = () => {    
+    setLanguage(languageForm.language as Language);
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
@@ -72,11 +79,12 @@ export const LanguageTab: FC = () => {
               {languages.map((lang) => (
                 <button
                   key={lang.code}
+                  disabled={!lang.enabled}
                   onClick={() => setLanguageForm(prev => ({ ...prev, language: lang.code }))}
                   className={`w-full p-3 rounded-lg border text-left flex items-center gap-3 transition-all ${languageForm.language === lang.code
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border hover:border-primary/50'
-                    }`}
+                    } ${!lang.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span className="text-xl">{lang.flag}</span>
                   <span className="font-medium">{lang.name}</span>

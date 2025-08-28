@@ -18,9 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { PersonalRecord } from "../../types/PsRecor";
+import { RequiredInputStar } from "../ui/RequiredInputStar";
+import Spiner from "../ui/Spiner";
 
 interface PRFormModalProps {
   isOpen: boolean;
+  isPRSaving: boolean;
   onClose: () => void;
   onSubmit: (data: PersonalRecord) => void;
   editingPR?: PersonalRecord | null;
@@ -31,9 +34,10 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
   onClose,
   onSubmit,
   editingPR,
+  isPRSaving
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PersonalRecord | any>(editingPR ?? {
     // Required fields
     distance: "",
     time: "",
@@ -129,6 +133,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
     if (name.startsWith("weather.")) {
       const field = name.split(".")[1];
+      // @ts-ignore
       setFormData((prev) => ({
         ...prev,
         weather: {
@@ -138,6 +143,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       }));
     } else if (name.startsWith("heartRate.")) {
       const field = name.split(".")[1];
+      // @ts-ignore
       setFormData((prev) => ({
         ...prev,
         heartRate: {
@@ -147,6 +153,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       }));
     } else if (name.startsWith("elevation.")) {
       const field = name.split(".")[1];
+      // @ts-ignore
       setFormData((prev) => ({
         ...prev,
         elevation: {
@@ -155,6 +162,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
         },
       }));
     } else {
+      // @ts-ignore
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -167,6 +175,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       formData.tagInput.trim() &&
       !formData.tags.includes(formData.tagInput.trim())
     ) {
+      // @ts-ignore
       setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, prev.tagInput.trim()],
@@ -176,8 +185,10 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
+    // @ts-ignore
     setFormData((prev) => ({
       ...prev,
+      // @ts-ignore
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
@@ -192,6 +203,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
     // Prepare the data for submission
     const submissionData: PersonalRecord = {
+      id: editingPR!.id,
       distance: Number(formData.distance),
       time: formData.time,
       date: formData.date,
@@ -249,8 +261,9 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       ...(formData.tags.length > 0 && { tags: formData.tags }),
     };
 
+    console.log("submissionData:", submissionData);
+    
     onSubmit(submissionData);
-    onClose();
   };
 
   const isStep1Valid = formData.distance && formData.time && formData.date;
@@ -279,11 +292,10 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex flex-col items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    currentStep >= step
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= step
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                  }`}
+                    }`}
                 >
                   {currentStep > step ? <CheckCircle size={16} /> : step}
                 </div>
@@ -306,7 +318,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Distance (meters) *
+                    Distance (meters) <RequiredInputStar />
                   </label>
                   <div className="relative">
                     <Ruler
@@ -328,7 +340,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Time (HH:MM:SS) *
+                    Time (HH:MM:SS) <RequiredInputStar />
                   </label>
                   <div className="relative">
                     <Clock
@@ -336,7 +348,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                       size={18}
                     />
                     <input
-                      type="text"
+                      type="time"
                       name="time"
                       value={formData.time}
                       onChange={handleInputChange}
@@ -349,7 +361,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date *
+                    Date <RequiredInputStar />
                   </label>
                   <div className="relative">
                     <Calendar
@@ -371,7 +383,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
               <div className="pt-4">
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                   <AlertCircle size={16} className="mr-2" />
-                  All fields marked with * are required
+                  All fields marked with &nbsp; <RequiredInputStar /> &nbsp;are required
                 </p>
               </div>
             </div>
@@ -597,7 +609,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                   Tags
                 </h3>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map((tag) => (
+                  {formData.tags.map((tag: string) => (
                     <span
                       key={tag}
                       className="inline-flex items-center bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-2 py-1 rounded-full text-sm"
@@ -618,7 +630,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                     type="text"
                     value={formData.tagInput}
                     onChange={(e) =>
-                      setFormData((prev) => ({
+                      setFormData((prev: any) => ({
                         ...prev,
                         tagInput: e.target.value,
                       }))
@@ -695,118 +707,118 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                 formData.weather.conditions ||
                 formData.weather.humidity ||
                 formData.weather.windSpeed) && (
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-800 dark:text-white mb-2">
-                    Weather Conditions
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {formData.weather.temperature && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Temperature:
-                        </div>
-                        <div>{formData.weather.temperature}°C</div>
-                      </>
-                    )}
-                    {formData.weather.conditions && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Conditions:
-                        </div>
-                        <div>{formData.weather.conditions}</div>
-                      </>
-                    )}
-                    {formData.weather.humidity && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Humidity:
-                        </div>
-                        <div>{formData.weather.humidity}%</div>
-                      </>
-                    )}
-                    {formData.weather.windSpeed && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Wind Speed:
-                        </div>
-                        <div>{formData.weather.windSpeed} km/h</div>
-                      </>
-                    )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 dark:text-white mb-2">
+                      Weather Conditions
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {formData.weather.temperature && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Temperature:
+                          </div>
+                          <div>{formData.weather.temperature}°C</div>
+                        </>
+                      )}
+                      {formData.weather.conditions && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Conditions:
+                          </div>
+                          <div>{formData.weather.conditions}</div>
+                        </>
+                      )}
+                      {formData.weather.humidity && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Humidity:
+                          </div>
+                          <div>{formData.weather.humidity}%</div>
+                        </>
+                      )}
+                      {formData.weather.windSpeed && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Wind Speed:
+                          </div>
+                          <div>{formData.weather.windSpeed} km/h</div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {(formData.heartRate.average ||
                 formData.heartRate.max ||
                 formData.heartRate.min) && (
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-800 dark:text-white mb-2">
-                    Heart Rate
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {formData.heartRate.average && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Average:
-                        </div>
-                        <div>{formData.heartRate.average} bpm</div>
-                      </>
-                    )}
-                    {formData.heartRate.max && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Max:
-                        </div>
-                        <div>{formData.heartRate.max} bpm</div>
-                      </>
-                    )}
-                    {formData.heartRate.min && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Min:
-                        </div>
-                        <div>{formData.heartRate.min} bpm</div>
-                      </>
-                    )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 dark:text-white mb-2">
+                      Heart Rate
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {formData.heartRate.average && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Average:
+                          </div>
+                          <div>{formData.heartRate.average} bpm</div>
+                        </>
+                      )}
+                      {formData.heartRate.max && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Max:
+                          </div>
+                          <div>{formData.heartRate.max} bpm</div>
+                        </>
+                      )}
+                      {formData.heartRate.min && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Min:
+                          </div>
+                          <div>{formData.heartRate.min} bpm</div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {(formData.elevation.gain ||
                 formData.elevation.loss ||
                 formData.elevation.maxAltitude) && (
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-800 dark:text-white mb-2">
-                    Elevation
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {formData.elevation.gain && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Gain:
-                        </div>
-                        <div>{formData.elevation.gain} m</div>
-                      </>
-                    )}
-                    {formData.elevation.loss && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Loss:
-                        </div>
-                        <div>{formData.elevation.loss} m</div>
-                      </>
-                    )}
-                    {formData.elevation.maxAltitude && (
-                      <>
-                        <div className="text-gray-600 dark:text-gray-300">
-                          Max Altitude:
-                        </div>
-                        <div>{formData.elevation.maxAltitude} m</div>
-                      </>
-                    )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-800 dark:text-white mb-2">
+                      Elevation
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {formData.elevation.gain && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Gain:
+                          </div>
+                          <div>{formData.elevation.gain} m</div>
+                        </>
+                      )}
+                      {formData.elevation.loss && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Loss:
+                          </div>
+                          <div>{formData.elevation.loss} m</div>
+                        </>
+                      )}
+                      {formData.elevation.maxAltitude && (
+                        <>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            Max Altitude:
+                          </div>
+                          <div>{formData.elevation.maxAltitude} m</div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {formData.tags.length > 0 && (
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
@@ -814,7 +826,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                     Tags
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {formData.tags.map((tag) => (
+                    {formData.tags.map((tag: string) => (
                       <span
                         key={tag}
                         className="inline-flex items-center bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-2 py-1 rounded-full text-sm"
@@ -860,14 +872,14 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
                 ? () => setCurrentStep((prev) => prev + 1)
                 : handleSubmit
             }
-            disabled={currentStep === 1 && !isStep1Valid}
-            className={`px-4 py-2 flex items-center ${
-              currentStep === 1 && !isStep1Valid
+            disabled={currentStep === 1 && !isStep1Valid || isPRSaving}
+            className={`px-4 py-2 flex items-center ${currentStep === 1 && !isStep1Valid
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
-            } rounded-lg`}
+              } rounded-lg`}
           >
-            {currentStep < 3 ? "Next" : editingPR ? "Save Changes" : "Add PR"}
+            {isPRSaving && <Spiner />}
+            {currentStep < 3 ? "Next" : isPRSaving ? "Saving..." : editingPR ? "Saving Changes" : "Add Personal Record"}
             {currentStep < 3 && <ChevronRight size={20} className="ml-1" />}
           </button>
         </div>
