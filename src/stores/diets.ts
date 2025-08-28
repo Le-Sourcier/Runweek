@@ -288,7 +288,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
   },
 
   // Fonction pour mettre à jour les notes quotidiennes (à implémenter côté API)
-  updateDailyNotes: async (date: string, notes: string) => {
+  updateDailyNotes: async (_date: string, notes: string) => {
     try {
       set({ isLoading: true, error: null });
       // Implémentez l'appel API ici

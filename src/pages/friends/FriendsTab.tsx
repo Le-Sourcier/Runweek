@@ -144,7 +144,7 @@ const FriendsTab: React.FC = () => {
             onRemoveFriend={removeFriend}
             onBlockUser={blockUser}
             onReportUser={reportUser}
-            onSendMessage={() => handleRealSendMessage(friend.id, "Hello")}
+            onSendMessage={() => handleRealSendMessage(friend.id)}
           />
         ))}
         {filteredAndSortedFriends.length === 0 && (

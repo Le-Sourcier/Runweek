@@ -129,6 +129,8 @@ const Diet: React.FC = () => {
   // Mettre à jour l'eau locale quand le store change
   useEffect(() => {
     if (dailyNutrition) {
+      console.log("Called");
+      
       setWaterIntakeLocal(dailyNutrition.waterIntake);
     }
   }, [dailyNutrition]);
