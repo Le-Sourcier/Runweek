@@ -94,6 +94,7 @@ const PersonalRecords: FC = () => {
       setIsPRSaving(true);
       if (editingPR) {
         await updateRecord(data);
+        showMessage("RECORD_UPDATED");
       } else {
         await createRecord(data);
         showMessage("RECORD_CREATED");

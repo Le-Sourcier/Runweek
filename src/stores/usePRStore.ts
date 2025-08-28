@@ -37,7 +37,22 @@ export const usePRStore = create<PRState>((set, get) => ({
       if (limit) params.append("limit", `${limit}`);
 
       const url = `/personal-records?${params.toString()}`;
-      const { data } = await apiUtils.get<PersonalRecord[]>(url);
+      const { data } = await apiUtils.get<PersonalRecord[]>(
+        ApiUrl.queryable(
+          ApiUrl.PERSONAL_RECORDS,
+          [
+            {
+              key: "distance", value: distance?.toString() || ""
+            }, {
+              key: "sort", value: sort
+            }, {
+              key: "order", value: order
+            }, {
+              key: "limit", value: limit.toString()
+            }
+          ]
+        )
+      );
 
       set({
         originalPRs: data,
@@ -114,7 +129,7 @@ export const usePRStore = create<PRState>((set, get) => ({
 
   // Mettre à jour un record
   updateRecord: async (pr: PersonalRecord) => {
-   
+
     try {
       set({ error: null });
       const { data } = await apiUtils.put<PersonalRecord>(
