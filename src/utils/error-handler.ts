@@ -55,7 +55,7 @@ export const MESSAGE_MAPPINGS = {
     "GOAL_MUST_BE_STRING": "Goal must be a text value",
     "INVALID_GOAL": "Invalid goal selected",
     "RECORD_CREATED": "Personal record added successfully",
-    "RECORD_DELETE": "Personal record deleted successfully",
+    "RECORD_DELETED": "Personal record deleted successfully",
     "RECORD_UPDATED": "Personal record updated successfully"
   },
   "fr": {
@@ -111,7 +111,7 @@ export const MESSAGE_MAPPINGS = {
     "GOAL_MUST_BE_STRING": "L'objectif doit être une valeur textuelle",
     "INVALID_GOAL": "Objectif invalide sélectionné",
     "RECORD_CREATED": "Record personnel ajouté avec succès",
-    "RECORD_DELETE": "Record personnel supprimé avec succès",
+    "RECORD_DELETED": "Record personnel supprimé avec succès",
     "RECORD_UPDATED": "Record personnel mis à jour avec succès"
   }
 };

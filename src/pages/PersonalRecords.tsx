@@ -22,6 +22,7 @@ import PRFormModal from "../components/pr/PRFormModal";
 import { useMessages } from "../hooks/useMessage";
 import { extractErrorMessage } from "../utils/error-handler";
 import Spiner from "../components/ui/Spiner";
+import { PersonalRecordList } from "./personal_record/PersonalRecordList";
 
 const DISTANCE_FILTER_OPTIONS = [
   { label: "All Records", value: "all" },
@@ -241,103 +242,110 @@ const PersonalRecords: FC = () => {
               : "No personal records yet. Add one!"}
           </p>
         ) : (
-          <ul className="space-y-4">
-            {processedPRs.map((pr) => {
-              const distanceInKm = metersToKilometers(pr.distance);
-              const timeInSec = timeStringToSeconds(pr.time);
-              const pace = calculatePace(distanceInKm, timeInSec);
-              const displayDistance =
-                distanceInKm >= 1
-                  ? `${distanceInKm.toLocaleString()} km`
-                  : `${pr.distance} m`;
+          <PersonalRecordList
+            processedPRs={processedPRs}
+            setEditingPR={setEditingPR}
+            setIsPREditorModalOpen={setIsPREditorModalOpen}
+            setShowDeleteConfirmModal={setShowDeleteConfirmModal}
+            isPRDeleting={isPRDeleting}
+          />
+          // <ul className="space-y-4">
+          //   {processedPRs.map((pr) => {
+          //     const distanceInKm = metersToKilometers(pr.distance);
+          //     const timeInSec = timeStringToSeconds(pr.time);
+          //     const pace = calculatePace(distanceInKm, timeInSec);
+          //     const displayDistance =
+          //       distanceInKm >= 1
+          //         ? `${distanceInKm.toLocaleString()} km`
+          //         : `${pr.distance} m`;
 
-              return (
-                <li
-                  key={pr.id}
-                  className="bg-background p-4 rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-                    <div className="flex items-center space-x-2">
-                      <Waypoints size={18} className="text-primary" />
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Distance
-                        </p>
-                        <p className="text-md font-semibold text-foreground">
-                          {displayDistance}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock size={18} className="text-primary" />
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Time
-                        </p>
-                        <p className="text-md font-semibold text-foreground">
-                          {pr.time}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock size={18} className="text-green-500" />
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Pace
-                        </p>
-                        <p className="text-md font-semibold text-foreground">
-                          {pace}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CalendarDays size={18} className="text-primary" />
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Date
-                        </p>
-                        <p className="text-md font-semibold text-foreground">
-                          {new Date(pr.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    {pr.notes && (
-                      <div className="md:col-span-2 lg:col-span-4 mt-2 pt-2 border-t border-border">
-                        <p className="text-xs font-medium text-muted-foreground">
-                          Notes
-                        </p>
-                        <p className="text-sm text-foreground whitespace-pre-wrap">
-                          {pr.notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-3 p-2 border-t border-border flex justify-end space-x-2">
-                    <button
-                      onClick={() => {
-                        setEditingPR(pr);
-                        setIsPREditorModalOpen(true);
-                      }}
-                      className="btn btn-ghost btn-sm text-xs p-1 h-auto hover:bg-muted"
-                    >
-                      <Edit2 size={14} className="mr-1" /> Edit
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirmModal(pr)}
-                      className="btn btn-ghost btn-sm text-xs p-1 h-auto text-destructive hover:bg-destructive/10"
-                    >
-                      {isPRDeleting ? (
-                        <Spiner />
-                      ) : (
-                        <Trash2 size={14} className="mr-1" />
-                      )}
-                      {isPRDeleting ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          //     return (
+          //       <li
+          //         key={pr.id}
+          //         className="bg-background p-4 rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow"
+          //       >
+          //         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+          //           <div className="flex items-center space-x-2">
+          //             <Waypoints size={18} className="text-primary" />
+          //             <div>
+          //               <p className="text-xs font-medium text-muted-foreground">
+          //                 Distance
+          //               </p>
+          //               <p className="text-md font-semibold text-foreground">
+          //                 {displayDistance}
+          //               </p>
+          //             </div>
+          //           </div>
+          //           <div className="flex items-center space-x-2">
+          //             <Clock size={18} className="text-primary" />
+          //             <div>
+          //               <p className="text-xs font-medium text-muted-foreground">
+          //                 Time
+          //               </p>
+          //               <p className="text-md font-semibold text-foreground">
+          //                 {pr.time}
+          //               </p>
+          //             </div>
+          //           </div>
+          //           <div className="flex items-center space-x-2">
+          //             <Clock size={18} className="text-green-500" />
+          //             <div>
+          //               <p className="text-xs font-medium text-muted-foreground">
+          //                 Pace
+          //               </p>
+          //               <p className="text-md font-semibold text-foreground">
+          //                 {pace}
+          //               </p>
+          //             </div>
+          //           </div>
+          //           <div className="flex items-center space-x-2">
+          //             <CalendarDays size={18} className="text-primary" />
+          //             <div>
+          //               <p className="text-xs font-medium text-muted-foreground">
+          //                 Date
+          //               </p>
+          //               <p className="text-md font-semibold text-foreground">
+          //                 {new Date(pr.date).toLocaleDateString()}
+          //               </p>
+          //             </div>
+          //           </div>
+          //           {pr.notes && (
+          //             <div className="md:col-span-2 lg:col-span-4 mt-2 pt-2 border-t border-border">
+          //               <p className="text-xs font-medium text-muted-foreground">
+          //                 Notes
+          //               </p>
+          //               <p className="text-sm text-foreground whitespace-pre-wrap">
+          //                 {pr.notes}
+          //               </p>
+          //             </div>
+          //           )}
+          //         </div>
+          //         <div className="mt-3 p-2 border-t border-border flex justify-end space-x-2">
+          //           <button
+          //             onClick={() => {
+          //               setEditingPR(pr);
+          //               setIsPREditorModalOpen(true);
+          //             }}
+          //             className="btn btn-ghost btn-sm text-xs p-1 h-auto hover:bg-muted"
+          //           >
+          //             <Edit2 size={14} className="mr-1" /> Edit
+          //           </button>
+          //           <button
+          //             onClick={() => setShowDeleteConfirmModal(pr)}
+          //             className="btn btn-ghost btn-sm text-xs p-1 h-auto text-destructive hover:bg-destructive/10"
+          //           >
+          //             {isPRDeleting ? (
+          //               <Spiner />
+          //             ) : (
+          //               <Trash2 size={14} className="mr-1" />
+          //             )}
+          //             {isPRDeleting ? "Deleting..." : "Delete"}
+          //           </button>
+          //         </div>
+          //       </li>
+          //     );
+          //   })}
+          // </ul>
         )}
       </Card>
     </div>
