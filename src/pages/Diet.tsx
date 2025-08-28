@@ -382,16 +382,16 @@ const Diet: React.FC = () => {
     return <div className="p-4 text-center">Chargement...</div>;
   }
 
-  if (error) {
-    return (
-      <div className="p-4 text-center text-red-500">
-        Erreur: {error}
-        <button onClick={clearError} className="ml-2 text-blue-500">
-          Réessayer
-        </button>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="p-4 text-center text-red-500">
+  //       Erreur: {error}
+  //       <button onClick={clearError} className="ml-2 text-blue-500">
+  //         Réessayer
+  //       </button>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="p-4 md:p-6 space-y-6">

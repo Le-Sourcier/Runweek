@@ -7,6 +7,7 @@ import {
   NutritionState,
 } from "../types/diet";
 import { ApiError } from "../types";
+import { ApiUrl } from "../utils/api-url";
 
 export const useDietsStore = create<NutritionState>((set, get) => ({
   // États initiaux
@@ -24,14 +25,16 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const params = new URLSearchParams();
-      if (query) params.append("q", query);
-      if (category) params.append("category", category);
-      if (limit) params.append("limit", `${limit}`);
-
-      const url = `/nutrition/foods/search?${params.toString()}`;
-
-      const { data } = await apiUtils.get<FoodItem[]>(url);
+      const { data } = await apiUtils.get<FoodItem[]>(
+        ApiUrl.queryable(
+          ApiUrl.NUTRITION_SEARCH,
+          [
+            { key: "q", value: query },
+            { key: "category", value: category },
+            { key: "limit", value: limit.toString() },
+          ]
+        )
+      );
 
       set({
         foodItems: data,
@@ -49,7 +52,10 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.post("/nutrition/foods", foodData);
+      const { data } = await apiUtils.post(
+        ApiUrl.NUTRITION_FOODS,
+        foodData
+      );
 
       set({
         foodItems: [...get().foodItems, data],
@@ -69,7 +75,9 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get(`/nutrition/daily/${date}`);
+      const { data } = await apiUtils.get(
+        ApiUrl.parameterized(ApiUrl.NUTRITION_DAILY, { key: "date", value: date })
+      );
 
       set({
         dailyNutrition: data,
@@ -107,7 +115,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
       set({ isLoading: true, error: null });
 
       const { data } = await apiUtils.post(
-        `/nutrition/daily/${date}/meals`,
+        ApiUrl.parameterized(ApiUrl.NUTRITION_DAILY_MEALS, { date }),
         mealData
       );
 
@@ -130,7 +138,13 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
       set({ isLoading: true, error: null });
 
       const { data } = await apiUtils.del(
-        `/nutrition/daily/${date}/meals/${mealId}`
+        ApiUrl.parameterized(
+          ApiUrl.NUTRITION_DAILY_MEALS,
+          {
+            date,
+            meal_id: mealId,
+          },
+        )
       );
 
       set({
@@ -151,9 +165,12 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.put(`/nutrition/daily/${date}/water`, {
-        waterIntake,
-      });
+      const { data } = await apiUtils.put(
+        ApiUrl.parameterized(ApiUrl.NUTRITION_UPDATE_WATER_INTAKE, { date }),
+        {
+          waterIntake,
+        }
+      );
 
       set({
         dailyNutrition: data,
@@ -173,7 +190,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get("/nutrition/goals");
+      const { data } = await apiUtils.get(ApiUrl.NUTRITION_GET_GOALS);
 
       set({
         nutritionGoals: data,
@@ -193,7 +210,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.put("/nutrition/goals", goals);
+      const { data } = await apiUtils.put(ApiUrl.NUTRITION_UPDATE_GOALS, goals);
 
       set({
         nutritionGoals: data,
@@ -213,7 +230,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get(`/nutrition/analysis/${date}`);
+      const { data } = await apiUtils.get(ApiUrl.parameterized(ApiUrl.NUTRITION_GET_WEEKLY_ANALYSIS, { date }));
 
       set({
         dietAnalysis: data,
@@ -233,7 +250,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get("/nutrition/weekly");
+      const { data } = await apiUtils.get(ApiUrl.NUTRITION_GET_WEEKLY_NUTRITION);
 
       set({
         weeklyNutrition: data,
@@ -253,7 +270,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get("/nutrition/stats");
+      const { data } = await apiUtils.get(ApiUrl.NUTRITION_GET_NUTRITION_STATS);
 
       set({
         nutritionStats: data,
@@ -279,9 +296,9 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
       set((state) => ({
         dailyNutrition: state.dailyNutrition
           ? {
-              ...state.dailyNutrition,
-              notes,
-            }
+            ...state.dailyNutrition,
+            notes,
+          }
           : null,
         isLoading: false,
       }));

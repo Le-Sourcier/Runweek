@@ -10,6 +10,7 @@ const commonHeaders = {
   "Content-Type": "application/json",
   Accept: "application/json",
   "Access-Control-Allow-Origin": "*",
+  "ngrok-skip-browser-warning": true,
 };
 
 // URL de base de l'API

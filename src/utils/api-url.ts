@@ -33,11 +33,39 @@ export const ApiUrl = {
   // Message
   CONVERSATIONS: "/conversations",
 
+
+  // Nutritions
+  NUTRITION_SEARCH: "/nutrition/foods/search",
+  NUTRITION_FOODS: "/nutrition/foods",
+  NUTRITION_DAILY: "/nutrition/daily/:date",
+  NUTRITION_DAILY_MEALS: "/nutrition/daily/:date/meals",
+  NUTRITION_DELETE_MEAL: "/nutrition/daily/:date/meals/:mealId",
+  NUTRITION_UPDATE_WATER_INTAKE: "/nutrition/daily/:date/water",
+  NUTRITION_GET_GOALS: "/nutrition/goals",
+  NUTRITION_UPDATE_GOALS: "/nutrition/goals",
+  NUTRITION_GET_WEEKLY_ANALYSIS: "/nutrition/analysis/:date",
+  NUTRITION_GET_WEEKLY_NUTRITION: "/nutrition/weekly",
+  NUTRITION_GET_NUTRITION_STATS: "/nutrition/stats",
+
+
+
+
   /**
    * Fonction pour les url à paramètres sous la forme url/:id
    */
-  parameterized: (item: string, parameter: string | number) =>
-    item.replace(":id", parameter.toString()),
+  parameterized: (item: string, parameters: Record<string, string | number> | string | number) => {
+    // Si on passe directement un string ou un number → c'est l'id par défaut
+    if (typeof parameters === "string" || typeof parameters === "number") {
+      return item.replace(":id", parameters.toString());
+    }
+
+    // Sinon on parcourt l'objet
+    Object.entries(parameters).forEach(([key, value]) => {
+      item = item.replace(`:${key}`, value.toString());
+    });
+
+    return item;
+  },
 
   queryable: (item: string, queries: Array<{ key: any; value: string }>) => {
     item += "?";
