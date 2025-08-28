@@ -384,37 +384,27 @@ const Diet: React.FC = () => {
     return <div className="p-4 text-center">Chargement...</div>;
   }
 
-  // if (error) {
-  //   return (
-  //     <div className="p-4 text-center text-red-500">
-  //       Erreur: {error}
-  //       <button onClick={clearError} className="ml-2 text-blue-500">
-  //         Réessayer
-  //       </button>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Nutrition</h1>
           <p className="text-muted-foreground">
             Suivez votre alimentation et obtenez des recommandations IA
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-4 lg:w-auto lg:flex">
           <button
             onClick={() => setIsGoalsModalOpen(true)}
-            className="btn btn-outline flex items-center gap-2"
+            className="btn btn-outline flex items-center gap-2 
+            col-span-2 md:col-span-1"
           >
             <Settings size={16} />
             Objectifs
           </button>
           <button
             onClick={() => setIsAddMealModalOpen(true)}
-            className="btn btn-primary flex items-center gap-2"
+            className="btn btn-primary flex items-center gap-2 col-span-2 md:col-span-1"
           >
             <Plus size={16} />
             Ajouter un repas
