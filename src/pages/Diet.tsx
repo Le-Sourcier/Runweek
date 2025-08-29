@@ -32,6 +32,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Info,
+  ArrowRight,
+  TrendingDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -50,6 +52,30 @@ import Spiner from "../components/ui/Spiner";
 import { useFriendsStore } from "../stores/friends";
 import { ProfileNameCircle } from "../components/ui/ProfileNameCircle";
 import { getInitials } from "../utils/get-initial";
+
+
+const DietTrendDisplay = ({ weeklyTrend }: { weeklyTrend: string }) => {
+  return (
+    <>
+      {weeklyTrend === "improving" ? (
+        <span className="flex items-center gap-1">
+          <TrendingUp className="text-green-500" size={18} />
+          En amélioration
+        </span>
+      ) : weeklyTrend === "declining" ? (
+        <span className="flex items-center gap-1">
+          <TrendingDown className="text-red-500" size={18} />
+          En baisse
+        </span>
+      ) : (
+        <span className="flex items-center gap-1">
+          <ArrowRight className="text-blue-400" size={18} />
+          Stable
+        </span>
+      )}
+    </>
+  );
+};
 
 const Diet: React.FC = () => {
   const navigate = useNavigate();
@@ -603,11 +629,7 @@ const Diet: React.FC = () => {
                           : "default"
                     }
                   >
-                    {dietAnalysis.weeklyTrend === "improving"
-                      ? "📈 En amélioration"
-                      : dietAnalysis.weeklyTrend === "declining"
-                        ? "📉 En baisse"
-                        : "➡️ Stable"}
+                    <DietTrendDisplay weeklyTrend={dietAnalysis.weeklyTrend} />
                   </Badge>
                 </div>
 
@@ -756,7 +778,7 @@ const Diet: React.FC = () => {
                                 <span className="font-medium text-foreground">
                                   {meal.foodItem.name}
                                 </span>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge className="text-xs">
                                   {meal.quantity}
                                   {meal.unit}
                                 </Badge>
@@ -989,7 +1011,7 @@ const Diet: React.FC = () => {
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="relative">
-                      <ProfileNameCircle name={getInitials(friend.name)} radius={12}/>
+                      <ProfileNameCircle name={getInitials(friend.name)} radius={12} />
                     </div>
                     <div className="flex-1">
                       <span className="text-sm font-medium text-foreground">
