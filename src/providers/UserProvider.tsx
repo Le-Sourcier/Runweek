@@ -221,13 +221,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       );
       return { error: true, message: "EMAIL_VERIFIED_SUCCESS" };
     } catch {
-      showMessage(
-        "EMAIL_VERIFICATION_FAILED",
-        {},
-        {
-          language: "fr",
-        }
-      );
+      showMessage("EMAIL_VERIFICATION_FAILED");
       return {
         error: true,
         message: "EMAIL_VERIFICATION_FAILED",
@@ -541,7 +535,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateUserPreferences = async (preferences: UserPreferences) => {
     try {
-      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences);
+      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences.dataSharing);
       await fetchUser();
       setUser((prevUser) => {
         if (!prevUser) return null;

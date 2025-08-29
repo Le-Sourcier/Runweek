@@ -1,24 +1,26 @@
-import React, { useState } from "react";
+import { FC, useState } from "react";
 import { Modal } from "../ui/Modal";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import { Search, Mail, MessageCircle, Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { useFriendsStore } from "../../stores/friends";
+import { useMessages } from "../../hooks/useMessage";
+import { extractErrorMessage } from "../../utils/error-handler";
 
 interface AddFriendModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSendFriendRequest: (email: string, message?: string) => Promise<boolean>;
   isLoading: boolean;
 }
 
-const AddFriendModal: React.FC<AddFriendModalProps> = ({
+const AddFriendModal: FC<AddFriendModalProps> = ({
   isOpen,
   onClose,
-  onSendFriendRequest,
-  isLoading,
 }) => {
+  const { sendFriendRequest, error } = useFriendsStore();
   const [email, setEmail] = useState("");
+  const [sendingRequest, setIsSendingRequest] = useState(false);
   const [message, setMessage] = useState("");
   const [step, setStep] = useState<"email" | "message">("email");
   const [emailError, setEmailError] = useState("");
@@ -27,6 +29,8 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  const {showMessage} = useMessages();
 
   const handleEmailNext = () => {
     if (!email.trim()) {
@@ -45,32 +49,36 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
 
   const handleSendRequest = async () => {
     try {
-      const success = await onSendFriendRequest(email, message || undefined);
-      if (success) {
-        // Store the request locally for immediate UI feedback
-        const sentRequests = JSON.parse(
-          localStorage.getItem("runweek_sent_requests") || "[]"
-        );
-        const newRequest = {
-          id: `req_${Date.now()}`,
-          email,
-          message: message || "",
-          status: "pending",
-          sentAt: new Date().toISOString(),
-        };
-        sentRequests.push(newRequest);
-        localStorage.setItem(
-          "runweek_sent_requests",
-          JSON.stringify(sentRequests)
-        );
+      setIsSendingRequest(true)
+      await sendFriendRequest(email, message || undefined);
 
-        setEmail("");
-        setMessage("");
-        setStep("email");
-        onClose();
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de la demande:", error);
+      // Store the request locally for immediate UI feedback
+      const sentRequests = JSON.parse(
+        localStorage.getItem("runweek_sent_requests") || "[]"
+      );
+      const newRequest = {
+        id: `req_${Date.now()}`,
+        email,
+        message: message || "",
+        status: "pending",
+        sentAt: new Date().toISOString(),
+      };
+      sentRequests.push(newRequest);
+      localStorage.setItem(
+        "runweek_sent_requests",
+        JSON.stringify(sentRequests)
+      );
+
+      setEmail("");
+      setMessage("");
+      setStep("email");
+      onClose();
+      showMessage("FRIEND_REQUEST_SENT")
+
+    } catch (err) {
+      showMessage(extractErrorMessage(err).message);
+    } finally {
+      setIsSendingRequest(false);
     }
   };
 
@@ -100,16 +108,14 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
         {/* Indicateur d'étapes */}
         <div className="flex items-center gap-4">
           <div
-            className={`flex items-center gap-2 ${
-              step === "email" ? "text-primary" : "text-muted-foreground"
-            }`}
+            className={`flex items-center gap-2 ${step === "email" ? "text-primary" : "text-muted-foreground"
+              }`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step === "email"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "email"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
-              }`}
+                }`}
             >
               1
             </div>
@@ -117,16 +123,14 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
           </div>
           <div className="flex-1 h-px bg-border"></div>
           <div
-            className={`flex items-center gap-2 ${
-              step === "message" ? "text-primary" : "text-muted-foreground"
-            }`}
+            className={`flex items-center gap-2 ${step === "message" ? "text-primary" : "text-muted-foreground"
+              }`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step === "message"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "message"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
-              }`}
+                }`}
             >
               2
             </div>
@@ -261,8 +265,8 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
           {step === "email" ? (
             <Button onClick={handleEmailNext}>Suivant</Button>
           ) : (
-            <Button onClick={handleSendRequest} disabled={isLoading}>
-              {isLoading ? "Envoi..." : "Envoyer la demande"}
+            <Button onClick={handleSendRequest} disabled={sendingRequest}>
+              {sendingRequest ? "Envoi..." : "Envoyer la demande"}
             </Button>
           )}
         </div>

@@ -54,7 +54,7 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.post(
+      const { data } = await apiUtils.post<FoodItem>(
         ApiUrl.NUTRITION_FOODS,
         foodData
       );
@@ -63,12 +63,14 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
         foodItems: [...get().foodItems, data],
         isLoading: false,
       });
+      return data;
     } catch (err) {
       const error = err as ApiError;
       set({
         error: error.message,
         isLoading: false,
       });
+      throw error;
     }
   },
 
@@ -113,6 +115,8 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
 
   // Ajouter un repas
   addMeal: async (date, mealData) => {
+    console.log("mealData:", mealData);
+    
     try {
       set({ isLoading: true, error: null });
 

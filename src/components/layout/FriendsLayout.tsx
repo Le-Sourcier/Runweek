@@ -17,7 +17,7 @@ const FriendsLayout: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
 
-  const { friendsStats, getFriendsStats, sendFriendRequest } = useFriendsStore();
+  const { friendsStats, getFriendsStats } = useFriendsStore();
 
   const tabs = [
     { id: "friends", label: "Mes amis", count: 0 },
@@ -127,7 +127,6 @@ const FriendsLayout: React.FC = () => {
       <AddFriendModal
         isOpen={isAddFriendModalOpen}
         onClose={() => setIsAddFriendModalOpen(false)}
-        onSendFriendRequest={sendFriendRequest}
         isLoading={false}
       />
     </div>

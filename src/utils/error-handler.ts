@@ -65,7 +65,12 @@ export const MESSAGE_MAPPINGS = {
     "FOOD_NAME_AND_CALORIES_REQUIRED": "Food name and calories are required",
     "DATE_CANNOT_BE_PAST": "Date cannot be in the past",
     "USER_UPDATED": "User updated successfully",
-    "PASSWORD_CHANGED": "Password changed successfully"
+    "PASSWORD_CHANGED": "Password changed successfully",
+    "EMAIL_VERIFICATION_FAILED": "Email verification failed",
+    "EMAIL_VERIFICATION_SUCCESS": "Email verification successful",
+    "CANNOT_ADD_SELF": "Cannot add yourself to your friends list",
+    "FRIENDSHIP_NOT_ALLOWED": "The recipient has not allowed this friend request.",
+    "FRIEND_REQUEST_SENT": "Friend request sent successfully.",
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -130,7 +135,12 @@ export const MESSAGE_MAPPINGS = {
     "FOOD_NAME_AND_CALORIES_REQUIRED": "Le nom de l'aliment et les calories sont requis",
     "DATE_CANNOT_BE_PAST": "La date du ne peut être une date passée",
     "USER_UPDATED": "Profil mis à jour avec succès",
-    "PASSWORD_CHANGED": "Mot de passe modifié avec succès"
+    "PASSWORD_CHANGED": "Mot de passe modifié avec succès",
+    "EMAIL_VERIFICATION_FAILED": "Email verification failed",
+    "EMAIL_VERIFICATION_SUCCESS": "Email verification successful",
+    "CANNOT_ADD_SELF": "Vous ne pouvez vous ajouter vous-mêmes à votre liste d'ami.e.s",
+    "FRIENDSHIP_NOT_ALLOWED": "Le destinataire n'a pas autorisé cette demande d'ami.",
+    "FRIEND_REQUEST_SENT": "Demande d'ami envoyée avec succès.",
   }
 };
 

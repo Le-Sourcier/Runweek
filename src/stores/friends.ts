@@ -15,7 +15,6 @@ import {
 import { io } from "socket.io-client";
 import sec from "react-secure-storage";
 import { ApiError } from "../types";
-import { useUserContext } from "../hooks/useUser";
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   // États initiaux
@@ -23,6 +22,8 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   friendRequests: [],
   friendActivities: [],
   friendsStats: null,
+  isLoadingStats: false,
+  statsError: null,
   searchResults: [],
   isLoading: false,
   isRequestLoading: false,
@@ -151,15 +152,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         email,
         message,
       });
-      set({ isRequestLoading: false });
-      return true;
-    } catch (err) {
-      const error =
-        err instanceof Error
-          ? err
-          : new Error("Erreur lors de l'envoi de la demande d'ami");
-      set({ error: error.message, isRequestLoading: false });
+    } catch (error: any) {      
+      set({ error: error, isRequestLoading: false });
       throw error;
+    } finally {
+      set({ isRequestLoading: false });
     }
   },
 
@@ -328,8 +325,8 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         err instanceof Error
           ? err
           : new Error(
-              "Erreur lors de la mise à jour des paramètres de confidentialité"
-            );
+            "Erreur lors de la mise à jour des paramètres de confidentialité"
+          );
       set({ error: error.message, isLoading: false });
       throw error;
     }
@@ -350,31 +347,24 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     }
   },
 
+  // Récupérer les statistiques des amis VIA SOCKET (nouvelle version)
   getFriendsStats: async () => {
-    set({ isLoading: true, error: null });
+    set({ isLoadingStats: true, statsError: null });
     try {
-      const { data } = await apiUtils.get<FriendsStats>("/friends/stats");
-
-      // Get the current online friends count from the store
-      const onlineFriendsCount = get().onlineFriends.size;
-
-      // Inject the connected friends count into the stats
-      const statsWithConnectedFriends = {
-        ...data,
-        onlineFriends: onlineFriendsCount, // Override the onlineFriends count with real-time data
-        connectedFriends: onlineFriendsCount, // Add a new field for connected friends
-      };
-
-      set({ friendsStats: statsWithConnectedFriends, isLoading: false });
+      const { socket, currentUser } = get();
+      if (socket && currentUser) {
+        // Demander les stats via socket
+        socket.emit("get_friends_stats", currentUser.id);
+      } else {
+        throw new Error("Socket non connecté ou utilisateur non connecté");
+      }
     } catch (err) {
-      const error =
-        err instanceof Error
-          ? err
-          : new Error("Erreur lors de la récupération des statistiques");
-      set({ error: error.message, isLoading: false });
-      throw error;
+      const error = err as ApiError;
+      set({ statsError: error.message, isLoadingStats: false });
+      console.error("Error getting friends stats:", error);
     }
   },
+
 
   // ****************** MESSAGE************************
   // Envoyer un message à un ami
@@ -405,6 +395,24 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       console.error("Error loading messages:", error);
       set({ conversationError: error.message, isLoadingMessages: false });
       throw error;
+    }
+  },
+
+  // S'abonner aux mises à jour des stats
+  subscribeToStatsUpdates: () => {
+    const { socket, currentUser } = get();
+    if (socket && currentUser) {
+      socket.emit("subscribe_friends_stats", currentUser.id);
+      console.log("Subscribed to friends stats updates");
+    }
+  },
+
+  // Se désabonner des mises à jour des stats
+  unsubscribeFromStatsUpdates: () => {
+    const { socket, currentUser } = get();
+    if (socket && currentUser) {
+      socket.emit("unsubscribe_friends_stats", currentUser.id);
+      console.log("Unsubscribed from friends stats updates");
     }
   },
 
@@ -466,19 +474,22 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   // Marquer les messages comme lus
   markAsRead: async (conversationId: string, messageIds?: string[]) => {
     try {
-      await apiUtils.put(`${ApiUrl.CONVERSATIONS}/${conversationId}/read`, {
+      await apiUtils.put(ApiUrl.parameterized(
+        ApiUrl.READ_CONVERSATION,
+        conversationId
+      ), {
         messageIds,
       });
 
       // Mettre à jour l'état local
       set((state) => ({
-        messages: state.messages.map((msg) =>
-          (!messageIds || messageIds.includes(msg.id)) && !msg.read
-            ? { ...msg, read: true }
-            : msg
+        messages: state.messages.map((_) =>
+          (!messageIds || messageIds.includes(_.id)) && !_.read
+            ? { ..._, read: true }
+            : _
         ),
-        conversations: state.conversations.map((conv) =>
-          conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+        conversations: state.conversations.map((_) =>
+          _.id === conversationId ? { ..._, unreadCount: 0 } : _
         ),
       }));
     } catch (err) {
@@ -543,7 +554,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           (msg.content === message.content &&
             Math.abs(
               new Date(msg.createdAt).getTime() -
-                new Date(message.createdAt).getTime()
+              new Date(message.createdAt).getTime()
             ) < 1000)
       );
 
@@ -577,7 +588,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
   initializeSocket: (userId?: string) => {
     const token = sec.getItem("aspk") as string;
-    
+
 
     if (!token) {
       console.error("No token found for socket connection");
@@ -604,16 +615,35 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       },
     });
 
+    // Écouteurs pour les statistiques
+    socket.on("friends_stats_update", (stats: FriendsStats) => {
+      console.log("Received real-time stats update:", stats);
+      set({ friendsStats: stats, isLoadingStats: false });
+    });
+
+    socket.on("friends_stats_response", (stats: FriendsStats) => {
+      console.log("Received friends stats response:", stats);
+      set({ friendsStats: stats, isLoadingStats: false });
+    });
+
+    socket.on("friends_stats_error", (error: { error: string }) => {
+      console.error("Friends stats error:", error);
+      set({ statsError: error.error, isLoadingStats: false });
+    });
+
     socket.on("connect", () => {
       // console.log("Connected to presence server");
 
       const currentUserId = userId || get().currentUser?.id;
       if (currentUserId) {
         socket.emit("user_online", currentUserId);
-        // console.log(
-        //   "Notified server of online status for user:",
-        //   currentUserId
-        // );
+
+        // S'abonner aux mises à jour des stats
+        setTimeout(() => {
+          get().subscribeToStatsUpdates();
+          get().getFriendsStats();
+        }, 1000);
+
 
         // Demander la liste actuelle des amis en ligne
         socket.emit(
@@ -652,8 +682,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         get().setTypingStatus(data.userId, data.isTyping);
 
         console.log(
-          `User ${data.userId} is ${
-            data.isTyping ? "typing" : "not typing"
+          `User ${data.userId} is ${data.isTyping ? "typing" : "not typing"
           } in conversation ${data.friendId}`
         );
       }
@@ -668,9 +697,18 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           friend.id === userId ? { ...friend, isOnline: true } : friend
         );
 
-        return { onlineFriends, friends: updatedFriends };
+        // Mettre à jour automatiquement les stats quand un ami se connecte
+        const updatedStats = state.friendsStats ? {
+          ...state.friendsStats,
+          onlineFriends: state.friendsStats.onlineFriends + 1
+        } : null;
+
+        return {
+          onlineFriends,
+          friends: updatedFriends,
+          friendsStats: updatedStats
+        };
       });
-      // console.log(`Friend ${userId} is now online`);
     });
 
     socket.on("friend_offline", (userId: string) => {
@@ -682,11 +720,19 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           friend.id === userId ? { ...friend, isOnline: false } : friend
         );
 
-        return { onlineFriends, friends: updatedFriends };
-      });
-      // console.log(`Friend ${userId} is now offline`);
-    });
+        // Mettre à jour automatiquement les stats quand un ami se déconnecte
+        const updatedStats = state.friendsStats ? {
+          ...state.friendsStats,
+          onlineFriends: Math.max(0, state.friendsStats.onlineFriends - 1)
+        } : null;
 
+        return {
+          onlineFriends,
+          friends: updatedFriends,
+          friendsStats: updatedStats
+        };
+      });
+    });
     // Recevoir la liste complète des amis en ligne
     socket.on("friends_online_list", (onlineFriends: string[]) => {
       set((state) => {
@@ -707,7 +753,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       // console.log("Received complete online friends list:", onlineFriends);
     });
 
-    socket.on("reconnect", (attemptNumber) => {
+    socket.on("reconnect", (_attemptNumber) => {
       // console.log("Reconnected to server, attempt:", attemptNumber);
       const currentUserId = userId || get().currentUser?.id;
       if (currentUserId) {
@@ -715,11 +761,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       }
     });
 
-    socket.on("connect_error", (error) => {
+    socket.on("connect_error", (_error) => {
       // console.error("Socket connection error:", error);
     });
 
-    socket.on("disconnect", (reason) => {
+    socket.on("disconnect", (_reason) => {
       // console.log("Disconnected from presence server:", reason);
     });
 
@@ -744,11 +790,21 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   disconnectSocket: () => {
     const { socket, currentUser } = get();
     if (socket) {
+      // Se désabonner des mises à jour des stats
+      if (currentUser) {
+        get().unsubscribeFromStatsUpdates();
+      }
+
       if (currentUser && currentUser.id) {
         socket.emit("user_offline", currentUser.id);
       }
       socket.disconnect();
-      set({ socket: null, onlineFriends: new Set() });
+      set({
+        socket: null,
+        onlineFriends: new Set(),
+        friendsStats: null,
+        isLoadingStats: false
+      });
     }
   },
 
@@ -760,10 +816,20 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     if (user) {
       if (socket && socket.connected) {
         socket.emit("user_online", user.id);
-        // console.log("Notified server of new user online:", user.id);
+
+        // S'abonner aux mises à jour des stats
+        setTimeout(() => {
+          get().subscribeToStatsUpdates();
+          get().getFriendsStats();
+        }, 1000);
+
       } else if (!socket) {
         get().initializeSocket(user.id);
       }
+    } else {
+      // Se désabonner des mises à jour si l'utilisateur se déconnecte
+      get().unsubscribeFromStatsUpdates();
+      set({ friendsStats: null });
     }
   },
 

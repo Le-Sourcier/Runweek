@@ -47,11 +47,15 @@ import { useDietsStore } from "../stores/diets";
 import { RequiredInputStar } from "../components/ui/RequiredInputStar";
 import { toast } from "react-toastify";
 import Spiner from "../components/ui/Spiner";
+import { useFriendsStore } from "../stores/friends";
+import { ProfileNameCircle } from "../components/ui/ProfileNameCircle";
+import { getInitials } from "../utils/get-initial";
 
 const Diet: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserContext();
-  const { friends, sharedMeals, shareMeal, likeMeal, addComment } = useSocial();
+  const { sharedMeals, shareMeal, likeMeal, addComment } = useSocial();
+  const { friends } = useFriendsStore();
   const {
     foodItems,
     dailyNutrition,
@@ -224,13 +228,8 @@ const Diet: React.FC = () => {
     };
 
     try {
-      await createFood(foodData);
-      setSelectedFood({
-        id: `custom_${Date.now()}`,
-        ...foodData,
-        isPublic: false,
-        isCustom: true,
-      });
+      const newFood = await createFood(foodData);
+      setSelectedFood(newFood);
       setIsCreateFoodModalOpen(false);
       setCustomFoodForm({
         name: "",
@@ -990,12 +989,7 @@ const Diet: React.FC = () => {
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="relative">
-                      <img
-                        src={friend.profileImage}
-                        alt={friend.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                      <ProfileNameCircle name={getInitials(friend.name)} radius={12}/>
                     </div>
                     <div className="flex-1">
                       <span className="text-sm font-medium text-foreground">

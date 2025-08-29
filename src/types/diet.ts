@@ -120,7 +120,7 @@ export interface NutritionState {
     category?: string,
     limit?: number
   ) => Promise<void>;
-  createFood: (foodData: Partial<FoodItem>) => Promise<void>;
+  createFood: (foodData: Partial<FoodItem>) => Promise<FoodItem>;
   getDailyNutrition: (date: string) => Promise<void>;
   addMeal: (date: string, mealData: Partial<MealEntry>) => Promise<void>;
   deleteMeal: (date: string, mealId: string) => Promise<void>;

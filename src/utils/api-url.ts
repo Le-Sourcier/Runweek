@@ -32,6 +32,7 @@ export const ApiUrl = {
 
   // Message
   CONVERSATIONS: "/conversations",
+  READ_CONVERSATION: "/conversations/:id/read",
 
   // Personal Records
   PERSONAL_RECORDS: "/personal-records",

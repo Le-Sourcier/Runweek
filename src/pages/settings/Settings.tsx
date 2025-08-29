@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useUserContext } from "../../hooks/useUser";
-import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import {
   User,
@@ -13,9 +12,6 @@ import {
   CreditCard,
   HelpCircle,
   AlertTriangle,
-  MessageSquare,
-  FileText,
-  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";

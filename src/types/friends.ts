@@ -95,22 +95,6 @@ export interface BlockedFriendsResponse {
   };
 }
 
-// ******************* MESSAGE *****************************
-// export interface Message {
-//   id: string;
-//   conversation: string;
-//   sender: {
-//     id: string;
-//     fname: string;
-//     lname: string;
-//     profile_image: string;
-//   };
-//   content: string;
-//   messageType: "text" | "image" | "system";
-//   createdAt: string;
-//   // read: boolean;
-// }
-
 export interface Message {
   id: string;
   friend_id: string;
@@ -123,6 +107,7 @@ export interface Message {
       image: string;
     };
   };
+  read: boolean;
   content: string;
   messageType: "text" | "image" | "system";
   createdAt: string;
@@ -151,6 +136,8 @@ export interface FriendsState {
   friendRequests: FriendRequest[];
   friendActivities: FriendActivity[];
   friendsStats: FriendsStats | null;
+  isLoadingStats: boolean;
+  statsError: string | null;
   searchResults: Friend[];
 
   currentUser: { id: string } | null; // Ici au bon endroit
@@ -190,12 +177,14 @@ export interface FriendsState {
   getFriends: (filters?: FriendFilter) => Promise<void>;
   getBlockedFriends: (filters?: BlockedFriendFilters) => Promise<void>;
   getFriendsRequest: (filter: FriendRequestType) => Promise<void>;
-  sendFriendRequest: (email: string, message?: string) => Promise<boolean>;
+  sendFriendRequest: (email: string, message?: string) => Promise<void>;
   acceptFriendRequest: (requestId: string) => Promise<void>;
   declineFriendRequest: (requestId: string) => Promise<void>;
   removeFriend: (friendId: string) => Promise<void>;
   searchUsers: (query: string) => Promise<void>;
   clearSearchResults: () => void;
+  unsubscribeFromStatsUpdates: () => void;
+  subscribeToStatsUpdates: () => void;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => void;
   reportUser: (userId: string, reason: string) => Promise<void>;
