@@ -1,19 +1,10 @@
 import { useState, useEffect, FC } from "react";
 import { PersonalRecord } from "../types";
-import {
-  calculatePace,
-  timeStringToSeconds,
-  metersToKilometers,
-} from "../utils/formatters";
 import Card from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import {
   PlusCircle,
-  Edit2,
   Trash2,
-  CalendarDays,
-  Clock,
-  Waypoints,
   Filter,
   ArrowDownUp,
 } from "lucide-react";
@@ -21,7 +12,6 @@ import { usePRStore } from "../stores/usePRStore";
 import PRFormModal from "../components/pr/PRFormModal";
 import { useMessages } from "../hooks/useMessage";
 import { extractErrorMessage } from "../utils/error-handler";
-import Spiner from "../components/ui/Spiner";
 import { PersonalRecordList } from "./personal_record/PersonalRecordList";
 
 const DISTANCE_FILTER_OPTIONS = [
@@ -65,6 +55,8 @@ const PersonalRecords: FC = () => {
   }, [getAllRecords]);
 
   useEffect(() => {
+    console.log("Error:", error);
+    
     if (error) {
       showMessage(extractErrorMessage(error).message);
     }
@@ -97,7 +89,8 @@ const PersonalRecords: FC = () => {
         await updateRecord(data);
         showMessage("RECORD_UPDATED");
       } else {
-        await createRecord(data);
+        const {id, ..._} = data;
+        await createRecord(_);
         showMessage("RECORD_CREATED");
       }
       setIsPREditorModalOpen(false);

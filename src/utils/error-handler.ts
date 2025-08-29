@@ -60,7 +60,10 @@ export const MESSAGE_MAPPINGS = {
     "SEARCH_QUERY_TOO_SHORT": "Search query must be at least 2 characters long",
     "GOALS_CREATED": "Nutrition goals created successfully",
     "GOALS_UPDATED": "Nutrition goals updated successfully",
-    "MEAL_ADDED": "Meal added successfully"
+    "MEAL_ADDED": "Meal added successfully",
+    "PROFILE_NOT_FOUND": "Profile not found",
+    "FOOD_NAME_AND_CALORIES_REQUIRED": "Food name and calories are required",
+    "DATE_CANNOT_BE_PAST": "Date cannot be in the past",
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -120,7 +123,10 @@ export const MESSAGE_MAPPINGS = {
     "SEARCH_QUERY_TOO_SHORT": "La requête de recherche doit contenir au moins 2 caractères",
     "GOALS_CREATED": "Objectifs nutritionnels créés avec succès",
     "GOALS_UPDATED": "Objectifs nutritionnels mis à jour avec succès",
-    "MEAL_ADDED": "Repas ajouté avec succès"
+    "MEAL_ADDED": "Repas ajouté avec succès",
+    "PROFILE_NOT_FOUND": "Profil non trouvé",
+    "FOOD_NAME_AND_CALORIES_REQUIRED": "Le nom de l'aliment et les calories sont requis",
+    "DATE_CANNOT_BE_PAST": "La date du ne peut être une date passée"
   }
 };
 

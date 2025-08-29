@@ -15,6 +15,7 @@ import {
 import { io } from "socket.io-client";
 import sec from "react-secure-storage";
 import { ApiError } from "../types";
+import { useUserContext } from "../hooks/useUser";
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   // États initiaux
@@ -576,6 +577,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
   initializeSocket: (userId?: string) => {
     const token = sec.getItem("aspk") as string;
+    
 
     if (!token) {
       console.error("No token found for socket connection");
@@ -596,6 +598,10 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,
+      extraHeaders: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
     });
 
     socket.on("connect", () => {
@@ -799,6 +805,13 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     const { socket } = get();
     if (socket) {
       socket.emit("leave_conversation", friendId);
+    }
+  },
+
+  getOnlineFriends: (friendId: string) => {
+    const { socket } = get();
+    if (socket) {
+      socket.emit("get_online_friends", friendId);
     }
   },
 

@@ -43,7 +43,7 @@ export const ApiUrl = {
   NUTRITION_FOODS: "/nutrition/foods",
   NUTRITION_DAILY: "/nutrition/daily/:date",
   NUTRITION_DAILY_MEALS: "/nutrition/daily/:date/meals",
-  NUTRITION_DELETE_MEAL: "/nutrition/daily/:date/meals/:mealId",
+  NUTRITION_DELETE_MEAL: "/nutrition/daily/:date/meals/:meal_id",
   NUTRITION_UPDATE_WATER_INTAKE: "/nutrition/daily/:date/water",
   NUTRITION_GET_GOALS: "/nutrition/goals",
   NUTRITION_UPDATE_GOALS: "/nutrition/goals",

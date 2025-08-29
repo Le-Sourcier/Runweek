@@ -57,6 +57,10 @@ export const usePRStore = create<PRState>((set, get) => ({
     } catch (err) {
       const error = err as ApiError;
       set({ error: error.message, isLoading: false });
+      if(error.message === "NO_RECORDS_FOUND") {
+        set({ error: null, isLoading: false });
+        return;
+      }
       throw new Error(
         error.message || "Erreur lors de la récupération des records"
       );

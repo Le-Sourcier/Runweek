@@ -17,10 +17,7 @@ const commonHeaders = {
 const baseURL = import.meta.env.VITE_API_URL;
 
 // Fonction pour définir les headers (avec token si nécessaire)
-export const defineHeaders = (
-  options: RequestInit,
-  isSecure: boolean
-): HeadersInit => {
+export const defineHeaders = (options: RequestInit, isSecure: boolean): HeadersInit => {
   const headers = new Headers(options.headers);
 
   // Ajouter les headers communs
@@ -39,9 +36,7 @@ export const defineHeaders = (
 };
 
 // Fonction pour créer une ApiError à partir d'une Response
-const createApiError = async (
-  response: Response
-): Promise<ApiResponse<{ status: number; message: string }>> => {
+const createApiError = async (response: Response): Promise<ApiResponse<{ status: number; message: string }>> => {
   let responseData;
   try {
     const { message, status } = await response.json();
@@ -50,8 +45,6 @@ const createApiError = async (
     const { message, status } = await response.json();
     responseData = { message, status };
   }
-
-  // const {message} =
 
   return {
     status: responseData.status,

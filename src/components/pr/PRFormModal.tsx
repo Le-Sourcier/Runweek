@@ -203,7 +203,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
     // Prepare the data for submission
     const submissionData: PersonalRecord = {
-      id: editingPR!.id,
+      id: editingPR?.id ||null,
       distance: Number(formData.distance),
       time: formData.time,
       date: formData.date,

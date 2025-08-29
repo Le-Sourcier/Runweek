@@ -44,6 +44,9 @@ import NutritionChart from "../components/diet/NutritionChart";
 import WeeklyNutritionTrend from "../components/diet/WeeklyNutritionTrend";
 import SocialFeed from "../components/diet/SocialFeed";
 import { useDietsStore } from "../stores/diets";
+import { RequiredInputStar } from "../components/ui/RequiredInputStar";
+import { toast } from "react-toastify";
+import Spiner from "../components/ui/Spiner";
 
 const Diet: React.FC = () => {
   const navigate = useNavigate();
@@ -74,6 +77,8 @@ const Diet: React.FC = () => {
 
   // États locaux
   const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
+  const [isSavingNewFood, setIsSavingNewFood] = useState(false);
+  const [isAddingMeal, setIsAddingMeal] = useState(false);
   const [isLoading, setIsLoading] = useState(storeIsLoading);
   const [isGoalsModalOpen, setIsGoalsModalOpen] = useState(false);
   const [isCreateFoodModalOpen, setIsCreateFoodModalOpen] = useState(false);
@@ -124,13 +129,13 @@ const Diet: React.FC = () => {
     getWeeklyNutrition,
     today,
   ]);
- 
+
 
   // Mettre à jour l'eau locale quand le store change
   useEffect(() => {
     if (dailyNutrition) {
       console.log("Called");
-      
+
       setWaterIntakeLocal(dailyNutrition.waterIntake);
     }
   }, [dailyNutrition]);
@@ -169,12 +174,20 @@ const Diet: React.FC = () => {
       timestamp: new Date().toISOString(),
     };
 
-    await addMeal(today, mealData);
-    setIsAddMealModalOpen(false);
-    setSelectedFood(null);
-    setFoodSearchQuery("");
-    setSearchResults([]);
-    setQuantity(100);
+    try {
+      await addMeal(today, mealData);
+      setIsAddMealModalOpen(false);
+      setSelectedFood(null);
+      setFoodSearchQuery("");
+      setSearchResults([]);
+      setQuantity(100);
+      toast.success("Repas ajouté avec succès");
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du repas:", error);
+      toast.error("Erreur lors de l'ajout du repas");
+    } finally {
+      setIsAddingMeal(false);
+    }
   };
 
   const handleWaterUpdate = async (amount: number) => {
@@ -197,10 +210,10 @@ const Diet: React.FC = () => {
 
   const handleCreateCustomFood = async () => {
     if (!customFoodForm.name || !customFoodForm.calories) {
-      alert("Nom et calories sont requis");
+      toast.error("Nom et calories sont requis");
       return;
     }
-
+    setIsSavingNewFood(true);
     const foodData = {
       name: customFoodForm.name,
       calories: parseFloat(customFoodForm.calories),
@@ -210,22 +223,30 @@ const Diet: React.FC = () => {
       fiber: parseFloat(customFoodForm.fiber) || 0,
     };
 
-    await createFood(foodData);
-    setSelectedFood({
-      id: `custom_${Date.now()}`,
-      ...foodData,
-      isPublic: false,
-      isCustom: true,
-    });
-    setIsCreateFoodModalOpen(false);
-    setCustomFoodForm({
-      name: "",
-      calories: "",
-      protein: "",
-      carbs: "",
-      fat: "",
-      fiber: "",
-    });
+    try {
+      await createFood(foodData);
+      setSelectedFood({
+        id: `custom_${Date.now()}`,
+        ...foodData,
+        isPublic: false,
+        isCustom: true,
+      });
+      setIsCreateFoodModalOpen(false);
+      setCustomFoodForm({
+        name: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        fiber: "",
+      });
+      toast.success("Aliment personnalisé créé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la création de l'aliment personnalisé:", error);
+      toast.error("Erreur lors de la création de l'aliment personnalisé");
+    } finally {
+      setIsSavingNewFood(false);
+    }
   };
 
   const handleUpdateGoals = async () => {
@@ -564,10 +585,10 @@ const Diet: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-4 h-4 rounded-full ${dietAnalysis.overallScore >= 80
-                          ? "bg-green-500"
-                          : dietAnalysis.overallScore >= 60
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                        ? "bg-green-500"
+                        : dietAnalysis.overallScore >= 60
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                         }`}
                     ></div>
                     <span className="text-lg font-semibold text-foreground">
@@ -600,12 +621,12 @@ const Diet: React.FC = () => {
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ delay: index * 0.1 }}
                       className={`p-4 rounded-lg border-l-4 ${rec.type === "warning"
-                          ? "border-red-500 bg-red-50/50 dark:bg-red-900/10"
-                          : rec.type === "improvement"
-                            ? "border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10"
-                            : rec.type === "achievement"
-                              ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
-                              : "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
+                        ? "border-red-500 bg-red-50/50 dark:bg-red-900/10"
+                        : rec.type === "improvement"
+                          ? "border-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10"
+                          : rec.type === "achievement"
+                            ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
+                            : "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
                         }`}
                     >
                       <div className="flex justify-between items-start">
@@ -767,7 +788,7 @@ const Diet: React.FC = () => {
                                 <Share2 size={14} />
                               </button>
                               <button
-                                onClick={() => deleteMeal("", meal.id)}
+                                onClick={() => deleteMeal(currentDayNutrition.date, meal.id)}
                                 className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded"
                                 title="Supprimer ce repas"
                               >
@@ -861,10 +882,10 @@ const Diet: React.FC = () => {
               <div className="text-center">
                 <div
                   className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white mb-2 ${dietAnalysis && dietAnalysis.overallScore >= 80
-                      ? "bg-green-500"
-                      : dietAnalysis && dietAnalysis.overallScore >= 60
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
+                    ? "bg-green-500"
+                    : dietAnalysis && dietAnalysis.overallScore >= 60
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                     }`}
                 >
                   {dietAnalysis && dietAnalysis.overallScore}
@@ -1028,8 +1049,8 @@ const Diet: React.FC = () => {
                     <button
                       onClick={() => likeMeal(sharedMeal.id)}
                       className={`flex items-center gap-1 transition-colors ${sharedMeal.isLiked
-                          ? "text-red-500"
-                          : "text-muted-foreground hover:text-red-500"
+                        ? "text-red-500"
+                        : "text-muted-foreground hover:text-red-500"
                         }`}
                     >
                       <Heart
@@ -1098,8 +1119,8 @@ const Diet: React.FC = () => {
                   key={type.value}
                   onClick={() => setSelectedMealType(type.value as any)}
                   className={`p-3 rounded-lg border flex items-center gap-2 text-sm transition-all ${selectedMealType === type.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
                     }`}
                 >
                   {type.icon}
@@ -1137,26 +1158,26 @@ const Diet: React.FC = () => {
           {/* Recherche d'aliment */}
           <div>
             {
-              true && (
-              <>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Rechercher un aliment
-                </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    value={foodSearchQuery}
-                    onChange={(e) => handleFoodSearch(e.target.value)}
-                    placeholder="Ex: pizza, salade, poulet..."
-                    className="pl-10"
-                  />
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                    size={16}
-                  />
-                </div>
-              </>
-            )}
+              !selectedFood && (
+                <>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Rechercher un aliment
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={foodSearchQuery}
+                      onChange={(e) => handleFoodSearch(e.target.value)}
+                      placeholder="Ex: pizza, salade, poulet..."
+                      className="pl-10"
+                    />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                      size={16}
+                    />
+                  </div>
+                </>
+              )}
 
             {searchResults.length > 0 && (
               <div className="mt-2 max-h-48 overflow-y-auto border border-border rounded-lg bg-background">
@@ -1186,10 +1207,35 @@ const Diet: React.FC = () => {
               </div>
             )}
 
-            {foodSearchQuery.length > 2 && searchResults.length === 0 && (
+            {selectedFood && <div className="relative mt-2 max-h-48 overflow-y-auto border border-border rounded-lg bg-background">
+              <div
+                className="w-full p-3 pr-8 text-left flex justify-between items-center"
+              >
+                <div>
+                  <span className="font-medium text-foreground">
+                    {selectedFood!.name}
+                  </span>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Protéines: {selectedFood!.protein}g • Glucides: {selectedFood!.carbs}g
+                  </div>
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {selectedFood!.calories} cal
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedFood(null)}
+                className="absolute top-1 right-1 p-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
+                aria-label="Désélectionner l'aliment"
+              >
+                <X size={14} />
+              </button>
+            </div>}
+
+            {!selectedFood && foodSearchQuery.length > 2 && searchResults.length === 0 && (
               <div className="mt-2 p-3 border border-border rounded-lg text-center">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Aliment non trouvé
+                  Aliment non trouvé pour "<strong>{foodSearchQuery}</strong>"
                 </p>
                 <button
                   onClick={() => setIsCreateFoodModalOpen(true)}
@@ -1295,8 +1341,8 @@ const Diet: React.FC = () => {
             >
               Annuler
             </Button>
-            <Button onClick={handleAddMeal} disabled={!selectedFood}>
-              Ajouter le repas
+            <Button onClick={handleAddMeal} disabled={!selectedFood || isAddingMeal}>
+              {isAddingMeal ? <><Spiner /> Enregistrement en cours ...</> : "Ajouter le repas"}
             </Button>
           </div>
         </div>
@@ -1309,78 +1355,104 @@ const Diet: React.FC = () => {
         title="Créer un aliment personnalisé"
         size="md"
       >
-        <div className="space-y-4">
-          <Input
-            type="text"
-            value={customFoodForm.name}
-            onChange={(e) =>
-              setCustomFoodForm((prev) => ({ ...prev, name: e.target.value }))
-            }
-            placeholder="Nom de l'aliment"
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="number"
-              value={customFoodForm.calories}
-              onChange={(e) =>
-                setCustomFoodForm((prev) => ({
-                  ...prev,
-                  calories: e.target.value,
-                }))
-              }
-              placeholder="Calories (pour 100g)"
-            />
-            <Input
-              type="number"
-              value={customFoodForm.protein}
-              onChange={(e) =>
-                setCustomFoodForm((prev) => ({
-                  ...prev,
-                  protein: e.target.value,
-                }))
-              }
-              placeholder="Protéines (g)"
-            />
+        <form>
+          <div className="space-y-4">
+            <div className="flex flex-col">
+              <label htmlFor="name" className="text-sm font-medium text-foreground mb-1">
+                Nom de l'aliment <RequiredInputStar />
+              </label>
+              <Input
+                type="text"
+                value={customFoodForm.name}
+                onChange={(e) =>
+                  setCustomFoodForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Nom de l'aliment"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label htmlFor="calories" className="text-sm font-medium text-foreground mb-1">
+                  Calories (pour 100g) <RequiredInputStar />
+                </label>
+                <Input
+                  type="number"
+                  value={customFoodForm.calories}
+                  onChange={(e) =>
+                    setCustomFoodForm((prev) => ({
+                      ...prev,
+                      calories: e.target.value,
+                    }))
+                  }
+                  placeholder="Calories (pour 100g)"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="protein" className="text-sm font-medium text-foreground mb-1">Protéines (g)</label>
+                <Input
+                  type="number"
+                  value={customFoodForm.protein}
+                  onChange={(e) =>
+                    setCustomFoodForm((prev) => ({
+                      ...prev,
+                      protein: e.target.value,
+                    }))
+                  }
+                  placeholder="Protéines (g)"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label htmlFor="carbs" className="text-sm font-medium text-foreground mb-1">Glucides (g)</label>
+                <Input
+                  type="number"
+                  value={customFoodForm.carbs}
+                  onChange={(e) =>
+                    setCustomFoodForm((prev) => ({
+                      ...prev,
+                      carbs: e.target.value,
+                    }))
+                  }
+                  placeholder="Glucides (g)"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="fat" className="text-sm font-medium text-foreground mb-1">Lipides (g)</label>
+                <Input
+                  type="number"
+                  value={customFoodForm.fat}
+                  onChange={(e) =>
+                    setCustomFoodForm((prev) => ({ ...prev, fat: e.target.value }))
+                  }
+                  placeholder="Lipides (g)"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="fiber" className="text-sm font-medium text-foreground mb-1">Fibres (g) - optionnel</label>
+              <Input
+                type="number"
+                value={customFoodForm.fiber}
+                onChange={(e) =>
+                  setCustomFoodForm((prev) => ({ ...prev, fiber: e.target.value }))
+                }
+                placeholder="Fibres (g) - optionnel"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateFoodModalOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button onClick={handleCreateCustomFood} type="button">
+                {isSavingNewFood ? <><Spiner /> Enregistrement en cours ...</> : "Créer l'aliment"}
+              </Button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="number"
-              value={customFoodForm.carbs}
-              onChange={(e) =>
-                setCustomFoodForm((prev) => ({
-                  ...prev,
-                  carbs: e.target.value,
-                }))
-              }
-              placeholder="Glucides (g)"
-            />
-            <Input
-              type="number"
-              value={customFoodForm.fat}
-              onChange={(e) =>
-                setCustomFoodForm((prev) => ({ ...prev, fat: e.target.value }))
-              }
-              placeholder="Lipides (g)"
-            />
-          </div>
-          <Input
-            type="number"
-            value={customFoodForm.fiber}
-            onChange={(e) =>
-              setCustomFoodForm((prev) => ({ ...prev, fiber: e.target.value }))
-            }
-            placeholder="Fibres (g) - optionnel"
-          />
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateFoodModalOpen(false)}
-            >
-              Annuler
-            </Button>
-            <Button onClick={handleCreateCustomFood}>Créer l'aliment</Button>
-          </div>
-        </div>
+        </form>
       </Modal>
 
       {/* Modal des objectifs nutritionnels */}

@@ -136,12 +136,14 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
 
   // Supprimer un repas
   deleteMeal: async (date, mealId) => {
+    console.log("mealId:", mealId);
+    
     try {
       set({ isLoading: true, error: null });
-
+      
       const { data } = await apiUtils.del(
         ApiUrl.parameterized(
-          ApiUrl.NUTRITION_DAILY_MEALS,
+          ApiUrl.NUTRITION_DELETE_MEAL,
           {
             date,
             meal_id: mealId,
@@ -149,11 +151,16 @@ export const useDietsStore = create<NutritionState>((set, get) => ({
         )
       );
 
+      console.log("Ici");
+      
+
       set({
         dailyNutrition: data,
         isLoading: false,
       });
     } catch (err) {
+      console.log("Error:", mealId);
+      
       const error = err as ApiError;
       set({
         error: error.message,
