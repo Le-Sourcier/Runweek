@@ -96,7 +96,7 @@ const AddFriendModal: React.FC<AddFriendModalProps> = ({
       title="Ajouter un ami"
       size="md"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
         {/* Indicateur d'étapes */}
         <div className="flex items-center gap-4">
           <div

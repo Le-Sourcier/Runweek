@@ -17,7 +17,7 @@ const FriendsLayout: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
 
-  const { friendsStats, getFriendsStats } = useFriendsStore();
+  const { friendsStats, getFriendsStats, sendFriendRequest } = useFriendsStore();
 
   const tabs = [
     { id: "friends", label: "Mes amis", count: 0 },
@@ -127,12 +127,7 @@ const FriendsLayout: React.FC = () => {
       <AddFriendModal
         isOpen={isAddFriendModalOpen}
         onClose={() => setIsAddFriendModalOpen(false)}
-        onSendFriendRequest={function (
-          email: string,
-          message?: string
-        ): Promise<boolean> {
-          throw new Error("Function not implemented.");
-        }}
+        onSendFriendRequest={sendFriendRequest}
         isLoading={false}
       />
     </div>
