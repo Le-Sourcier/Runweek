@@ -1,18 +1,23 @@
+import { useId } from "react";
+
 export const ToggleSwitch = ({ checked, onChange, disabled = false }: {
   checked: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
 }) => {
+  const id = useId();
   return (
     <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
       <input
         type="checkbox"
+        id={id}
         className="sr-only peer"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
       />
       <label
+        htmlFor={id}
         className={`block h-6 overflow-hidden rounded-full cursor-pointer transition-colors ${disabled
           ? 'bg-gray-300 cursor-not-allowed'
           : checked

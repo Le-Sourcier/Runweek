@@ -18,126 +18,8 @@ import { getCookie, removeCookie } from "../utils/Cookies";
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
 import { extractErrorMessage } from "../utils/error-handler";
+import { ROUTES } from "../hooks/useAppNavigation";
 
-// // Hardcoded sample user for login
-// const sampleUser: User = {
-//   id: "1",
-//   name: "Alex Runner",
-//   email: "andre@runweek.fr", // Login with this email
-//   profileImage:
-//     "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150",
-//   joinedDate: "2023-05-15",
-//   stats: {
-//     totalDistance: 327.5,
-//     weeklyDistance: 23.4,
-//     totalRuns: 42,
-//     averagePace: "5:32",
-//     streakDays: 12,
-//     level: 8,
-//     points: 3450,
-//   },
-//   goals: [
-//     {
-//       id: "g1",
-//       title: "Weekly Distance",
-//       category: "distance" as GoalCategory,
-//       description: "Run 40km this week",
-//       target: 40,
-//       current: 23.4,
-//       unit: "km",
-//       deadline: "2025-06-01",
-//       completed: false,
-//     },
-//     {
-//       id: "g2",
-//       title: "Run a Half Marathon",
-//       category: "event" as GoalCategory,
-//       description: "Complete a 21.1km race.",
-//       target: 21.1,
-//       current: 15, // Current longest run towards this, perhaps
-//       unit: "km",
-//       deadline: "2025-07-15",
-//       completed: false,
-//     },
-//   ],
-//   achievements: [
-//     {
-//       id: "a1",
-//       title: "First Run",
-//       description: "Completed your first run",
-//       icon: "Award",
-//       earnedDate: "2023-05-18",
-//     },
-//     {
-//       id: "a2",
-//       title: "10K Club",
-//       description: "Completed a 10K run",
-//       icon: "Medal",
-//       earnedDate: "2023-06-02",
-//     },
-//   ],
-//   preferences: {
-//     distanceUnit: "kilometers",
-//     preferredRunDays: ["Mon", "Wed", "Fri"],
-//     preferredRunTime: "morning",
-//     trainingFocus: "endurance",
-//     // Default privacy settings for sampleUser
-//     activityVisibility: "friends",
-//     profileVisibility: "friends",
-//     dataSharing: {
-//       enabled: false,
-//       shareNutrition: false,
-//       shareActivities: true,
-//       shareGoals: false,
-//       shareAchievements: true,
-//       allowFriendRequests: false,
-//       showInSearch: false,
-//     },
-//     locationSharing: true,
-//     // Default language and region for sampleUser
-//     language: "en",
-//     region: "US",
-//     notificationSettings: {
-//       // Default values
-//       email: true,
-//       push: true,
-//       achievements: true,
-//       reminders: true,
-//       updates: false,
-//     },
-//     isTwoFactorEnabled: false, // Default 2FA status
-//     syncSettings: {
-//       autoSync: true,
-//       backgroundSync: false,
-//     },
-//   },
-//   connectedDevices: [
-//     {
-//       id: "d1",
-//       name: "Garmin Forerunner 955",
-//       type: "Montre connectée",
-//       lastSync: new Date().toISOString(), // Use dynamic date for freshness
-//       status: "connected",
-//     },
-//     {
-//       id: "d2",
-//       name: "iPhone 15 Pro",
-//       type: "Smartphone",
-//       lastSync: new Date(Date.now() - 3600 * 1000 * 24).toISOString(), // Example: 1 day ago
-//       status: "connected",
-//     },
-//   ],
-//   socialAccounts: [
-//     { id: "facebook", name: "Facebook", connected: false },
-//     { id: "twitter", name: "Twitter", connected: false },
-//     { id: "instagram", name: "Instagram", connected: false },
-//     { id: "linkedin", name: "LinkedIn", connected: false },
-//     { id: "strava", name: "Strava", connected: true },
-//   ],
-//   // preferences.dashboardWidgetsConfig is added below after defaultDashboardWidgetsConfig definition
-// };
-
-// // Define Default Widget Configuration
 export const defaultDashboardWidgetsConfig = {
   statsGrid: { isVisible: true, order: 1, defaultSpan: 2 },
   heartRateTrend: { isVisible: true, order: 2, defaultSpan: 2 },
@@ -148,21 +30,6 @@ export const defaultDashboardWidgetsConfig = {
   weeklySummary: { isVisible: true, order: 7, defaultSpan: 1 },
   tipOfTheDay: { isVisible: true, order: 8, defaultSpan: 1 },
 };
-
-// // Add dashboardWidgetsConfig to sampleUser's preferences
-// sampleUser.preferences = {
-//   ...sampleUser.preferences,
-//   dashboardWidgetsConfig: {
-//     statsGrid: { isVisible: true, order: 1, defaultSpan: 2 },
-//     heartRateTrend: { isVisible: true, order: 2, defaultSpan: 2 },
-//     goalSummary: { isVisible: true, order: 3, defaultSpan: 1 },
-//     upcomingWorkouts: { isVisible: true, order: 4, defaultSpan: 1 },
-//     recentAchievements: { isVisible: false, order: 5, defaultSpan: 1 }, // Example: hidden by default for sample user
-//     recentPRs: { isVisible: true, order: 6, defaultSpan: 1 },
-//     weeklySummary: { isVisible: true, order: 7, defaultSpan: 1 },
-//     tipOfTheDay: { isVisible: false, order: 8, defaultSpan: 1 }, // Hidden for sample user
-//   },
-// };
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true); // Default to true, as we'll check sec
@@ -379,17 +246,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       setMessage(error.message);
 
-      showMessage(
-        error.message as MessageCode,
-        {},
-        {
-          language: "fr",
-        }
-      );
-      console.error(
-        "Erreur lors d'envoi lien de verification de compte (message) :",
-        error
-      );
+      showMessage(error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -403,7 +260,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setMessage(null);
     toast.info("You have been logged out.");
 
-    navigate("/login");
+    navigate(ROUTES.LOGIN);
   };
 
   const updateUserProfile = async (updatedProfileData: Partial<User>) => {
@@ -431,8 +288,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       );
     }
   };
+
   const updatePassword = async (updatePasswordData: {
-    oldPassword: string;
+    currentPassword: string;
     newPassword: string;
   }) => {
     const { message, error, data } = await apiUtils.put<User>(
@@ -450,13 +308,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } else {
       setUser(data);
       await fetchUser();
-      showMessage(
-        message as MessageCode,
-        {},
-        {
-          language: "fr",
-        }
-      );
+      showMessage(message as MessageCode);
     }
   };
 
@@ -474,13 +326,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (error) {
         const _message = extractErrorMessage(error);
         // setMessage(_message.message);
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+        showMessage(message as MessageCode);
         throw new Error(_message.message);
       }
 
@@ -491,25 +337,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
         // setMessage(message);
         console.log("Google account linked successfully:", data);
 
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+        showMessage(message as MessageCode);
         // update user data
         // setUser({ ...user, socialAccounts: data });
       } else {
         const _message = message || "Failed to link Google account.";
         setMessage(message);
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+        showMessage(message as MessageCode);
         throw new Error(_message);
       }
       // if (data) {
@@ -535,13 +369,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (error) {
         const _message = extractErrorMessage(error);
         // setMessage(_message.message);
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+        showMessage(message as MessageCode);
         throw new Error(_message.message);
       }
 
@@ -551,13 +379,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         await fetchUser();
         // setMessage(message);
 
-        showMessage(
-          message as MessageCode,
-          {},
-          {
-            language: "fr",
-          }
-        );
+        showMessage(message as MessageCode);
       } else {
         const _message = message || "Failed to link Google account.";
         setMessage(message);
@@ -717,17 +539,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const updateUserPreferences = (preferences: UserPreferences) => {
-    setUser((prevUser) => {
-      if (!prevUser) return null;
-      const updatedUser = {
-        ...prevUser,
-        preferences: { ...(prevUser.preferences || {}), ...preferences },
-      };
-      sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
-      toast.success("Preferences saved successfully!");
-      return updatedUser;
-    });
+  const updateUserPreferences = async (preferences: UserPreferences) => {
+    try {
+      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences);
+      await fetchUser();
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        const updatedUser = {
+          ...prevUser,
+          preferences: { ...(prevUser.preferences || {}), ...preferences },
+        };
+        sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
+        toast.success("Preferences saved successfully!");
+        return updatedUser;
+      });
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      toast.error("Failed to update preferences.");
+    }
   };
 
   const unlockSpecificAchievement = () => {

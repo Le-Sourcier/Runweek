@@ -68,10 +68,10 @@ export const AccountTab: FC = () => {
         confirmPassword: '',
       });
 
-      showMessage("PASSWORD_CHANGED", {}, { language: "fr" });
+      showMessage("PASSWORD_CHANGED");
     } catch (error) {
       console.log("error:", error);
-      showMessage(extractErrorMessage(error).message as MessageCode, {}, { language: "fr" });
+      showMessage(extractErrorMessage(error).message);
     } finally {
       setIsLoading(false);
     }
@@ -88,10 +88,10 @@ export const AccountTab: FC = () => {
         bio: accountForm.bio,
       });
 
-      showMessage("USER_UPDATED", {}, { language: "fr" });
+      showMessage("USER_UPDATED");
     } catch (error) {
       console.log("error:", error);
-      showMessage(extractErrorMessage(error).message as MessageCode, {}, { language: "fr" });
+      showMessage(extractErrorMessage(error).message);
     } finally {
       setIsLoading(false);
     }

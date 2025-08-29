@@ -43,6 +43,8 @@ export const PrivacyTab: FC = () => {
   const handleShareNutritionChange = (shareNutrition: boolean) => {
     const newDataSharing = { ...dataSharing, shareNutrition };
     setDataSharing(newDataSharing);
+    console.log("shareNutrition:", shareNutrition);
+    
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
@@ -82,6 +84,7 @@ export const PrivacyTab: FC = () => {
 
   const handleShareActivitiesChange = (shareActivities: boolean) => {
     const newDataSharing = { ...dataSharing, shareActivities };
+    
     setDataSharing(newDataSharing);
     //@ts-ignore
     updateUserPreferences({

@@ -64,6 +64,8 @@ export const MESSAGE_MAPPINGS = {
     "PROFILE_NOT_FOUND": "Profile not found",
     "FOOD_NAME_AND_CALORIES_REQUIRED": "Food name and calories are required",
     "DATE_CANNOT_BE_PAST": "Date cannot be in the past",
+    "USER_UPDATED": "User updated successfully",
+    "PASSWORD_CHANGED": "Password changed successfully"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -126,7 +128,9 @@ export const MESSAGE_MAPPINGS = {
     "MEAL_ADDED": "Repas ajouté avec succès",
     "PROFILE_NOT_FOUND": "Profil non trouvé",
     "FOOD_NAME_AND_CALORIES_REQUIRED": "Le nom de l'aliment et les calories sont requis",
-    "DATE_CANNOT_BE_PAST": "La date du ne peut être une date passée"
+    "DATE_CANNOT_BE_PAST": "La date du ne peut être une date passée",
+    "USER_UPDATED": "Profil mis à jour avec succès",
+    "PASSWORD_CHANGED": "Mot de passe modifié avec succès"
   }
 };
 

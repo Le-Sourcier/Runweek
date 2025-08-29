@@ -52,6 +52,9 @@ export const ApiUrl = {
   NUTRITION_GET_NUTRITION_STATS: "/nutrition/stats",
 
 
+  GET_DATA_SHARING_PREFERENCE: "/data-sharing/preferences",
+  UPDATE_DATA_SHARING_PREFERENCE: "/data-sharing/preferences",
+  GET_DATA_SHARING_PREFERENCE_BY_ADMIN: "/data-sharing/preferences/:id",
 
 
   /**
