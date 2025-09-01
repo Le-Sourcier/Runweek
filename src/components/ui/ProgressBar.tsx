@@ -51,7 +51,7 @@ export default function ProgressBar({
         />
       </div>
       {!label && showPercentage && (
-        <div className="mt-1 text-xs text-gray-500 text-right">
+        <div className="mt-1 text-xs text-right">
           {Math.round(percentage)}%
         </div>
       )}

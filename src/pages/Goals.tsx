@@ -75,7 +75,7 @@ export default function Goals() {
   );
 
   const [isSavingGoal, setIsSavingGoal] = useState(false);
-  
+
   const activeGoals = goals.filter((goal) => !goal.completed);
   const completedGoals = goals.filter((goal) => goal.completed);
 
@@ -144,21 +144,6 @@ export default function Goals() {
     } finally {
       setIsDeletingGoal(false);
     }
-  };
-
-  const handleToggleComplete = (goal: UserGoal) => {
-    const newCompletedStatus = !goal.completed;
-    let newCurrentValue = goal.current;
-    // If marking complete and progress isn't full, set progress to target
-    if (newCompletedStatus && goal.current < goal.target) {
-      newCurrentValue = goal.target;
-    }
-    // If reopening a completed goal, and it was auto-completed, user might want to reset progress or adjust.
-    // For now, just toggle completed status. Progress remains.
-    updateGoal(goal.id, {
-      completed: newCompletedStatus,
-      current: newCurrentValue,
-    });
   };
 
   const handleModalSubmit = async (data: UserGoalFormData) => {
@@ -340,7 +325,8 @@ export default function Goals() {
                       value={goal.current}
                       max={goal.target}
                       showPercentage
-                      className="bg-muted mb-1"
+                      // className="bg-muted mb-1"
+                      className="mb-1"
                     />
                     <div className="flex justify-between mt-1 text-xs mb-3">
                       <span className="text-muted-foreground">
