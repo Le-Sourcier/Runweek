@@ -520,17 +520,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const deleteGoal = (goalId: string) => {
     setUser((prevUser) => {
       if (!prevUser) return null;
-      const goalToDelete = (prevUser.goals || []).find((g) => g.id === goalId);
       const updatedGoals = (prevUser.goals || []).filter(
         (goal) => goal.id !== goalId
       );
       const updatedUser = { ...prevUser, goals: updatedGoals };
       sec.setItem("user", JSON.stringify(updatedUser));
-      if (goalToDelete) {
-        toast.info(`Goal deleted: ${goalToDelete.title}`);
-      } else {
-        toast.info("Goal deleted.");
-      }
       return updatedUser;
     });
   };

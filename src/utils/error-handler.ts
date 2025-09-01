@@ -72,7 +72,8 @@ export const MESSAGE_MAPPINGS = {
     "FRIENDSHIP_NOT_ALLOWED": "The recipient has not allowed this friend request.",
     "FRIEND_REQUEST_SENT": "Friend request sent successfully.",
     "ALREADY_FRIENDS": "You are already friends",
-    "GOALS_NOT_FOUND": "Aucun objectif trouvé"
+    "GOALS_NOT_FOUND": "Aucun objectif trouvé",
+    "GOAL_DELETED": "Goal deleted successfully",
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -144,7 +145,8 @@ export const MESSAGE_MAPPINGS = {
     "FRIENDSHIP_NOT_ALLOWED": "Le destinataire n'a pas autorisé cette demande d'ami.",
     "FRIEND_REQUEST_SENT": "Demande d'ami envoyée avec succès.",
     "ALREADY_FRIENDS": "Vous êtes déjà amis avec cet utilisateur",
-    "GOALS_NOT_FOUND": "Aucun objectif trouvé"
+    "GOALS_NOT_FOUND": "Aucun objectif trouvé",
+    "GOAL_DELETED": "Objectif supprimé avec succès",
   }
 };
 

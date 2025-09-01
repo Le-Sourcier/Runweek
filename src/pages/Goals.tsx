@@ -24,6 +24,7 @@ import { goalStore } from "../stores/GoalStore";
 import { UserGoal } from "../types/user";
 import { useMessages } from "../hooks/useMessage";
 import { extractErrorMessage } from "../utils/error-handler";
+import { DeleteGoalModal } from "../components/goals/DeleteGoalModal";
 
 // Mock data for goal suggestions - category should match GoalCategory type
 const goalSuggestions: Array<Omit<UserGoal, "id" | "current" | "completed" | "deadline"> & {
@@ -60,10 +61,15 @@ export default function Goals() {
     deleteGoal: deleteContextGoal,
   } = useUserContext();
 
-  const { goals, getGoals, createGoal, updateGoal } = goalStore();
+  const { goals, getGoals, createGoal, updateGoal, deleteGoal } = goalStore();
   const { showMessage } = useMessages();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateOrEditModalOpen, setIsCreateOrEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<{ id: string, title: string } | undefined>(
+    undefined
+  );
+  const [isDeletingGoal, setIsDeletingGoal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<UserGoal | undefined>(
     undefined
   );
@@ -78,12 +84,15 @@ export default function Goals() {
   }, [])
 
   const loadGoals = async () => {
+    setIsDeletingGoal(true)
     try {
       await getGoals();
       setAllUserGoals(goalStore.getState().goals);
     } catch (error) {
       showMessage(extractErrorMessage(error).message)
       console.error("Failed to load goals:", error);
+    } finally {
+      setIsDeletingGoal(false)
     }
   };
 
@@ -115,17 +124,27 @@ export default function Goals() {
     } else {
       setEditingGoal(undefined); // Clear any previous editing state for a truly new goal
     }
-    setIsModalOpen(true);
+    setIsCreateOrEditModalOpen(true);
   };
 
   const handleOpenEditModal = (goal: UserGoal) => {
     setEditingGoal(goal);
-    setIsModalOpen(true);
+    setIsCreateOrEditModalOpen(true);
   };
 
-  const handleDeleteGoal = (goalId: string) => {
-    if (window.confirm("Are you sure you want to delete this goal?")) {
+  const handleDeleteGoal = async (goalId: string) => {
+    setIsDeletingGoal(true);
+    try {
+      await deleteGoal(goalId);
       deleteContextGoal(goalId);
+      setAllUserGoals(goalStore.getState().goals.filter(_ => _.id !== goalId))
+      showMessage("GOAL_DELETED");
+      setIsDeleteModalOpen(false);
+      setEditingGoal(undefined);
+    } catch (error) {
+      showMessage(extractErrorMessage(error).message)
+    } finally {
+      setIsDeletingGoal(false);
     }
   };
 
@@ -173,7 +192,7 @@ export default function Goals() {
       showMessage(extractErrorMessage(error).message)
     } finally {
       setIsSavingGoal(false);
-      setIsModalOpen(false);
+      setIsCreateOrEditModalOpen(false);
     }
   };
 
@@ -349,7 +368,10 @@ export default function Goals() {
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDeleteGoal(goal.id)}
+                        onClick={() => {
+                          setGoalToDelete({ id: goal.id, title: goal.title });
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="btn btn-ghost btn-sm text-destructive hover:bg-destructive/10 p-1.5"
                       >
                         <Trash2 size={16} />
@@ -494,7 +516,10 @@ export default function Goals() {
                         <RotateCcw size={16} />
                       </button>
                       <button
-                        onClick={() => handleDeleteGoal(goal.id)}
+                        onClick={() => {
+                          setGoalToDelete({ id: goal.id, title: goal.title });
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="btn btn-ghost btn-sm text-destructive hover:bg-destructive/10 p-1.5"
                         title="Delete Goal"
                       >
@@ -521,14 +546,26 @@ export default function Goals() {
 
       {/* Modal for Adding/Editing Goals */}
       <AddEditGoalModal
-        isOpen={isModalOpen}
+        isOpen={isCreateOrEditModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
+          setIsCreateOrEditModalOpen(false);
           setEditingGoal(undefined);
         }}
         onSubmit={handleModalSubmit}
         goalToEdit={editingGoal}
         isLoading={isSavingGoal}
+      />
+
+      {/* Modal for Deleting Goals */}
+      <DeleteGoalModal
+        isOpen={isDeleteModalOpen && !!goalToDelete?.id && !!goalToDelete?.title}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setEditingGoal(undefined);
+        }}
+        goalTitle={goalToDelete?.title || ""}
+        isLoading={isDeletingGoal}
+        onConfirm={() => handleDeleteGoal(goalToDelete!.id)}
       />
     </div>
   );
