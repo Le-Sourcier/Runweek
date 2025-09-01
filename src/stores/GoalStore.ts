@@ -72,7 +72,7 @@ export const goalStore = create<GoalState>((set, state) => ({
   addProgressToGoal: async (goalId: string, progress: number) => {
     try {
       await apiUtils.post(ApiUrl.parameterized(ApiUrl.ADD_PROGRESS_TO_GOAL, goalId), { progress });
-      set((state) => ({ goals: state.goals.map((_) => (_.id === goalId ? { ..._, current: _current + progress } : _)) }));
+      set((state) => ({ goals: state.goals.map((_) => (_.id === goalId ? { ..._, current: _.current + progress } : _)) }));
     } catch (error) {
       throw error;
     }

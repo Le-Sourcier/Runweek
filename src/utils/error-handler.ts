@@ -92,7 +92,28 @@ export const MESSAGE_MAPPINGS = {
     "VALUE_MUST_BE_NUMBER": "Progress value must be a number",
     "VALUE_TOO_LOW": "Progress value cannot be negative",
     "VALUE_REQUIRED": "Progress value is required",
-    "NOTES_TOO_LONG": "Notes must not exceed 200 characters"
+    "NOTES_TOO_LONG": "Notes must not exceed 200 characters",
+    "EVENTS_RETRIEVED": "Events retrieved successfully",
+    "EVENT_RETRIEVED": "Event retrieved successfully",
+    "EVENT_CREATED": "Event created successfully",
+    "EVENT_UPDATED": "Event updated successfully",
+    "EVENT_DELETED": "Event deleted successfully",
+    "EVENT_COMPLETED": "Event marked as completed",
+    "UPCOMING_EVENTS_RETRIEVED": "Upcoming events retrieved successfully",
+    "EVENT_NOT_FOUND": "Event not found",
+    "EVENT_ALREADY_COMPLETED": "Event is already completed",
+    "DATE_REQUIRED": "Date is required",
+    "INVALID_DATE_FORMAT": "Invalid date format",
+    "DATE_MUST_BE_ISO_FORMAT": "Date must be in ISO format (YYYY-MM-DD)",
+    "INVALID_TIME_FORMAT": "Invalid time format. Use HH:MM format",
+    "ACTIVITY_TYPE_REQUIRED": "Activity type is required",
+    "INVALID_ACTIVITY_TYPE": "Invalid activity type",
+    "DISTANCE_TOO_LOW": "Distance cannot be negative",
+    "DISTANCE_TOO_HIGH": "Distance cannot exceed 1000 km",
+    "INVALID_DURATION_FORMAT": "Invalid duration format. Use HH:MM:SS or MM:SS format",
+    "LOCATION_TOO_LONG": "Location cannot exceed 200 characters",
+    "EVENT_NOTES_TOO_LONG": "Notes cannot exceed 500 characters"
+
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -184,7 +205,28 @@ export const MESSAGE_MAPPINGS = {
     "VALUE_MUST_BE_NUMBER": "La valeur de progression doit être un nombre",
     "VALUE_TOO_LOW": "La valeur de progression ne peut pas être négative",
     "VALUE_REQUIRED": "La valeur de progression est requise",
-    "NOTES_TOO_LONG": "Les notes ne doivent pas dépasser 200 caractères"
+    "NOTES_TOO_LONG": "Les notes ne doivent pas dépasser 200 caractères",
+    "EVENTS_RETRIEVED": "Événements récupérés avec succès",
+    "EVENT_RETRIEVED": "Événement récupéré avec succès",
+    "EVENT_CREATED": "Événement créé avec succès",
+    "EVENT_UPDATED": "Événement mis à jour avec succès",
+    "EVENT_DELETED": "Événement supprimé avec succès",
+    "EVENT_COMPLETED": "Événement marqué comme terminé",
+    "UPCOMING_EVENTS_RETRIEVED": "Événements à venir récupérés avec succès",
+    "EVENT_NOT_FOUND": "Événement non trouvé",
+    "EVENT_ALREADY_COMPLETED": "L'événement est déjà terminé",
+    "DATE_REQUIRED": "La date est requise",
+    "INVALID_DATE_FORMAT": "Format de date invalide",
+    "DATE_MUST_BE_ISO_FORMAT": "La date doit être au format ISO (AAAA-MM-JJ)",
+    "INVALID_TIME_FORMAT": "Format d'heure invalide. Utilisez le format HH:MM",
+    "ACTIVITY_TYPE_REQUIRED": "Le type d'activité est requis",
+    "INVALID_ACTIVITY_TYPE": "Type d'activité invalide",
+    "DISTANCE_TOO_LOW": "La distance ne peut pas être négative",
+    "DISTANCE_TOO_HIGH": "La distance ne peut pas dépasser 1000 km",
+    "INVALID_DURATION_FORMAT": "Format de durée invalide. Utilisez le format HH:MM:SS ou MM:SS",
+    "LOCATION_TOO_LONG": "L'emplacement ne peut pas dépasser 200 caractères",
+    "EVENT_NOTES_TOO_LONG": "Les notes ne peuvent pas dépasser 500 caractères"
+
 
   }
 };

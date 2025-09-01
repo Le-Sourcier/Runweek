@@ -532,7 +532,7 @@ export default function Dashboard() {
               <h3 className="font-semibold text-xl mb-2">
                 Connectez votre appareil Garmin
               </h3>
-              <p className="opacity-90">
+              <p className="text-white dark:opacity-90">
                 Suivez vos activités automatiquement et obtenez des analyses
                 détaillées
               </p>

@@ -18,9 +18,13 @@ import { motion } from "framer-motion";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
 import Spiner from "../components/ui/Spiner";
+import { useCalendarStore } from "../stores/CalendarStore";
+import { extractErrorMessage } from "../utils/error-handler";
+import { useMessages } from "../hooks/useMessage";
+import { DeleteModal } from "./calendar/DeleteModal";
 
 // Event type (can be moved to types.ts if shared)
-interface CalendarEventType {
+export interface CalendarEventType {
   id: string;
   title: string;
   date: string; // YYYY-MM-DD
@@ -32,52 +36,6 @@ interface CalendarEventType {
   notes?: string;
 }
 
-// Initial mock events
-const initialMockEvents: CalendarEventType[] = [
-  {
-    id: "e1",
-    title: "Long Run",
-    date: "2025-05-25",
-    time: "07:00",
-    type: "Run",
-    distance: 12,
-    duration: "1:15:00",
-    location: "City Park",
-    notes: "Feeling great, steady pace.",
-  },
-  {
-    id: "e2",
-    title: "Tempo Run",
-    date: "2025-05-27",
-    time: "18:30",
-    type: "Run",
-    distance: 6,
-    duration: "0:35:00",
-    location: "Riverside Trail",
-  },
-  {
-    id: "e3",
-    title: "Easy Recovery",
-    date: "2025-05-29",
-    time: "08:00",
-    type: "Run",
-    distance: 5,
-    duration: "0:30:00",
-    location: "Neighborhood Loop",
-  },
-  {
-    id: "e4",
-    title: "Interval Training",
-    date: "2025-06-01",
-    time: "17:30",
-    type: "Run",
-    distance: 8,
-    duration: "0:50:00",
-    location: "Track",
-    notes: "8x400m repeats",
-  },
-];
-
 // Helper functions for date handling
 const daysInMonth = (year: number, month: number) =>
   new Date(year, month + 1, 0).getDate();
@@ -86,13 +44,21 @@ const firstDayOfMonth = (year: number, month: number) =>
 const getMonthName = (month: number) =>
   new Date(0, month).toLocaleString("default", { month: "long" });
 
+
 export default function Calendar() {
   // const { user } = useUser();
+  const { showMessage } = useMessages();
+  const { events, getEvents } = useCalendarStore();
+
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [events, setEvents] = useState<CalendarEventType[]>(initialMockEvents);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<CalendarEventType | null>(null);
+
 
   // Modal and Form States
   const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
@@ -113,6 +79,10 @@ export default function Calendar() {
       setNewWorkoutDate(selectedDate);
     }
   }, [selectedDate, isAddWorkoutModalOpen]);
+
+  useEffect(() => {
+    getEvents();
+  }, []);
 
   // Get current year and month
   const currentYear = currentDate.getFullYear();
@@ -190,14 +160,15 @@ export default function Calendar() {
     setIsAddWorkoutModalOpen(true);
   };
 
-  const handleSaveNewWorkout = (event: React.FormEvent) => {
+  const handleSaveNewWorkout = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newWorkoutTitle || !newWorkoutDate || !newWorkoutType) {
       alert("Please fill in Title, Date, and Type."); // Basic validation
       return;
     }
     setIsSavingWorkout(true);
-    setTimeout(() => {
+
+    try {
       const newWorkout: CalendarEventType = {
         id: `e${Date.now()}`,
         title: newWorkoutTitle,
@@ -210,17 +181,22 @@ export default function Calendar() {
         location: newWorkoutLocation || undefined,
         notes: newWorkoutNotes || undefined,
       };
-      setEvents((prevEvents) => [newWorkout, ...prevEvents]);
+
+      await useCalendarStore.getState().addEvent(newWorkout);
+
       setIsAddWorkoutModalOpen(false);
+    } catch (error) {
+      console.log("Error:", error);
+
+      showMessage(extractErrorMessage(error).message)
+    } finally {
       setIsSavingWorkout(false);
-    }, 1000); // Delay the execution to allow the modal to close first
-  };
-  const handleDeleteWorkout = (eventId: string) => {
-    if (window.confirm("Are you sure you want to delete this workout?")) {
-      setEvents((prevEvents) =>
-        prevEvents.filter((event) => event.id !== eventId)
-      );
     }
+  };
+
+  const handleDeleteWorkout = (event: CalendarEventType) => {
+    setIsDeleteModalOpen(true);
+    setEventToDelete(event);
   };
 
   return (
@@ -292,37 +268,32 @@ export default function Calendar() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.01 }}
-                className={`aspect-square p-1 ${
-                  !day.isCurrentMonth ? "opacity-30" : ""
-                }`}
+                className={`aspect-square p-1 ${!day.isCurrentMonth ? "opacity-30" : ""
+                  }`}
                 onClick={() => day.date && setSelectedDate(day.date)}
               >
                 {day.day && (
                   <div
                     className={`h-full w-full rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all text-sm
-                      ${
-                        day.isToday
-                          ? "bg-primary text-primary-foreground font-bold"
-                          : ""
+                      ${day.isToday
+                        ? "bg-primary text-primary-foreground font-bold"
+                        : ""
                       }
-                      ${
-                        selectedDate === day.date && !day.isToday
-                          ? "bg-primary/20 dark:bg-primary/30 text-primary font-semibold"
-                          : "text-foreground"
+                      ${selectedDate === day.date && !day.isToday
+                        ? "bg-primary/20 dark:bg-primary/30 text-primary font-semibold"
+                        : "text-foreground"
                       }
-                      ${
-                        !day.isToday && selectedDate !== day.date
-                          ? "hover:bg-muted dark:hover:bg-muted/50"
-                          : ""
+                      ${!day.isToday && selectedDate !== day.date
+                        ? "hover:bg-muted dark:hover:bg-muted/50"
+                        : ""
                       }
                     `}
                   >
                     <span>{day.day}</span>
                     {day.hasEvent && (
                       <div
-                        className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
-                          day.isToday ? "bg-primary-foreground" : "bg-primary"
-                        }`}
+                        className={`w-1.5 h-1.5 rounded-full mt-0.5 ${day.isToday ? "bg-primary-foreground" : "bg-primary"
+                          }`}
                       ></div>
                     )}
                   </div>
@@ -364,7 +335,7 @@ export default function Calendar() {
                           </Badge>
                         )}
                         <button
-                          onClick={() => handleDeleteWorkout(event.id)}
+                          onClick={() => handleDeleteWorkout(event)}
                           className="p-1 text-destructive hover:text-destructive/80 transition-colors"
                           aria-label="Delete workout"
                         >
@@ -464,7 +435,7 @@ export default function Calendar() {
                     </h4>{" "}
                     {/* Adjusted text size */}
                     <button
-                      onClick={() => handleDeleteWorkout(event.id)}
+                      onClick={() => handleDeleteWorkout(event)}
                       className="p-1 text-destructive hover:text-destructive/80 transition-colors"
                       aria-label="Delete workout"
                     >
@@ -597,10 +568,10 @@ export default function Calendar() {
               htmlFor="workout-duration"
               className="block text-sm font-medium text-muted-foreground mb-1"
             >
-              Duration (e.g., 45 min, 1:30:00, optional)
+              {"Duration (e.g., 00:45 -> 45 min, optional)"}
             </label>
             <Input
-              type="text"
+              type="time"
               id="workout-duration"
               value={newWorkoutDuration}
               onChange={(e) => setNewWorkoutDuration(e.target.value)}
@@ -657,6 +628,12 @@ export default function Calendar() {
           </div>
         </form>
       </Modal>
+
+      <DeleteModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)}
+        event={eventToDelete}
+      />
     </div>
   );
 }

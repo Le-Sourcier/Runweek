@@ -65,6 +65,9 @@ export const ApiUrl = {
   GET_GOALS_STATISTIC: "/goals/statistic",
   ADD_PROGRESS_TO_GOAL: "/goals/:id/progress",
 
+  EVENTS: "/calendar/events",
+  DELETE_EVENT: "/calendar/events/:id",
+
 
   /**
    * Fonction pour les url à paramètres sous la forme url/:id

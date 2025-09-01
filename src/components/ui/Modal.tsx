@@ -1,5 +1,5 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import React, { Children, FC, ReactNode, useEffect, useRef, useState } from "react";
+import { AlertCircle, X } from "lucide-react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
 interface ModalProps {
@@ -17,6 +17,14 @@ interface DraggableModalProps {
   children: ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   draggable?: boolean; // New prop to enable/disable dragging
+}
+
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -192,3 +200,31 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
     </AnimatePresence>
   );
 };
+
+
+export const DeleteConfirmModal: FC<DeleteConfirmModalProps> = ({
+  isOpen,
+  onClose,
+  children,
+}) => {
+  return <Modal
+    isOpen={isOpen}
+    onClose={onClose}
+    title="Confirmation de suppression"
+    size="md"
+  >
+    <div className="space-y-4">
+
+      <div className="grid grid-cols-1 items-center justify-center mb-4">
+        <div className="flex items-center">
+          <AlertCircle size={48} className="mr-2 text-white bg-gradient-to-br from-blue-500 to-purple-600 rounded-full p-2" />
+          <h3 className="text-sm text-red-500 text-center">
+            Attention, cette action est irréversible.
+          </h3>
+        </div>
+      </div>
+
+      {children}
+    </div>
+  </Modal>
+}
