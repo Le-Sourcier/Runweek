@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserContext } from "../hooks/useUser";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 import Badge from "../components/ui/Badge";
-import { UserGoal, GoalCategory } from "../types"; // Import UserGoal and GoalCategory from types
+import { GoalCategory } from "../types"; // Import UserGoal and GoalCategory from types
 import {
   Target,
   PlusCircle,
@@ -20,52 +20,72 @@ import { motion } from "framer-motion";
 import AddEditGoalModal, {
   UserGoalFormData,
 } from "../components/goals/AddEditGoalModal";
+import { goalStore } from "../stores/GoalStore";
+import { UserGoal } from "../types/user";
+import { useMessages } from "../hooks/useMessage";
+import { extractErrorMessage } from "../utils/error-handler";
 
 // Mock data for goal suggestions - category should match GoalCategory type
-const goalSuggestions: Array<
-  Omit<UserGoal, "id" | "current" | "completed" | "deadline"> & {
-    deadline?: string;
-  }
+const goalSuggestions: Array<Omit<UserGoal, "id" | "current" | "completed" | "deadline"> & {
+  deadline?: string;
+}
 > = [
-  {
-    title: "Run 5 days in a week",
-    category: "consistency",
-    target: 5,
-    unit: "days",
-    description: "Build consistency with five running days each week",
-  },
-  {
-    title: "Improve 5K time",
-    category: "speed",
-    target: 25, // Assuming target is in minutes for speed goal
-    unit: "minutes", // Target unit for time
-    description: "Train to run 5K under 25 minutes",
-  },
-  {
-    title: "Complete a half marathon",
-    category: "event",
-    target: 21.1,
-    unit: "km",
-    description: "Train for and run a half marathon distance",
-  },
-];
+    {
+      title: "Run 5 days in a week",
+      category: "consistency",
+      target: 5,
+      unit: "days",
+      description: "Build consistency with five running days each week",
+    },
+    {
+      title: "Improve 5K time",
+      category: "speed",
+      target: 25, // Assuming target is in minutes for speed goal
+      unit: "minutes", // Target unit for time
+      description: "Train to run 5K under 25 minutes",
+    },
+    {
+      title: "Complete a half marathon",
+      category: "event",
+      target: 21.1,
+      unit: "km",
+      description: "Train for and run a half marathon distance",
+    },
+  ];
 
 export default function Goals() {
   const {
-    user,
     addGoal,
-    updateGoal,
+    updateGoal: updateContextGoal,
     deleteGoal: deleteContextGoal,
   } = useUserContext();
+
+  const { goals, getGoals, createGoal, updateGoal } = goalStore();
+  const { showMessage } = useMessages();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<UserGoal | undefined>(
     undefined
   );
 
-  const allUserGoals = user?.goals || [];
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [allUserGoals, setAllUserGoals] = useState<UserGoal[]>(goals);
   const activeGoals = allUserGoals.filter((goal) => !goal.completed);
   const completedGoals = allUserGoals.filter((goal) => goal.completed);
+
+  useEffect(() => {
+    loadGoals();
+  }, [])
+
+  const loadGoals = async () => {
+    try {
+      await getGoals();
+      setAllUserGoals(goalStore.getState().goals);
+    } catch (error) {
+      showMessage(extractErrorMessage(error).message)
+      console.error("Failed to load goals:", error);
+    }
+  };
 
   const categoryIcons: Record<GoalCategory, JSX.Element> = {
     distance: <TrendingUp size={16} />,
@@ -124,7 +144,8 @@ export default function Goals() {
     });
   };
 
-  const handleModalSubmit = (data: UserGoalFormData) => {
+  const handleModalSubmit = async (data: UserGoalFormData) => {
+    setIsSavingGoal(true);
     const goalDataPayload = {
       title: data.title,
       description: data.description,
@@ -135,15 +156,24 @@ export default function Goals() {
       // current and completed are handled by addGoal/updateGoal logic
     };
 
-    if (editingGoal && editingGoal.id) {
-      // Editing existing goal
-      updateGoal(editingGoal.id, goalDataPayload);
-    } else {
-      // Adding new goal (editingGoal might be a template from suggestion without an id, or undefined)
-      addGoal(goalDataPayload);
+    try {
+      if (editingGoal && editingGoal.id) {
+        await updateGoal(goalDataPayload);
+        // Editing existing goal
+        updateContextGoal(editingGoal.id, goalDataPayload);
+      } else {
+        await createGoal(goalDataPayload);
+        // Adding new goal (editingGoal might be a template from suggestion without an id, or undefined)
+        addGoal(goalDataPayload);
+        setAllUserGoals(goalStore.getState().goals);
+      }
+      setEditingGoal(undefined);
+    } catch (error) {
+      showMessage(extractErrorMessage(error).message)
+    } finally {
+      setIsSavingGoal(false);
+      setIsModalOpen(false);
     }
-    setIsModalOpen(false);
-    setEditingGoal(undefined);
   };
 
   return (
@@ -201,12 +231,12 @@ export default function Goals() {
                     catKey === "distance"
                       ? "primary"
                       : catKey === "speed"
-                      ? "secondary"
-                      : catKey === "consistency"
-                      ? "warning"
-                      : catKey === "event"
-                      ? "error"
-                      : "default"
+                        ? "secondary"
+                        : catKey === "consistency"
+                          ? "warning"
+                          : catKey === "event"
+                            ? "error"
+                            : "default"
                   }
                   className="text-xs flex items-center gap-1"
                 >
@@ -238,16 +268,16 @@ export default function Goals() {
                     {(() => {
                       const currentCategory =
                         goal.category &&
-                        typeof goal.category === "string" &&
-                        categoryIcons[goal.category]
+                          typeof goal.category === "string" &&
+                          categoryIcons[goal.category]
                           ? goal.category
                           : "other";
                       const categoryText =
                         currentCategory &&
-                        typeof currentCategory === "string" &&
-                        currentCategory.length > 0
+                          typeof currentCategory === "string" &&
+                          currentCategory.length > 0
                           ? currentCategory.charAt(0).toUpperCase() +
-                            currentCategory.slice(1)
+                          currentCategory.slice(1)
                           : "Other";
                       return (
                         <Badge
@@ -255,12 +285,12 @@ export default function Goals() {
                             currentCategory === "distance"
                               ? "primary"
                               : currentCategory === "speed"
-                              ? "secondary"
-                              : currentCategory === "consistency"
-                              ? "warning"
-                              : currentCategory === "event"
-                              ? "error"
-                              : "default"
+                                ? "secondary"
+                                : currentCategory === "consistency"
+                                  ? "warning"
+                                  : currentCategory === "event"
+                                    ? "error"
+                                    : "default"
                           }
                           className="flex items-center gap-1 text-xs"
                         >
@@ -353,16 +383,16 @@ export default function Goals() {
               {(() => {
                 const currentSuggestionCategory =
                   suggestion.category &&
-                  typeof suggestion.category === "string" &&
-                  categoryIcons[suggestion.category]
+                    typeof suggestion.category === "string" &&
+                    categoryIcons[suggestion.category]
                     ? suggestion.category
                     : "other";
                 const categorySuggestionText =
                   currentSuggestionCategory &&
-                  typeof currentSuggestionCategory === "string" &&
-                  currentSuggestionCategory.length > 0
+                    typeof currentSuggestionCategory === "string" &&
+                    currentSuggestionCategory.length > 0
                     ? currentSuggestionCategory.charAt(0).toUpperCase() +
-                      currentSuggestionCategory.slice(1)
+                    currentSuggestionCategory.slice(1)
                     : "Other";
                 return (
                   <Badge
@@ -370,12 +400,12 @@ export default function Goals() {
                       currentSuggestionCategory === "distance"
                         ? "primary"
                         : currentSuggestionCategory === "speed"
-                        ? "secondary"
-                        : currentSuggestionCategory === "consistency"
-                        ? "warning"
-                        : currentSuggestionCategory === "event"
-                        ? "error"
-                        : "default"
+                          ? "secondary"
+                          : currentSuggestionCategory === "consistency"
+                            ? "warning"
+                            : currentSuggestionCategory === "event"
+                              ? "error"
+                              : "default"
                     }
                     className="mb-2 flex items-center gap-1 text-xs self-start"
                   >
@@ -497,7 +527,7 @@ export default function Goals() {
         }}
         onSubmit={handleModalSubmit}
         goalToEdit={editingGoal}
-        // isLoading={isSubmittingGoal} // Assuming you might add a loading state for form submission
+        isLoading={isSavingGoal}
       />
     </div>
   );

@@ -58,6 +58,13 @@ export const ApiUrl = {
   UPDATE_DATA_SHARING_PREFERENCE: "/data-sharing/preferences",
   GET_DATA_SHARING_PREFERENCE_BY_ADMIN: "/data-sharing/preferences/:id",
 
+  GOALS: "/goals",
+  GET_GOAL: "/goals/:id",
+  UPDATE_GOAL: "/goals/:id",
+  DELETE_GOAL: "/goals/:id",
+  GET_GOALS_STATISTIC: "/goals/statistic",
+  ADD_PROGRESS_TO_GOAL: "/goals/:id/progress",
+
 
   /**
    * Fonction pour les url à paramètres sous la forme url/:id

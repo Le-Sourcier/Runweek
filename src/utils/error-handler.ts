@@ -71,7 +71,8 @@ export const MESSAGE_MAPPINGS = {
     "CANNOT_ADD_SELF": "Cannot add yourself to your friends list",
     "FRIENDSHIP_NOT_ALLOWED": "The recipient has not allowed this friend request.",
     "FRIEND_REQUEST_SENT": "Friend request sent successfully.",
-    "ALREADY_FRIENDS": "You are already friends"
+    "ALREADY_FRIENDS": "You are already friends",
+    "GOALS_NOT_FOUND": "Aucun objectif trouvé"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -142,7 +143,8 @@ export const MESSAGE_MAPPINGS = {
     "CANNOT_ADD_SELF": "Vous ne pouvez vous ajouter vous-mêmes à votre liste d'ami.e.s",
     "FRIENDSHIP_NOT_ALLOWED": "Le destinataire n'a pas autorisé cette demande d'ami.",
     "FRIEND_REQUEST_SENT": "Demande d'ami envoyée avec succès.",
-    "ALREADY_FRIENDS": "Vous êtes déjà amis avec cet utilisateur"
+    "ALREADY_FRIENDS": "Vous êtes déjà amis avec cet utilisateur",
+    "GOALS_NOT_FOUND": "Aucun objectif trouvé"
   }
 };
 
