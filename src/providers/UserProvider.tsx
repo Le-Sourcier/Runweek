@@ -81,7 +81,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       setUser({ ...data, socialAccounts });
     } catch (error: any) {
-      if (error.response.status === 401) {
+      console.log("Error:", error);
+
+      if (error.response && error.response.status === 401) {
         await refreshUserTokens();
         await fetchUser();
       }

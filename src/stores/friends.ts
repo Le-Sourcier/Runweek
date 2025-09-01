@@ -152,7 +152,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         email,
         message,
       });
-    } catch (error: any) {      
+    } catch (error: any) {
       set({ error: error, isRequestLoading: false });
       throw error;
     } finally {
@@ -426,7 +426,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
 
     try {
       const { data } = await apiUtils.post<Message>(
-        `${ApiUrl.FRIENDS}/${friendId}/message`,
+        ApiUrl.parameterized(ApiUrl.FRIENDS_SEND_MESSAGE, { friendId }),
         { content, messageType }
       );
 
@@ -435,7 +435,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       // NE PAS ajouter le message ici - il sera ajouté via socket ou par le re-fetch
       // Le socket ou une autre méthode se chargera de l'ajouter
 
-      set({ isSendingMessage: false });
+      set({ isSendingMessage: false, messages: [...get().messages, data] });
       return data;
     } catch (err) {
       const error = err as ApiError;

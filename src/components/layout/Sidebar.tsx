@@ -30,21 +30,21 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
     {
       icon: <LayoutDashboard size={20} />,
       label: "Tableau de bord",
-      path: "/",
+      path: ROUTES.WELCOME,
     },
     {
       icon: <BarChart2 size={20} />,
       label: "Statistiques",
       path: ROUTES.STATISTICS,
     },
-    { icon: <Brain size={20} />, label: "Coach IA", path: "/coach" },
+    { icon: <Brain size={20} />, label: "Coach IA", path: ROUTES.COACH },
     {
       icon: <CalendarIcon size={20} />,
       label: "Calendrier",
       path: ROUTES.CALENDAR,
     },
-    { icon: <Target size={20} />, label: "Objectifs", path: "/goals" },
-    { icon: <Award size={20} />, label: "Réalisations", path: "/achievements" },
+    { icon: <Target size={20} />, label: "Objectifs", path: ROUTES.GOALS },
+    { icon: <Award size={20} />, label: "Réalisations", path: ROUTES.ACHIEVEMENTS },
     {
       icon: <Award size={20} />,
       label: "Records Perso",
@@ -70,7 +70,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
 
   return (
     <aside
-      className={` dark:bg-gray-800 dark:border-gray-700 w-64 bg-white border-r border-gray-200 flex flex-col ${className}`}
+      className={` dark:bg-gray-800 dark:border-gray-700 w-64 bg-white border-r border-gray-200 flex flex-col overflow-y-auto ${className}`}
     >
       {/* Top section with logo and close button for mobile */}
       <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
@@ -118,7 +118,7 @@ export default function Sidebar({ className = "", onClose }: SidebarProps) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto">
+      <nav className="py-4">
         <ul className="space-y-1 px-3">
           {navItems.map((item) => (
             <li key={item.path}>

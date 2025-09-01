@@ -21,6 +21,7 @@ export const ApiUrl = {
   FRIENDS_REQUEST: "/friends/request",
   FRIENDS_SEARCH: "/friends/search",
   FRIENDS_CONVERSATIONS: "/friends/conversations",
+  FRIENDS_SEND_MESSAGE: "/friends/:friendId/message",
   FRIENDS_ACTIVITY_FEED: "/friends/activity-feed",
   FRIENDS_SHARE_ACTIVITY: "/friends/share-activity",
   FRIENDS_ACTIVITY: "/friends/activity",

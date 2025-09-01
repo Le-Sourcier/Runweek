@@ -27,10 +27,10 @@ export const Modal: React.FC<ModalProps> = ({
   size = "md",
 }) => {
   const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-xl",
+    sm: "w-full lg:max-w-sm",
+    md: "w-full lg:max-w-md",
+    lg: "w-full lg:max-w-lg",
+    xl: "w-full lg:max-w-xl",
   };
 
   if (!isOpen) return null; // AnimatePresence handles this
@@ -52,7 +52,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 30 }} // Softened: scale 0.9 to 0.95, y 50 to 30
             transition={{ duration: 0.25, ease: "easeOut" }} // Softened: duration 0.3 to 0.25
             key="modal-content"
-            className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 w-full ${sizeClasses[size]}`}
+            className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 ${sizeClasses[size]}`}
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
           >
             <div className="flex items-center justify-between">
@@ -86,10 +86,10 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
   draggable = true,
 }) => {
   const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-xl",
+    sm: "w-full lg:max-w-sm",
+    md: "w-full lg:max-w-md",
+    lg: "w-full lg:max-w-lg",
+    xl: "w-full lg:max-w-xl",
   };
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -102,7 +102,6 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
-      // Reset position when modal closes
       setPosition({ x: 0, y: 0 });
     }
 
@@ -111,40 +110,29 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
     };
   }, [isOpen]);
 
-  // Handle drag end
-  const handleDragEnd = (
-    event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
-
-    // Close modal if dragged down far enough
     if (info.offset.y > 150) {
       onClose();
       return;
     }
-
-    // Save the new position
     setPosition({
       x: position.x + info.offset.x,
       y: position.y + info.offset.y,
     });
   };
 
-  // Handle drag start
   const handleDragStart = () => {
     setIsDragging(true);
   };
 
-  // Handle overlay click - only close if clicking directly on overlay
   const handleOverlayClick = (e: React.MouseEvent) => {
-    // Vérifier si le clic est directement sur l'overlay (pas sur un enfant)
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  if (!isOpen) return;
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -153,13 +141,12 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-0 bg-black/50 backdrop-blur-sm"
         onClick={handleOverlayClick}
-        // style={{ pointerEvents: "auto" }} // S'assurer que l'overlay capture les événements
       >
         <motion.div
           ref={modalRef}
-          drag={draggable}
+          drag={draggable && window.innerWidth >= 1024} // drag uniquement en lg+
           dragElastic={0.2}
           dragMomentum={false}
           onDragStart={handleDragStart}
@@ -172,26 +159,25 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
             y: position.y,
           }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{
-            type: "spring",
-            damping: 25,
-            stiffness: 300,
-          }}
-          className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card text-card-foreground rounded-xl shadow-2xl p-6 space-y-4 w-full ${sizeClasses[size]} border border-border/50 select-none`}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className={`bg-card text-card-foreground rounded-xl shadow-2xl p-6 space-y-4 
+            ${sizeClasses[size]} 
+            border border-border/50 select-none
+            lg:fixed lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2`}
           onClick={(e) => e.stopPropagation()}
           style={{
-            cursor: draggable ? (isDragging ? "grabbing" : "grab") : "auto",
+            cursor: draggable && window.innerWidth >= 1024
+              ? (isDragging ? "grabbing" : "grab")
+              : "auto",
           }}
         >
-          {/* Drag handle (only visible when draggable) */}
+          {/* Drag handle visible seulement en lg+ */}
           {draggable && (
-            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1.5 bg-muted-foreground/30 rounded-full cursor-grab" />
+            <div className="hidden lg:block absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1.5 bg-muted-foreground/30 rounded-full cursor-grab" />
           )}
 
           <div className="flex items-center justify-between">
-            {title && (
-              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-            )}
+            {title && <h3 className="text-lg font-semibold text-foreground">{title}</h3>}
             <button
               onClick={onClose}
               className="p-1.5 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-110 active:scale-95 hover:text-foreground"

@@ -136,6 +136,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
       // Le socket se chargera de l'ajouter
 
       // Envoyer le message via Socket.io pour une diffusion immédiate
+      // @ts-ignore
       sendRealTimeMessage({
         friend_id: friend.id,
         sender: {
@@ -284,26 +285,23 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex ${
-                    msg.sender.id === currentUser?.id
+                  className={`flex ${msg.sender.id === currentUser?.id
                       ? "justify-end"
                       : "justify-start"
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`max-w-[70%] ${
-                      msg.sender.id === currentUser?.id
+                    className={`max-w-[70%] ${msg.sender.id === currentUser?.id
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
-                    } rounded-2xl px-4 py-2 relative`}
+                      } rounded-2xl px-4 py-2 relative`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p className={`text-sm whitespace-pre-wrap ${msg.sender.id === currentUser?.id ? "text-white" : "text-foreground"}`}>{msg.content}</p>
                     <p
-                      className={`text-xs mt-1 ${
-                        msg.sender.id === currentUser?.id
+                      className={`text-xs mt-1 ${msg.sender.id === currentUser?.id
                           ? "text-primary-foreground/70"
                           : "text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       {formatTime(msg.createdAt)}
                     </p>

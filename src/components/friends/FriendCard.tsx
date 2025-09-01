@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { BlockedFriend, Friend } from "../../types/friends";
 import {
   MoreVertical,
@@ -18,6 +18,8 @@ import { motion } from "framer-motion";
 import { formatTimeAgo } from "../../utils/date-formatter";
 import ConversationModal from "./ConversationModal";
 import BlockFriendModal from "./BlockFriendModal";
+import { getInitials } from "../../utils/get-initial";
+import { ProfileNameCircle } from "../ui/ProfileNameCircle";
 
 interface FriendCardProps {
   friend: Friend;
@@ -84,16 +86,7 @@ const FriendCard: React.FC<FriendCardProps> = ({
                 alt={friend.name}
                 className="w-12 h-12 rounded-full object-cover ring-2 ring-background"
               />
-            ) : (
-              <div className="w-12 h-12 rounded-full object-cover ring-2 border dark:border-gray-700 border-gray-200 flex items-center justify-center ring-background">
-                <span className="capitalize">
-                  {friend.name.split(" ")[0].slice(0, 1)}
-                </span>{" "}
-                <span className="capitalize">
-                  {friend.name.split(" ")[1].slice(0, 1)}
-                </span>
-              </div>
-            )}
+            ) : <ProfileNameCircle name={getInitials(friend.name)} radius={12} />}
             {friend.isOnline && (
               <div className="absolute -bottom-0 -right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
             )}
