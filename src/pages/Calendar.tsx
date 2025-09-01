@@ -21,7 +21,7 @@ import Spiner from "../components/ui/Spiner";
 import { useCalendarStore } from "../stores/CalendarStore";
 import { extractErrorMessage } from "../utils/error-handler";
 import { useMessages } from "../hooks/useMessage";
-import { DeleteModal } from "./calendar/DeleteModal";
+import { DeleteEventModal } from "./calendar/DeleteEventModal";
 
 // Event type (can be moved to types.ts if shared)
 export interface CalendarEventType {
@@ -629,7 +629,7 @@ export default function Calendar() {
         </form>
       </Modal>
 
-      <DeleteModal 
+      <DeleteEventModal 
         isOpen={isDeleteModalOpen} 
         onClose={() => setIsDeleteModalOpen(false)}
         event={eventToDelete}

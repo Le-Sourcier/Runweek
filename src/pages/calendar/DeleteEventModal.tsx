@@ -13,7 +13,7 @@ interface DeleteModalProps {
   event: CalendarEventType | null;
 }
 
-export const DeleteModal: FC<DeleteModalProps> = ({ isOpen, onClose, event }) => {
+export const DeleteEventModal: FC<DeleteModalProps> = ({ isOpen, onClose, event }) => {
 
   const { showMessage } = useMessages();
   const { deleteEvent } = useCalendarStore();
