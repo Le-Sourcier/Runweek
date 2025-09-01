@@ -82,6 +82,14 @@ module.exports = (sequelize) => {
         type: DataTypes.JSONB,
         defaultValue: [],
       },
+      progressPercentage: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+          max: 100,
+        },
+      },
     },
     {
       tableName: "goals",
@@ -98,6 +106,9 @@ module.exports = (sequelize) => {
         {
           fields: ["isActive"],
         },
+        {
+          fields: ["progressPercentage"], // Nouvel index
+        },
       ],
     }
   );
@@ -108,6 +119,27 @@ module.exports = (sequelize) => {
       as: "user",
     });
   };
+
+  // Hook pour calculer automatiquement le pourcentage de progression
+  Goal.beforeSave(async (goal) => {
+    if (goal.target > 0) {
+      goal.progressPercentage = Math.min(
+        (goal.current / goal.target) * 100,
+        100
+      );
+    } else {
+      goal.progressPercentage = 0;
+    }
+
+    // Marquer comme complété si la progression atteint 100%
+    if (goal.progressPercentage >= 100 && !goal.completed) {
+      goal.completed = true;
+      goal.completedAt = new Date();
+    } else if (goal.progressPercentage < 100 && goal.completed) {
+      goal.completed = false;
+      goal.completedAt = null;
+    }
+  });
 
   // Méthode pour calculer le pourcentage de progression
   Goal.prototype.getProgressPercentage = function () {

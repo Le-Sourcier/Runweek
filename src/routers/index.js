@@ -29,7 +29,8 @@ router
     "/data-sharing/preferences",
     authorize,
     require("./components/dataSharingPreferencesRouter")
-  );
+  )
+  .use("/calendar", require("./components/calendarRoutes"));
 // router.use("/comments", authorize, require("./components/commentRouter"));
 // router.use("/reports", authorize, require("./components/reportRouter"));
 // router.use("/challenges", authorize, require("./components/challengeRouter"));

@@ -1,78 +1,8 @@
-const Joi = require("joi");
 const { PersonalRecord } = require("../../models");
 const { serverMessage } = require("../../utils");
-const { sequelize, Sequelize } = require("../../models"); // Ajoutez Sequelize
+const { sequelize, Sequelize } = require("../../models");
+const { createPRValidator, updatePRValidator } = require("./../../validators");
 const Op = Sequelize.Op; // Importez Op
-// Validation schemas
-const createPRSchema = Joi.object({
-  distance: Joi.number().positive().required(),
-  time: Joi.string()
-    .pattern(/^([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}$/)
-    .required(),
-  date: Joi.date().iso().required(),
-  notes: Joi.string().max(500).trim().allow(""),
-  location: Joi.string().max(100).trim().allow(""),
-  weather: Joi.object({
-    temperature: Joi.number(),
-    conditions: Joi.string(),
-    humidity: Joi.number().min(0).max(100),
-    windSpeed: Joi.number().min(0),
-  }).optional(),
-  heartRate: Joi.object({
-    average: Joi.number().min(40).max(220),
-    max: Joi.number().min(40).max(220),
-    min: Joi.number().min(40).max(220),
-  }).optional(),
-  elevation: Joi.object({
-    gain: Joi.number().min(0),
-    loss: Joi.number().min(0),
-    maxAltitude: Joi.number(),
-  }).optional(),
-  splits: Joi.array()
-    .items(
-      Joi.object({
-        distance: Joi.number().positive(),
-        time: Joi.string(),
-        pace: Joi.string(),
-      })
-    )
-    .optional(),
-  tags: Joi.array().items(Joi.string()).optional(),
-});
-
-const updatePRSchema = Joi.object({
-  distance: Joi.number().positive(),
-  time: Joi.string().pattern(/^([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}$/),
-  date: Joi.date().iso(),
-  notes: Joi.string().max(500).trim().allow(""),
-  location: Joi.string().max(100).trim().allow(""),
-  weather: Joi.object({
-    temperature: Joi.number(),
-    conditions: Joi.string(),
-    humidity: Joi.number().min(0).max(100),
-    windSpeed: Joi.number().min(0),
-  }).optional(),
-  heartRate: Joi.object({
-    average: Joi.number().min(40).max(220),
-    max: Joi.number().min(40).max(220),
-    min: Joi.number().min(40).max(220),
-  }).optional(),
-  elevation: Joi.object({
-    gain: Joi.number().min(0),
-    loss: Joi.number().min(0),
-    maxAltitude: Joi.number(),
-  }).optional(),
-  splits: Joi.array()
-    .items(
-      Joi.object({
-        distance: Joi.number().positive(),
-        time: Joi.string(),
-        pace: Joi.string(),
-      })
-    )
-    .optional(),
-  tags: Joi.array().items(Joi.string()).optional(),
-});
 
 module.exports = {
   // Récupérer tous les records personnels
@@ -156,11 +86,20 @@ module.exports = {
   // Créer un nouveau record personnel
   createRecord: async (req, res) => {
     try {
-      const { error, value } = createPRSchema.validate(req.body);
+      const { error, value } = createPRValidator.validate(req.body, {
+        abortEarly: false, // Pour obtenir toutes les erreurs, pas seulement la première
+      });
 
       if (error) {
-        console.log("Données invalides details: ", error.details[0].message);
-        return serverMessage(res, "INVALID_RECORD_DATA");
+        console.log("Données invalides details: ", error.details);
+        const errorMessages = error.details.map((detail) => detail.message);
+        return serverMessage(res, errorMessages[0]); // Retourne le premier message d'erreur
+        // return res.status(400).json({
+        //   error: true,
+        //   status: 400,
+        //   message: errorMessages[0],
+        //   data: [],
+        // }); // Retourne le premier message d'erreur
       }
 
       // Calculer timeInSeconds avant toute opération
@@ -205,18 +144,28 @@ module.exports = {
 
       return serverMessage(res, "RECORD_CREATED", record);
     } catch (error) {
-      console.error("Erreur lors de la création du record:", error);
+      // console.error("Erreur lors de la création du record:", error);
+      console.log("ERROR: ", error.message);
       return serverMessage(res);
     }
   },
   // Mettre à jour un record
   updateRecord: async (req, res) => {
     try {
-      const { error, value } = updatePRSchema.validate(req.body);
+      const { error, value } = updatePRValidator.validate(req.body, {
+        abortEarly: false, // Pour obtenir toutes les erreurs, pas seulement la première
+      });
 
       if (error) {
-        console.log("Données invalides details: ", error.details[0].message);
-        return serverMessage(res, "INVALID_RECORD_DATA");
+        console.log("Données invalides details: ", error.details);
+        const errorMessages = error.details.map((detail) => detail.message);
+        return serverMessage(res, errorMessages[0]); // Retourne le premier message d'erreur
+        // return res.status(400).json({
+        //   error: true,
+        //   status: 400,
+        //   message: errorMessages[0],
+        //   data: [],
+        // }); // Retourne le premier message d'erreur
       }
 
       const [updatedCount] = await PersonalRecord.update(value, {
@@ -233,7 +182,7 @@ module.exports = {
       const updatedRecord = await PersonalRecord.findByPk(req.params.id);
       return serverMessage(res, "RECORD_UPDATED", updatedRecord);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du record:", error);
+      console.error("Erreur lors de la mise à jour du record:", error.message);
       return serverMessage(res);
     }
   },

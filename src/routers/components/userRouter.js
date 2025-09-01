@@ -152,7 +152,7 @@ router
    *             schema:
    *               $ref: '#/components/schemas/Error500'
    */
-  .post("/login", loginLimiter, userAuthValidator, ctr.login) // Authentifier un utilisateur
+  .post("/login", userAuthValidator, ctr.login) // Authentifier un utilisateur
   /**
    * @openapi
    * /api/user/refresh:

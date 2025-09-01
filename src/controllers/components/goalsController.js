@@ -1,43 +1,11 @@
-const Joi = require("joi");
 const { Goal } = require("../../models");
 const { serverMessage } = require("../../utils");
 const { Op } = require("sequelize");
-
-// Schémas de validation
-const createGoalSchema = Joi.object({
-  title: Joi.string().required().max(100).trim(),
-  description: Joi.string().max(500).trim().allow(""),
-  category: Joi.string()
-    .valid("distance", "speed", "consistency", "event", "other")
-    .required(),
-  target: Joi.number().positive().required(),
-  unit: Joi.string().required().trim(),
-  deadline: Joi.date().iso().required(),
-  priority: Joi.string().valid("low", "medium", "high").default("medium"),
-});
-
-const updateGoalSchema = Joi.object({
-  title: Joi.string().max(100).trim(),
-  description: Joi.string().max(500).trim().allow(""),
-  category: Joi.string().valid(
-    "distance",
-    "speed",
-    "consistency",
-    "event",
-    "other"
-  ),
-  target: Joi.number().positive(),
-  current: Joi.number().min(0),
-  unit: Joi.string().trim(),
-  deadline: Joi.date().iso(),
-  completed: Joi.boolean(),
-  priority: Joi.string().valid("low", "medium", "high"),
-});
-
-const progressSchema = Joi.object({
-  value: Joi.number().min(0).required(),
-  notes: Joi.string().max(200).trim().allow(""),
-});
+const {
+  progressValidator,
+  updateGoalValidator,
+  createGoalValidator,
+} = require("../../validators/components/goalValidator");
 
 // Contrôleurs
 module.exports = {
@@ -112,7 +80,7 @@ module.exports = {
       // Calcul du total pour la pagination
       const totalPages = Math.ceil(count / limitNumber);
 
-      // Calcul des statistiques
+      // Calcul des statistiques - CORRECTION ICI
       const stats = {
         total: count,
         completed: await Goal.count({
@@ -185,11 +153,13 @@ module.exports = {
   // POST /api/goals - Créer un nouvel objectif
   createGoal: async (req, res) => {
     try {
-      const { error, value } = createGoalSchema.validate(req.body);
+      const { error, value } = createGoalValidator.validate(req.body, {
+        abortEarly: false,
+      });
 
       if (error) {
-        console.log("INVALID_GOAL_DATA", error.details[0].message);
-        return serverMessage(res, "INVALID_GOAL_DATA");
+        const errorMessages = error.details.map((detail) => detail.message);
+        return serverMessage(res, errorMessages[0]);
       }
 
       const goal = new Goal({
@@ -209,16 +179,13 @@ module.exports = {
   // PUT /api/goals/:id - Mettre à jour un objectif
   updateGoal: async (req, res) => {
     try {
-      const { error, value } = updateGoalSchema.validate(req.body);
+      const { error, value } = updateGoalValidator.validate(req.body, {
+        abortEarly: false,
+      });
 
       if (error) {
-        res.status(400).json({
-          error: true,
-          message: "Données invalides",
-          details: error.details[0].message,
-        });
-
-        return serverMessage(res, "INVALID_GOAL_DATA");
+        const errorMessages = error.details.map((detail) => detail.message);
+        return serverMessage(res, errorMessages[0]);
       }
 
       const goal = await Goal.findOne({
@@ -254,11 +221,13 @@ module.exports = {
   // POST /api/goals/:id/progress - Ajouter une progression à un objectif
   addProgress: async (req, res) => {
     try {
-      const { error, value } = progressSchema.validate(req.body);
+      const { error, value } = progressValidator.validate(req.body, {
+        abortEarly: false,
+      });
 
       if (error) {
-        console.log("Données invalides details: ", error.details[0].message);
-        return serverMessage(res, "INVALID_RECORD_DATA");
+        const errorMessages = error.details.map((detail) => detail.message);
+        return serverMessage(res, errorMessages[0]);
       }
 
       const goal = await Goal.findOne({

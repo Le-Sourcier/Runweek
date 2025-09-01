@@ -131,6 +131,12 @@ module.exports = (sequelize) => {
       as: "user",
       onDelete: "CASCADE",
     });
+
+    FoodItem.belongsTo(models.Users, {
+      foreignKey: "createdBy",
+      as: "creator",
+      onDelete: "CASCADE",
+    });
   };
 
   return FoodItem;

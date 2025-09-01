@@ -103,10 +103,15 @@ module.exports = {
           {
             model: Users,
             as: "user",
-            attributes: ["id", "fname", "lname", "email"],
+            attributes: ["id", "email"],
           },
         ],
       });
+
+      if (req.body.shareNutrition) {
+        updatedPreferences.shareNutrition = req.body.shareNutrition;
+        await updatedPreferences.save();
+      }
 
       return serverMessage(
         res,
@@ -145,7 +150,7 @@ module.exports = {
           {
             model: Users,
             as: "user",
-            attributes: ["id", "fname", "lname", "email"],
+            attributes: ["id", "email"],
           },
         ],
       });

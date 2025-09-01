@@ -268,6 +268,12 @@ module.exports = (sequelize) => {
       as: "stats",
       onDelete: "CASCADE",
     });
+
+    Users.hasMany(models.CalendarEvent, {
+      foreignKey: "user_id",
+      as: "calendar_event",
+      onDelete: "CASCADE",
+    });
   };
   Users.prototype.generateTokens = function () {
     const payload = { id: this.id, email: this.email };

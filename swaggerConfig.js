@@ -20,7 +20,9 @@ const options = {
         url:
           process.env.NODE_ENV === "production"
             ? `${process.env.APP_URL}`
-            : `http://localhost:${process.env.PORT || 3016}`,
+            : // : `http://localhost:${process.env.PORT || 3016}`,
+
+              "https://abf1cadca4c3.ngrok-free.app/",
         description: `${
           process.env.APP_URL === "production" ? "Production" : "Development"
         }  server`,
