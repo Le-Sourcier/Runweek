@@ -3,10 +3,11 @@ import { Button } from "../ui/Button";
 import { Textarea } from "../ui/Textarea";
 import { Select, SelectItem } from "../ui/Select";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { UserGoal, GoalCategory } from "../../types"; // Assumes types are in src/types/index.ts
+import { GoalCategory } from "../../types"; // Assumes types are in src/types/index.ts
 import { useEffect } from "react";
 import { Modal } from "../ui/Modal";
 import Spiner from "../ui/Spiner";
+import { UserGoal } from "../../types/user";
 
 export type UserGoalFormData = {
   title: string;

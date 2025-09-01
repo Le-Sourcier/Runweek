@@ -32,16 +32,15 @@ export const goalStore = create<GoalState>((set, state) => ({
   createGoal: async (goal: UserGoalFormData) => {
     try {
       const { data } = await apiUtils.post<UserGoal>(ApiUrl.GOALS, goal);
-      console.log("state().goals:", state().goals);
-
       set({ goals: [...state().goals, data] });
     } catch (error) {
       throw error;
     }
   },
-  updateGoal: async (updatedGoal: UserGoalFormData) => {
+  updateGoal: async (updatedGoal: UserGoal) => {
     try {
-      const { data } = await apiUtils.put<UserGoal>(ApiUrl.parameterized(ApiUrl.UPDATE_GOAL, updatedGoal.id), updatedGoal);
+      const { id, ..._ } = updatedGoal;
+      const { data } = await apiUtils.put<UserGoal>(ApiUrl.parameterized(ApiUrl.UPDATE_GOAL, updatedGoal.id), _);
       set((state) => ({ goals: state.goals.map((_) => (_.id === updatedGoal.id ? updatedGoal : _)) }));
       return data;
     } catch (error) {

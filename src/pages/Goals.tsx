@@ -158,9 +158,10 @@ export default function Goals() {
 
     try {
       if (editingGoal && editingGoal.id) {
-        await updateGoal(goalDataPayload);
+        const updatedGoal = await updateGoal({ ...data, id: editingGoal.id, current: editingGoal.current, completed: editingGoal.completed } as UserGoal);
         // Editing existing goal
-        updateContextGoal(editingGoal.id, goalDataPayload);
+        updateContextGoal(updatedGoal.id, updatedGoal);
+        setAllUserGoals(goalStore.getState().goals.map(_ => _.id === updatedGoal.id ? updatedGoal : _));
       } else {
         await createGoal(goalDataPayload);
         // Adding new goal (editingGoal might be a template from suggestion without an id, or undefined)
