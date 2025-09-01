@@ -75,9 +75,9 @@ export default function Goals() {
   );
 
   const [isSavingGoal, setIsSavingGoal] = useState(false);
-  const [allUserGoals, setAllUserGoals] = useState<UserGoal[]>(goals);
-  const activeGoals = allUserGoals.filter((goal) => !goal.completed);
-  const completedGoals = allUserGoals.filter((goal) => goal.completed);
+  
+  const activeGoals = goals.filter((goal) => !goal.completed);
+  const completedGoals = goals.filter((goal) => goal.completed);
 
   useEffect(() => {
     loadGoals();
@@ -87,7 +87,6 @@ export default function Goals() {
     setIsDeletingGoal(true)
     try {
       await getGoals();
-      setAllUserGoals(goalStore.getState().goals);
     } catch (error) {
       showMessage(extractErrorMessage(error).message)
       console.error("Failed to load goals:", error);
@@ -137,7 +136,6 @@ export default function Goals() {
     try {
       await deleteGoal(goalId);
       deleteContextGoal(goalId);
-      setAllUserGoals(goalStore.getState().goals.filter(_ => _.id !== goalId))
       showMessage("GOAL_DELETED");
       setIsDeleteModalOpen(false);
       setEditingGoal(undefined);
@@ -180,19 +178,17 @@ export default function Goals() {
         const updatedGoal = await updateGoal({ ...data, id: editingGoal.id, current: editingGoal.current, completed: editingGoal.completed } as UserGoal);
         // Editing existing goal
         updateContextGoal(updatedGoal.id, updatedGoal);
-        setAllUserGoals(goalStore.getState().goals.map(_ => _.id === updatedGoal.id ? updatedGoal : _));
       } else {
         await createGoal(goalDataPayload);
         // Adding new goal (editingGoal might be a template from suggestion without an id, or undefined)
         addGoal(goalDataPayload);
-        setAllUserGoals(goalStore.getState().goals);
       }
       setEditingGoal(undefined);
+      setIsCreateOrEditModalOpen(false);
     } catch (error) {
       showMessage(extractErrorMessage(error).message)
     } finally {
       setIsSavingGoal(false);
-      setIsCreateOrEditModalOpen(false);
     }
   };
 
@@ -223,7 +219,7 @@ export default function Goals() {
               <Target size={24} />
             </div>
             <h3 className="text-2xl font-bold text-foreground">
-              {allUserGoals.length}
+              {goals.length}
             </h3>
             <p className="text-muted-foreground text-sm">Total Goals</p>
           </div>
@@ -234,12 +230,12 @@ export default function Goals() {
                 Overall Progress
               </span>
               <span className="font-medium text-muted-foreground">
-                {completedGoals.length} of {allUserGoals.length} completed
+                {completedGoals.length} of {goals.length} completed
               </span>
             </div>
             <ProgressBar
               value={completedGoals.length}
-              max={allUserGoals.length > 0 ? allUserGoals.length : 1} // Avoid division by zero if no goals
+              max={goals.length > 0 ? goals.length : 1} // Avoid division by zero if no goals
               height="lg"
               className="bg-muted"
             />
