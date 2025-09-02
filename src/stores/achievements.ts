@@ -39,10 +39,10 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
         isLoading: false,
       });
     } catch (err) {
-      const error = err as ApiError;
+      const error = err as ApiError;      
 
       if (error.message === "NO_ACHIEVEMENTS_FOUND") {
-        set({ error: null, isLoading: false });
+        set({ error: null, isLoading: false, achievements: [] });
         throw new Error();
       }
 
@@ -81,10 +81,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
   },
 
   // Vérifier automatiquement les achievements
-  checkAchievements: async (
-    userStats: UserStats,
-    activityData?: ActivityData
-  ) => {
+  checkAchievements: async (userStats: UserStats,activityData?: ActivityData) => {
     try {
       set({ isLoading: true, error: null });
 
@@ -108,6 +105,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
       } else {
         set({ isLoading: false });
       }
+      return data;
     } catch (err) {
       const error = err as ApiError;
       set({ error: error.message, isLoading: false });

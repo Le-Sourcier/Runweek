@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, Outlet } from "react-router-dom";
 import React from "react";
 
 // Layout and Page Components
@@ -41,6 +41,8 @@ import { ROUTES } from "./hooks/useAppNavigation";
 import FriendsLayout from "./components/layout/FriendsLayout";
 import SocketManager from "./utils/SocketManager";
 import { LanguageProvider } from "./providers/LanguageProvider";
+import FakeAchievements from "./pages/FakeAchievements";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const MainAppLayoutContent: React.FC = () => {
   return (
@@ -94,19 +96,20 @@ const AuthRoutesHandler = () => {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="statistics" element={<Statistics />} />
-        <Route path="coach" element={<Coach />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="goals" element={<Goals />} />
-        <Route path="achievements" element={<Achievements />} />
-        <Route path="personal-records" element={<PersonalRecords />} />
-        <Route path="diet" element={<Diet />} />
+        <Route path={ROUTES.STATISTICS} element={<Statistics />} />
+        <Route path={ROUTES.COACH} element={<Coach />} />
+        <Route path={ROUTES.CALENDAR} element={<Calendar />} />
+        <Route path={ROUTES.GOALS} element={<Goals />} />
+        <Route path={ROUTES.ACHIEVEMENTS} element={<Achievements />} />
+        <Route path={ROUTES.PERSONAL_RECORDS} element={<PersonalRecords />} />
+        <Route path={ROUTES.DIET} element={<Diet />} />
         <Route path={ROUTES.TRAINING_PLAN} element={<TrainingPlan />} />
-        <Route path="friends" element={<FriendsLayout />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="support" element={<Support />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path={ROUTES.FRIENDS} element={<FriendsLayout />} />
+        <Route path={ROUTES.PROFILE} element={<Profile />} />
+        <Route path={ROUTES.SUPPORT} element={<Support />} />
+        <Route path={ROUTES.SETTINGS} element={<Settings />} />
+        <Route path="fake" element={<FakeAchievements />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
