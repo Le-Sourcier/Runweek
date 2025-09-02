@@ -41,7 +41,6 @@ import { ROUTES } from "./hooks/useAppNavigation";
 import FriendsLayout from "./components/layout/FriendsLayout";
 import SocketManager from "./utils/SocketManager";
 import { LanguageProvider } from "./providers/LanguageProvider";
-import FakeAchievements from "./pages/FakeAchievements";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const MainAppLayoutContent: React.FC = () => {
@@ -108,7 +107,6 @@ const AuthRoutesHandler = () => {
         <Route path={ROUTES.PROFILE} element={<Profile />} />
         <Route path={ROUTES.SUPPORT} element={<Support />} />
         <Route path={ROUTES.SETTINGS} element={<Settings />} />
-        <Route path="fake" element={<FakeAchievements />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

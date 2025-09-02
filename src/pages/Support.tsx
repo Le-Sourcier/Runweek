@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
   ExternalLink,
+  PlayCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Input from "../components/ui/Input";
@@ -227,7 +228,7 @@ export default function Support() {
           />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
           {helpCategories.map((category) => (
             <motion.div
               key={category.id}
@@ -237,38 +238,34 @@ export default function Support() {
                   category.id === selectedHelpCategory ? null : category.id
                 )
               }
-              className={`p-4 border rounded-lg hover:border-primary hover:shadow-sm transition-all cursor-pointer duration-300 ${
-                selectedHelpCategory === category.id
+              className={`p-4 border rounded-lg hover:border-primary hover:shadow-sm transition-all cursor-pointer duration-300 ${selectedHelpCategory === category.id
                   ? "border-primary bg-primary-50 dark:bg-[#80808010] shadow-md"
                   : "dark:border-border"
-              }`}
+                }`}
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-                    selectedHelpCategory === category.id
+                  className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${selectedHelpCategory === category.id
                       ? "bg-primary dark:bg-[#8080801a]  text-primary-foreground"
                       : "bg-primary dark:bg-[#8080801a] bg-opacity-10 text-primary-foreground dark:text-primary-300"
-                  }`}
+                    }`}
                 >
                   {category.icon}
                 </div>
                 <div>
                   <h3
-                    className={`font-medium ${
-                      selectedHelpCategory === category.id
+                    className={`font-medium ${selectedHelpCategory === category.id
                         ? "text-primary dark:text-primary"
                         : "text-foreground"
-                    }`}
+                      }`}
                   >
                     {category.title}
                   </h3>
                   <p
-                    className={`text-sm ${
-                      selectedHelpCategory === category.id
+                    className={`text-sm ${selectedHelpCategory === category.id
                         ? "text-primary/80 dark:text-secondary"
                         : "text-muted-foreground"
-                    }`}
+                      }`}
                   >
                     {category.count} articles
                   </p>
@@ -280,9 +277,9 @@ export default function Support() {
       </Card>
 
       {/* Quick Help Tabs */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* FAQs */}
-        <Card className="md:col-span-7" title={faqTitle}>
+        <Card className="lg:col-span-7" title={faqTitle}>
           <div className="space-y-3">
             {displayedFaqs.map((faq) => (
               <div
@@ -332,7 +329,7 @@ export default function Support() {
         </Card>
 
         {/* Contact */}
-        <Card className="md:col-span-5" title="Contact Support">
+        <Card className="lg:col-span-5" title="Contact Support">
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             Can't find what you're looking for? Our support team is here to
             help.
@@ -345,7 +342,7 @@ export default function Support() {
               </div>
               <div>
                 <h3 className="font-medium">Email Support</h3>
-                <p className="text-sm text-primary">support@runweek.com</p>
+                <a href="mailto:support@runweek.com" className="text-sm text-primary">support@runweek.com</a>
               </div>
             </div>
 
@@ -365,7 +362,7 @@ export default function Support() {
               </div>
               <div>
                 <h3 className="font-medium">Phone Support</h3>
-                <p className="text-sm text-gray-500">+1 (555) 123-4567</p>
+                <a href="tel:+15551234567" className="text-sm text-primary">+1 (555) 123-4567</a>
               </div>
             </div>
           </div>
@@ -391,8 +388,8 @@ export default function Support() {
                   className="w-full h-40 object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-40 transition-all">
-                  <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center">
-                    <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-primary border-b-8 border-b-transparent ml-1"></div>
+                  <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center animate-pulse hover:cursor-pointer">
+                    <PlayCircle size={24} />
                   </div>
                 </div>
                 <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">

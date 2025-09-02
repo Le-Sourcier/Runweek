@@ -1,9 +1,11 @@
+import { MessageCode } from "./message";
+
 // types/achievements.ts
 export interface Achievement {
   id: string;
   achievement_id: string;
-  title: string;
-  description: string;
+  title: MessageCode;
+  description: MessageCode;
   icon: string;
   category: string;
   points: number;

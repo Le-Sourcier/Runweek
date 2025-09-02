@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(formData);
-      navigateWithParams(ROUTES.HOME);
+      navigateWithParams(ROUTES.WELCOME);
     } catch (error) {
       if (extractErrorMessage(error).message === "ACCOUNT_UNVERIFIED") {
         navigateWithQuery(ROUTES.VERIFY_EMAIL, { email: formData.email });

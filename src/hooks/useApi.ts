@@ -4,6 +4,7 @@ import { LoginResponse } from "../types/user.tsx";
 import { getBaseMessage } from "../utils/error-handler.ts";
 import sec from "react-secure-storage";
 import { ApiResponse, FetchOptions } from "../types/index.ts";
+import { Language } from "../types/message.ts";
 
 // Headers communs pour toutes les requêtes
 const commonHeaders = {
@@ -35,6 +36,11 @@ export const defineHeaders = (options: RequestInit, isSecure: boolean): HeadersI
   return headers;
 };
 
+const getSystemLanguage = (): Language => {
+    const systemLang = navigator.language.split('-')[0] as Language;
+    return ['en', 'fr', 'es', 'de'].includes(systemLang) ? systemLang : 'en';
+  };
+
 // Fonction pour créer une ApiError à partir d'une Response
 const createApiError = async (response: Response): Promise<ApiResponse<{ status: number; message: string }>> => {
   let responseData;
@@ -61,6 +67,8 @@ const apiFetch = async <T = never>(
   const headers = defineHeaders(options, isSecure);
   const url = `${baseURL}${endpoint}`;
 
+  const language = getSystemLanguage();
+
   const config: RequestInit = {
     ...options,
     headers,
@@ -78,7 +86,7 @@ const apiFetch = async <T = never>(
 
         if (refreshToken) {
           if (endpoint === ApiUrl.VERIFY_MAIL) {
-            throw new Error(getBaseMessage("fr", "TOKEN_EXPIRED"));
+            throw new Error(getBaseMessage("TOKEN_EXPIRED", language));
           }
 
           try {
@@ -116,7 +124,7 @@ const apiFetch = async <T = never>(
           } catch {
             sec.removeItem("aspk");
             sec.removeItem("rft");
-            throw new Error(getBaseMessage("fr", "TOKEN_EXPIRED"));
+            throw new Error(getBaseMessage("TOKEN_EXPIRED", language));
           }
         } else {
           sec.removeItem("aspk");

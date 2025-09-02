@@ -23,16 +23,18 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
   error: null,
 
   // Récupérer les achievements de l'utilisateur
-  getUserAchievements: async (filters?: AchievementFilter) => {
+  getUserAchievements: async (_filters?: AchievementFilter) => {
     try {
       set({ isLoading: true, error: null });
 
       const { data } = await apiUtils.get<Achievement[]>(
         ApiUrl.queryable(ApiUrl.ACHIEVEMENTS, {
-          category: filters?.category?.toString() || "all",
-          earned: filters?.earned?.toString() || "true",
+          // category: filters?.category?.toString() || "all",
+          // earned: filters?.earned?.toString() || "true",
         })
       );
+
+      console.log("achievements:", data);
 
       set({
         achievements: data,

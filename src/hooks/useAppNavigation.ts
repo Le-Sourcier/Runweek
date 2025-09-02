@@ -229,6 +229,7 @@ export const ROUTES = {
   HOME: "/home",
   WELCOME: "/",
   DASHBOARD: "/dashboard",
+  PASSWORD_RECOVERY: "/password-recovery",
 
   LOGIN: "/login",
   REGISTER: "/register",

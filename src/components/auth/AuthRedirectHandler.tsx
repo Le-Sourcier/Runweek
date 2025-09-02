@@ -1,6 +1,7 @@
 // src/components/auth/AuthRedirectHandler.tsx
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useUserContext } from "../../hooks/useUser";
+import { ROUTES } from "../../hooks/useAppNavigation";
 
 export const AuthRedirectHandler = ({
   authType = "login",
@@ -43,12 +44,12 @@ export const AuthRedirectHandler = ({
   const buildAuthUrl = (path: string, keepToken = false) => {
     const currentPath = location.pathname;
     const isAuthPath = [
-      "/login",
-      "/register",
-      "/verify-email",
-      "/forgot-password",
-      "/reset-password",
-      "/password-recovery",
+      ROUTES.LOGIN,
+      ROUTES.REGISTER,
+      ROUTES.VERIFY_EMAIL,
+      ROUTES.FORGOT_PASSWORD,
+      ROUTES.RESET_PASSWORD,
+      ROUTES.PASSWORD_RECOVERY,
     ].some((authPath) => currentPath.startsWith(authPath));
 
     const originalRedirect = isAuthPath
@@ -63,16 +64,16 @@ export const AuthRedirectHandler = ({
 
   switch (authType) {
     case "register":
-      return <Navigate to={buildAuthUrl("/register")} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.REGISTER)} replace />;
     case "verify-email":
-      return <Navigate to={buildAuthUrl("/verify-email")} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.VERIFY_EMAIL)} replace />;
     case "forgot-password":
-      return <Navigate to={buildAuthUrl("/forgot-password")} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.FORGOT_PASSWORD)} replace />;
     case "reset-password":
-      return <Navigate to={buildAuthUrl("/reset-password", true)} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.RESET_PASSWORD, true)} replace />;
     case "password-recovery":
-      return <Navigate to={buildAuthUrl("/password-recovery")} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.PASSWORD_RECOVERY)} replace />;
     default: // "login"
-      return <Navigate to={buildAuthUrl("/login")} replace />;
+      return <Navigate to={buildAuthUrl(ROUTES.LOGIN)} replace />;
   }
 };

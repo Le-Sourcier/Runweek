@@ -10,7 +10,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   // Initialize language from localStorage or system language
-  const {currentLanguage: language} = useLanguage();
+  const { currentLanguage: language } = useLanguage();
 
   const getMessage = (
     code: MessageCode | null | undefined,
@@ -21,7 +21,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     // Fallback to English if translation missing
-    const baseMessage = getBaseMessage(language, code);
+    const baseMessage = getBaseMessage(code, language);
 
     let message = baseMessage;
     for (const [key, value] of Object.entries(variables)) {
