@@ -27,17 +27,12 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const params = new URLSearchParams();
-      if (filters?.category && filters.category !== "all") {
-        params.append("category", filters.category);
-      }
-      if (filters?.earned) {
-        params.append("earned", filters.earned);
-      }
-
-      const url = `${ApiUrl.ACHIEVEMENTS}?${params.toString()}`;
-
-      const { data } = await apiUtils.get<Achievement[]>(url);
+      const { data } = await apiUtils.get<Achievement[]>(
+        ApiUrl.queryable(ApiUrl.ACHIEVEMENTS, {
+          category: filters?.category?.toString() || "all",
+          earned: filters?.earned?.toString() || "true",
+        })
+      );
 
       set({
         achievements: data,
@@ -64,7 +59,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
     try {
       set({ isUnlocking: true, error: null });
 
-      const { data } = await apiUtils.post(`${ApiUrl.ACHIEVEMENTS}/unlock`, {
+      const { data } = await apiUtils.post<Achievement>(ApiUrl.UNLOCK_ACHIEVEMENTS, {
         achievement_id: achievementId,
         activityData,
       });
@@ -73,13 +68,11 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
       set((state) => ({
         achievements: state.achievements.map((achievement) =>
           achievement.achievement_id === achievementId
-            ? { ...achievement, ...data, isLocked: false }
+            ? { ...data, isLocked: false }
             : achievement
         ),
         isUnlocking: false,
       }));
-
-      return data;
     } catch (err) {
       const error = err as ApiError;
       set({ error: error.message, isUnlocking: false });
@@ -95,7 +88,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.post(`${ApiUrl.ACHIEVEMENTS}/check`, {
+      const { data } = await apiUtils.post<Achievement[]>(ApiUrl.CHECK_ACHIEVEMENTS, {
         userStats,
         activityData,
       });
@@ -115,8 +108,6 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
       } else {
         set({ isLoading: false });
       }
-
-      return data;
     } catch (err) {
       const error = err as ApiError;
       set({ error: error.message, isLoading: false });
@@ -129,9 +120,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const { data } = await apiUtils.get<AchievementStats>(
-        `${ApiUrl.ACHIEVEMENTS}/stats`
-      );
+      const { data } = await apiUtils.get<AchievementStats>(ApiUrl.GET_ACHIEVEMENT_STATS);
 
       set({
         achievementStats: data,
@@ -150,7 +139,7 @@ export const useAchievementsStore = create<AchievementState>((set) => ({
       set({ isLoading: true, error: null });
 
       const { data } = await apiUtils.get<Record<string, AvailableAchievement>>(
-        `${ApiUrl.ACHIEVEMENTS}/available`
+        ApiUrl.GET_AVAILABLE_ACHIEVEMENTS
       );
 
       set({

@@ -22,6 +22,7 @@ import { useCalendarStore } from "../stores/CalendarStore";
 import { extractErrorMessage } from "../utils/error-handler";
 import { useMessages } from "../hooks/useMessage";
 import { DeleteEventModal } from "./calendar/DeleteEventModal";
+import { RequiredInputStar } from "../components/ui/RequiredInputStar";
 
 // Event type (can be moved to types.ts if shared)
 export interface CalendarEventType {
@@ -476,7 +477,7 @@ export default function Calendar() {
               htmlFor="workout-title"
               className="block text-sm font-medium text-muted-foreground mb-1"
             >
-              Title
+              Title <RequiredInputStar/>
             </label>
             <Input
               type="text"
@@ -493,7 +494,7 @@ export default function Calendar() {
                 htmlFor="workout-date"
                 className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                Date
+                Date <RequiredInputStar/>
               </label>
               <Input
                 type="date"

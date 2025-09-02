@@ -63,15 +63,15 @@ export const Modal: React.FC<ModalProps> = ({
             className={`bg-card text-card-foreground rounded-lg shadow-xl p-6 space-y-4 ${sizeClasses[size]}`}
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start">
               {title && (
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-foreground mr-4">
                   {title}
                 </h3>
               )}
               <button
                 onClick={onClose}
-                className="p-1 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
+                className="ml-auto flex-shrink-0 p-1 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-[1.03] active:scale-[0.97]"
                 aria-label="Close modal"
               >
                 <X size={20} />
@@ -184,11 +184,11 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({
             <div className="hidden lg:block absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1.5 bg-muted-foreground/30 rounded-full cursor-grab" />
           )}
 
-          <div className="flex items-center justify-between">
-            {title && <h3 className="text-lg font-semibold text-foreground">{title}</h3>}
+          <div className="flex items-start">
+            {title && <h3 className="text-lg font-semibold text-foreground mr-4">{title}</h3>}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-110 active:scale-95 hover:text-foreground"
+              className="ml-auto flex-shrink-0 p-1.5 rounded-full text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card transition-all duration-200 ease-in-out hover:scale-110 active:scale-95 hover:text-foreground"
               aria-label="Close modal"
             >
               <X size={18} />

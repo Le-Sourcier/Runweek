@@ -29,7 +29,11 @@ export const ApiUrl = {
   FRIENDS_STATS: "/friends/stats",
 
   // achievements
-  ACHIEVEMENTS: "/api/achievements",
+  ACHIEVEMENTS: "/achievements",
+  UNLOCK_ACHIEVEMENTS: "/achievements/unlock",
+  CHECK_ACHIEVEMENTS: "/achievements/check",
+  GET_ACHIEVEMENT_STATS: "/achievements/stats",
+  GET_AVAILABLE_ACHIEVEMENTS: "/achievements/available",
 
   // Message
   CONVERSATIONS: "/conversations",
