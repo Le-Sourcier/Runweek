@@ -18,6 +18,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       const { data } = await apiUtils.get<CalendarEventType[]>(
         ApiUrl.EVENTS
       );
+      console.log("data:", data);
+      
       set({ events: data });
     } catch (error) {
       if (extractErrorMessage(error).message === "EVENT_NOT_FOUND") {

@@ -29,17 +29,21 @@ import MotivationOfTheDayWidget from "../components/dashboard/widgets/Motivation
 import { useAchievementsStore } from "../stores/achievements";
 import { getBaseMessage } from "../utils/error-handler";
 import { useLanguage } from "../providers/LanguageProvider";
+import { ROUTES } from "../hooks/useAppNavigation";
+import { useCalendarStore } from "../stores/CalendarStore";
 
 export default function Dashboard() {
-  const { user, updateUserPreferences } = useUserContext(); // Destructure updateUserPreferences
+  const { user, updateUserPreferences } = useUserContext();
   const { processedPRs: prs } = usePRs();
   const { achievements } = useAchievementsStore();
+  const { events } = useCalendarStore();
   const { currentLanguage: language } = useLanguage();
 
   const recentAchievements = achievements.filter(_ => !_.isLocked).slice(0, 3);
 
   useEffect(() => {
     useAchievementsStore.getState().getUserAchievements();
+    useCalendarStore.getState().getEvents();
   }, []);
 
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
@@ -86,22 +90,6 @@ export default function Dashboard() {
       }
     })
     .slice(0, 3); // Take top 3 recent PRs
-
-  // Mock data for upcoming workouts
-  const upcomingWorkouts = [
-    {
-      title: "Course longue",
-      time: "Demain",
-      distance: "10.0 km",
-      duration: "1h 30m",
-    },
-    {
-      title: "Entraînement par intervalles",
-      time: "Dans 2 jours",
-      distance: "5.0 km",
-      duration: "45m",
-    },
-  ];
 
   // --- Render Functions for Widgets ---
 
@@ -268,58 +256,68 @@ export default function Dashboard() {
 
   const renderUpcomingWorkouts = () => (
     <div className="chart-container mb-8">
-      {" "}
-      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-card-foreground">
           Entraînements à venir
         </h3>
         <Link
-          to="/calendar"
+          to={ROUTES.CALENDAR}
           className="text-primary hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
         >
           Voir calendrier
           <Calendar size={14} />
         </Link>
       </div>
-      <div className="space-y-4">
-        {upcomingWorkouts.map((workout, index) => (
-          <div
-            key={index}
-            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
+      {
+        events.length > 0 ? (
+          <div className="space-y-4">
+            {events.slice(0, 2).map((workout, index) => (
+              <div
+                key={index}
+                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-medium text-card-foreground">
+                      {workout.title}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">{workout.time}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-card-foreground">
+                      {workout.distance || "Non définie"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {workout.duration || "Non définie"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>) : <div className="text-center py-4">
+          <Calendar size={24} className="mx-auto text-muted-foreground mb-2" />
+          <p className="text-muted-foreground mb-3">
+            Aucun entraînement à venir pour le moment.
+          </p>
+          <Link
+            to={ROUTES.CALENDAR}
+            className="btn btn-outline dark:hover:bg-gray-700 dark:border-gray-600 btn-sm"
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium text-card-foreground">
-                  {workout.title}
-                </h4>
-                <p className="text-sm text-muted-foreground">{workout.time}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-card-foreground">
-                  {workout.distance}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {workout.duration}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            Voir le calendrier
+          </Link>
+        </div>
+      }
     </div>
   );
 
   const renderRecentAchievements = () => (
     <div className="chart-container mb-8">
-      {" "}
-      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-card-foreground">
           Réalisations récentes
         </h3>
         <Link
-          to="/achievements"
+          to={ROUTES.ACHIEVEMENTS}
           className="text-primary hover:text-primary-600 duration-300 transition-colors dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
         >
           Voir tout
@@ -376,22 +374,20 @@ export default function Dashboard() {
 
   const renderRecentPRs = () => (
     <div className="chart-container mb-8">
-      {" "}
-      {/* Ensured mb-8 for spacing */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-card-foreground">
           Records Récents
         </h3>
         <div className="flex items-center gap-3">
           <Link
-            to="/personal-records"
+            to={ROUTES.PERSONAL_RECORDS}
             className="text-primary hover:text-primary-600 duration-300 transition-colors dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1"
           >
             Voir tout
             <ArrowRight size={14} />
           </Link>
           <Link
-            to="/personal-records"
+            to={ROUTES.PERSONAL_RECORDS}
             className="bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary-200 flex items-center gap-1.5 transition-colors duration-300 shadow-sm"
           >
             <PlusCircle size={16} />
@@ -406,7 +402,7 @@ export default function Dashboard() {
             Aucun record personnel pour le moment.
           </p>
           <Link
-            to="/personal-records"
+            to={ROUTES.PERSONAL_RECORDS}
             className="btn btn-outline dark:hover:bg-gray-700 dark:border-gray-600 btn-sm"
           >
             Ajouter un Record
@@ -455,8 +451,6 @@ export default function Dashboard() {
 
   const renderWeeklySummaryWidget = () => (
     <Card className="mb-8">
-      {" "}
-      {/* Card provides padding and mb-8 for spacing */}
       <WeeklySummaryWidget />
     </Card>
   );
@@ -476,7 +470,6 @@ export default function Dashboard() {
   // --- Main Return ---
   return (
     <div>
-      {" "}
       {/* Removed space-y-6 */}
       {/* Dashboard Header */}
       <div className="flex justify-between items-center">
