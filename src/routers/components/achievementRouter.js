@@ -23,7 +23,7 @@ router
    *         name: category
    *         schema:
    *           type: string
-   *           enum: [running, distance, consistency, speed, challenge, all]
+   *           enum: [beginner, distance, speed, habit, consistency, challenge, milestone, all]
    *         description: Filter achievements by category. Use "all" or omit for all categories.
    *       - in: query
    *         name: earned
@@ -44,7 +44,7 @@ router
    *                   example: false
    *                 message:
    *                   type: string
-   *                   example: "Achievements récupérés avec succès"
+   *                   example: "ACHIEVEMENTS_RETRIEVED"
    *                 data:
    *                   type: array
    *                   items:
@@ -52,22 +52,22 @@ router
    *                     properties:
    *                       achievement_id:
    *                         type: string
-   *                         example: "first_5k"
+   *                         example: "first_run"
    *                       title:
    *                         type: string
-   *                         example: "First 5K"
+   *                         example: "Premier Pas"
    *                       description:
    *                         type: string
-   *                         example: "Complete your first 5K run"
+   *                         example: "Complété votre première course"
    *                       icon:
    *                         type: string
-   *                         example: "🏃‍♂️"
+   *                         example: "Award"
    *                       category:
    *                         type: string
-   *                         example: "running"
+   *                         example: "beginner"
    *                       points:
    *                         type: integer
-   *                         example: 100
+   *                         example: 50
    *                       rarity:
    *                         type: string
    *                         enum: [common, rare, epic, legendary]
@@ -80,6 +80,12 @@ router
    *                       isLocked:
    *                         type: boolean
    *                         example: false
+   *                       requirements:
+   *                         type: object
+   *                         properties:
+   *                           totalRuns:
+   *                             type: integer
+   *                             example: 1
    *       401:
    *         description: Unauthorized access
    *         content:
@@ -92,7 +98,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Unauthorized access"
+   *                   example: "FORBIDDEN_RESOURCE"
    *       500:
    *         description: Server error
    *         content:
@@ -105,9 +111,9 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Erreur lors de la récupération des achievements"
+   *                   example: "ACHIEVEMENTS_RETRIEVE_FAILED"
    */
-  .get("/", authorize, ctr.getUserAchievements) // GET /api/achievements - Retrieves all achievements for the authenticated user, including locked and unlocked achievements with optional filtering
+  .get("/", authorize, ctr.getUserAchievements)
 
   /**
    * @openapi
@@ -129,7 +135,7 @@ router
    *             properties:
    *               achievement_id:
    *                 type: string
-   *                 example: "first_5k"
+   *                 example: "first_run"
    *                 description: The ID of the achievement to unlock
    *               activityData:
    *                 type: object
@@ -158,36 +164,36 @@ router
    *                   example: false
    *                 message:
    *                   type: string
-   *                   example: "Achievement débloqué avec succès"
+   *                   example: "ACHIEVEMENT_UNLOCKED"
    *                 data:
    *                   type: object
    *                   properties:
-   *                     _id:
+   *                     id:
    *                       type: string
    *                       format: uuid
    *                       example: "507f1f77bcf86cd799439011"
-   *                     userId:
+   *                     user_id:
    *                       type: string
    *                       format: uuid
    *                       example: "507f1f77bcf86cd799439012"
    *                     achievement_id:
    *                       type: string
-   *                       example: "first_5k"
+   *                       example: "first_run"
    *                     title:
    *                       type: string
-   *                       example: "First 5K"
+   *                       example: "Premier Pas"
    *                     description:
    *                       type: string
-   *                       example: "Complete your first 5K run"
+   *                       example: "Complété votre première course"
    *                     icon:
    *                       type: string
-   *                       example: "🏃‍♂️"
+   *                       example: "Award"
    *                     category:
    *                       type: string
-   *                       example: "running"
+   *                       example: "beginner"
    *                     points:
    *                       type: integer
-   *                       example: 100
+   *                       example: 50
    *                     rarity:
    *                       type: string
    *                       example: "common"
@@ -197,9 +203,6 @@ router
    *                         totalRuns:
    *                           type: integer
    *                           example: 1
-   *                         totalDistance:
-   *                           type: number
-   *                           example: 5.0
    *                     earnedDate:
    *                       type: string
    *                       format: date-time
@@ -224,7 +227,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Données invalides"
+   *                   example: "INVALID_DATA"
    *                 details:
    *                   type: string
    *                   example: "achievement_id is required"
@@ -240,7 +243,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Achievement non trouvé"
+   *                   example: "ACHIEVEMENT_NOT_FOUND"
    *       409:
    *         description: Achievement already unlocked
    *         content:
@@ -253,7 +256,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Achievement déjà débloqué"
+   *                   example: "ACHIEVEMENT_ALREADY_UNLOCKED"
    *       401:
    *         description: Unauthorized access
    *         content:
@@ -266,7 +269,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Unauthorized access"
+   *                   example: "FORBIDDEN_RESOURCE"
    *       500:
    *         description: Server error
    *         content:
@@ -279,9 +282,9 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Erreur lors du déblocage de l'achievement"
+   *                   example: "ACHIEVEMENT_UNLOCK_FAILED"
    */
-  .post("/unlock", authorize, ctr.unlockAchievement) // POST /api/achievements/unlock - Manually unlock a specific achievement for the authenticated user
+  .post("/unlock", authorize, ctr.unlockAchievement)
 
   /**
    * @openapi
@@ -345,32 +348,35 @@ router
    *                   example: false
    *                 message:
    *                   type: string
-   *                   example: "3 nouveaux achievements débloqués"
+   *                   example: "ACHIEVEMENTS_CHECKED"
    *                 data:
    *                   type: array
    *                   items:
    *                     type: object
    *                     properties:
-   *                       _id:
+   *                       id:
    *                         type: string
    *                         format: uuid
    *                         example: "507f1f77bcf86cd799439011"
    *                       achievement_id:
    *                         type: string
-   *                         example: "marathon_runner"
+   *                         example: "marathon"
    *                       title:
    *                         type: string
-   *                         example: "Marathon Runner"
+   *                         example: "Marathonien"
    *                       description:
    *                         type: string
-   *                         example: "Complete a marathon distance run"
+   *                         example: "Complété un marathon complet (42.2 km)"
    *                       points:
    *                         type: integer
-   *                         example: 500
+   *                         example: 1000
    *                       earnedDate:
    *                         type: string
    *                         format: date-time
    *                         example: "2024-01-15T10:30:00.000Z"
+   *                 count:
+   *                   type: integer
+   *                   example: 3
    *       401:
    *         description: Unauthorized access
    *         content:
@@ -383,7 +389,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Unauthorized access"
+   *                   example: "FORBIDDEN_RESOURCE"
    *       500:
    *         description: Server error
    *         content:
@@ -396,9 +402,9 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Erreur lors de la vérification des achievements"
+   *                   example: "ACHIEVEMENTS_CHECK_FAILED"
    */
-  .post("/check", authorize, ctr.checkAchievements) //POST /api/achievements/check - Automatically checks and unlocks achievements based on user statistics and activity data
+  .post("/check", authorize, ctr.checkAchievements)
 
   /**
    * @openapi
@@ -422,7 +428,7 @@ router
    *                   example: false
    *                 message:
    *                   type: string
-   *                   example: "Statistiques récupérées avec succès"
+   *                   example: "ACHIEVEMENT_STATS_RETRIEVED"
    *                 data:
    *                   type: object
    *                   properties:
@@ -443,7 +449,7 @@ router
    *                       type: array
    *                       items:
    *                         type: string
-   *                       example: ["running", "distance", "consistency"]
+   *                       example: ["beginner", "distance", "consistency"]
    *                     raritiesEarned:
    *                       type: array
    *                       items:
@@ -456,10 +462,10 @@ router
    *                         properties:
    *                           achievement_id:
    *                             type: string
-   *                             example: "streak_7_days"
+   *                             example: "week_streak"
    *                           title:
    *                             type: string
-   *                             example: "7-Day Streak"
+   *                             example: "Série Hebdomadaire"
    *                           earnedDate:
    *                             type: string
    *                             format: date-time
@@ -476,7 +482,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Unauthorized access"
+   *                   example: "FORBIDDEN_RESOURCE"
    *       500:
    *         description: Server error
    *         content:
@@ -489,9 +495,9 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Erreur lors de la récupération des statistiques"
+   *                   example: "ACHIEVEMENT_STATS_RETRIEVE_FAILED"
    */
-  .get("/stats", authorize, ctr.getAchievementStats) // GET /api/achievements/stats - Retrieves comprehensive statistics about the user's achievements
+  .get("/stats", authorize, ctr.getAchievementStats)
 
   /**
    * @openapi
@@ -515,27 +521,30 @@ router
    *                   example: false
    *                 message:
    *                   type: string
-   *                   example: "Achievements disponibles récupérés avec succès"
+   *                   example: "AVAILABLE_ACHIEVEMENTS_RETRIEVED"
    *                 data:
-   *                   type: object
-   *                   additionalProperties:
+   *                   type: array
+   *                   items:
    *                     type: object
    *                     properties:
+   *                       id:
+   *                         type: string
+   *                         example: "first_run"
    *                       title:
    *                         type: string
-   *                         example: "First 5K"
+   *                         example: "Premier Pas"
    *                       description:
    *                         type: string
-   *                         example: "Complete your first 5K run"
+   *                         example: "Complété votre première course"
    *                       icon:
    *                         type: string
-   *                         example: "🏃‍♂️"
+   *                         example: "Award"
    *                       category:
    *                         type: string
-   *                         example: "running"
+   *                         example: "beginner"
    *                       points:
    *                         type: integer
-   *                         example: 100
+   *                         example: 50
    *                       rarity:
    *                         type: string
    *                         enum: [common, rare, epic, legendary]
@@ -546,15 +555,9 @@ router
    *                           totalRuns:
    *                             type: integer
    *                             example: 1
-   *                           totalDistance:
-   *                             type: number
-   *                             example: 5.0
-   *                           singleRunDistance:
-   *                             type: number
-   *                             example: 5.0
-   *                           consecutiveDays:
-   *                             type: integer
-   *                             example: 7
+   *                       isActive:
+   *                         type: boolean
+   *                         example: true
    *       401:
    *         description: Unauthorized access
    *         content:
@@ -567,7 +570,7 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Unauthorized access"
+   *                   example: "FORBIDDEN_RESOURCE"
    *       500:
    *         description: Server error
    *         content:
@@ -580,8 +583,8 @@ router
    *                   example: true
    *                 message:
    *                   type: string
-   *                   example: "Erreur lors de la récupération des achievements disponibles"
+   *                   example: "AVAILABLE_ACHIEVEMENTS_RETRIEVE_FAILED"
    */
-  .get("/available", authorize, ctr.getAvailableAchievements); // GET /api/achievements/available - Retrieves all available achievements
+  .get("/available", authorize, ctr.getAvailableAchievements);
 
 module.exports = router;

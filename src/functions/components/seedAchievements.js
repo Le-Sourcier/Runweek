@@ -1,0 +1,388 @@
+// scripts/seedAchievements.js
+const { AchievementDefinition } = require("../../models");
+
+const achievementDefinitions = [
+  {
+    id: "first_run",
+    title: "FIRST_RUN_TITLE",
+    description: "FIRST_RUN_DESC",
+    icon: "Award",
+    category: "beginner",
+    points: 50,
+    rarity: "common",
+    requirements: { totalRuns: 1 },
+    isActive: true,
+  },
+  {
+    id: "distance_5k",
+    title: "DISTANCE_5K_TITLE",
+    description: "DISTANCE_5K_DESC",
+    icon: "Medal",
+    category: "distance",
+    points: 100,
+    rarity: "common",
+    requirements: { singleRunDistance: 5 },
+    isActive: true,
+  },
+  {
+    id: "distance_10k",
+    title: "DISTANCE_10K_TITLE",
+    description: "DISTANCE_10K_DESC",
+    icon: "Trophy",
+    category: "distance",
+    points: 200,
+    rarity: "rare",
+    requirements: { singleRunDistance: 10 },
+    isActive: true,
+  },
+  {
+    id: "half_marathon",
+    title: "HALF_MARATHON_TITLE",
+    description: "HALF_MARATHON_DESC",
+    icon: "Flag",
+    category: "distance",
+    points: 500,
+    rarity: "epic",
+    requirements: { singleRunDistance: 21.1 },
+    isActive: true,
+  },
+  {
+    id: "marathon",
+    title: "MARATHON_TITLE",
+    description: "MARATHON_DESC",
+    icon: "Trophy",
+    category: "distance",
+    points: 1000,
+    rarity: "legendary",
+    requirements: { singleRunDistance: 42.2 },
+    isActive: true,
+  },
+  {
+    id: "ultra_marathon",
+    title: "ULTRA_MARATHON_TITLE",
+    description: "ULTRA_MARATHON_DESC",
+    icon: "Mountain",
+    category: "distance",
+    points: 2000,
+    rarity: "legendary",
+    requirements: { singleRunDistance: 50 },
+    isActive: true,
+  },
+  {
+    id: "early_bird",
+    title: "EARLY_BIRD_TITLE",
+    description: "EARLY_BIRD_DESC",
+    icon: "Sunrise",
+    category: "habit",
+    points: 150,
+    rarity: "rare",
+    requirements: { earlyMorningRuns: 5 },
+    isActive: true,
+  },
+  {
+    id: "week_streak",
+    title: "WEEK_STREAK_TITLE",
+    description: "WEEK_STREAK_DESC",
+    icon: "Flame",
+    category: "consistency",
+    points: 300,
+    rarity: "rare",
+    requirements: { consecutiveDays: 7 },
+    isActive: true,
+  },
+  {
+    id: "month_streak",
+    title: "MONTH_STREAK_TITLE",
+    description: "MONTH_STREAK_DESC",
+    icon: "Calendar",
+    category: "consistency",
+    points: 1000,
+    rarity: "epic",
+    requirements: { consecutiveDays: 30 },
+    isActive: true,
+  },
+  {
+    id: "speed_demon",
+    title: "SPEED_DEMON_TITLE",
+    description: "SPEED_DEMON_DESC",
+    icon: "Zap",
+    category: "speed",
+    points: 400,
+    rarity: "epic",
+    requirements: { bestPace: 4.0 },
+    isActive: true,
+  },
+  {
+    id: "speed_king",
+    title: "SPEED_KING_TITLE",
+    description: "SPEED_KING_DESC",
+    icon: "Crown",
+    category: "speed",
+    points: 800,
+    rarity: "legendary",
+    requirements: { bestPace: 3.3 },
+    isActive: true,
+  },
+  {
+    id: "elevation_master",
+    title: "ELEVATION_MASTER_TITLE",
+    description: "ELEVATION_MASTER_DESC",
+    icon: "MapPin",
+    category: "challenge",
+    points: 250,
+    rarity: "rare",
+    requirements: { totalElevation: 1000 },
+    isActive: true,
+  },
+  {
+    id: "mountain_goat",
+    title: "MOUNTAIN_GOAT_TITLE",
+    description: "MOUNTAIN_GOAT_DESC",
+    icon: "Mountain",
+    category: "challenge",
+    points: 600,
+    rarity: "epic",
+    requirements: { totalElevation: 5000 },
+    isActive: true,
+  },
+  {
+    id: "total_100k",
+    title: "TOTAL_100K_TITLE",
+    description: "TOTAL_100K_DESC",
+    icon: "Medal",
+    category: "milestone",
+    points: 300,
+    rarity: "rare",
+    requirements: { totalDistance: 100 },
+    isActive: true,
+  },
+  {
+    id: "total_500k",
+    title: "TOTAL_500K_TITLE",
+    description: "TOTAL_500K_DESC",
+    icon: "Trophy",
+    category: "milestone",
+    points: 750,
+    rarity: "epic",
+    requirements: { totalDistance: 500 },
+    isActive: true,
+  },
+  {
+    id: "total_1000k",
+    title: "TOTAL_1000K_TITLE",
+    description: "TOTAL_1000K_DESC",
+    icon: "Star",
+    category: "milestone",
+    points: 1500,
+    rarity: "legendary",
+    requirements: { totalDistance: 1000 },
+    isActive: true,
+  },
+  {
+    id: "night_runner",
+    title: "NIGHT_RUNNER_TITLE",
+    description: "NIGHT_RUNNER_DESC",
+    icon: "Moon",
+    category: "habit",
+    points: 150,
+    rarity: "rare",
+    requirements: { nightRuns: 5 },
+    isActive: true,
+  },
+  {
+    id: "weekend_warrior",
+    title: "WEEKEND_WARRIOR_TITLE",
+    description: "WEEKEND_WARRIOR_DESC",
+    icon: "Calendar",
+    category: "habit",
+    points: 200,
+    rarity: "rare",
+    requirements: { weekendRuns: 10 },
+    isActive: true,
+  },
+  {
+    id: "first_10_runs",
+    title: "FIRST_10_RUNS_TITLE",
+    description: "FIRST_10_RUNS_DESC",
+    icon: "Target",
+    category: "beginner",
+    points: 100,
+    rarity: "common",
+    requirements: { totalRuns: 10 },
+    isActive: true,
+  },
+  {
+    id: "first_50_runs",
+    title: "FIRST_50_RUNS_TITLE",
+    description: "FIRST_50_RUNS_DESC",
+    icon: "Award",
+    category: "milestone",
+    points: 400,
+    rarity: "rare",
+    requirements: { totalRuns: 50 },
+    isActive: true,
+  },
+  {
+    id: "first_100_runs",
+    title: "FIRST_100_RUNS_TITLE",
+    description: "FIRST_100_RUNS_DESC",
+    icon: "Trophy",
+    category: "milestone",
+    points: 1000,
+    rarity: "epic",
+    requirements: { totalRuns: 100 },
+    isActive: true,
+  },
+  {
+    id: "rain_runner",
+    title: "RAIN_RUNNER_TITLE",
+    description: "RAIN_RUNNER_DESC",
+    icon: "CloudRain",
+    category: "challenge",
+    points: 200,
+    rarity: "rare",
+    requirements: { rainyRuns: 5 },
+    isActive: true,
+  },
+  {
+    id: "four_seasons",
+    title: "FOUR_SEASONS_TITLE",
+    description: "FOUR_SEASONS_DESC",
+    icon: "Cloud",
+    category: "challenge",
+    points: 500,
+    rarity: "epic",
+    requirements: { seasonalRuns: 4 },
+    isActive: true,
+  },
+  {
+    id: "social_butterfly",
+    title: "SOCIAL_BUTTERFLY_TITLE",
+    description: "SOCIAL_BUTTERFLY_DESC",
+    icon: "Users",
+    category: "habit",
+    points: 300,
+    rarity: "rare",
+    requirements: { groupRuns: 5 },
+    isActive: true,
+  },
+  {
+    id: "explorer",
+    title: "EXPLORER_TITLE",
+    description: "EXPLORER_DESC",
+    icon: "Compass",
+    category: "challenge",
+    points: 350,
+    rarity: "rare",
+    requirements: { differentRoutes: 10 },
+    isActive: true,
+  },
+  {
+    id: "trail_blazer",
+    title: "TRAIL_BLAZER_TITLE",
+    description: "TRAIL_BLAZER_DESC",
+    icon: "TreePine",
+    category: "challenge",
+    points: 450,
+    rarity: "epic",
+    requirements: { trailRuns: 20 },
+    isActive: true,
+  },
+  {
+    id: "city_runner",
+    title: "CITY_RUNNER_TITLE",
+    description: "CITY_RUNNER_DESC",
+    icon: "Building",
+    category: "challenge",
+    points: 300,
+    rarity: "rare",
+    requirements: { urbanRuns: 15 },
+    isActive: true,
+  },
+  {
+    id: "heart_rate_achiever",
+    title: "HEART_RATE_ACHIEVER_TITLE",
+    description: "HEART_RATE_ACHIEVER_DESC",
+    icon: "Heart",
+    category: "challenge",
+    points: 250,
+    rarity: "rare",
+    requirements: { zoneRuns: 10 },
+    isActive: true,
+  },
+  {
+    id: "consistent_pacer",
+    title: "CONSISTENT_PACER_TITLE",
+    description: "CONSISTENT_PACER_DESC",
+    icon: "Gauge",
+    category: "consistency",
+    points: 350,
+    rarity: "rare",
+    requirements: { consistentPaceRuns: 10 },
+    isActive: true,
+  },
+  {
+    id: "negative_split",
+    title: "NEGATIVE_SPLIT_TITLE",
+    description: "NEGATIVE_SPLIT_DESC",
+    icon: "TrendingUp",
+    category: "speed",
+    points: 300,
+    rarity: "rare",
+    requirements: { negativeSplitRuns: 5 },
+    isActive: true,
+  },
+  {
+    id: "first_year",
+    title: "FIRST_YEAR_TITLE",
+    description: "FIRST_YEAR_DESC",
+    icon: "Calendar",
+    category: "milestone",
+    points: 800,
+    rarity: "epic",
+    requirements: { runningDays: 365 },
+    isActive: true,
+  },
+];
+
+async function seedAchievements() {
+  try {
+    console.log("Starting achievement migration...");
+
+    for (const definition of achievementDefinitions) {
+      const [achievement, created] = await AchievementDefinition.upsert(
+        definition,
+        {
+          returning: true,
+        }
+      );
+
+      if (created) {
+        // console.log(`Created achievement: ${definition.title}`);
+      } else {
+        // console.log(`Updated achievement: ${definition.title}`);
+      }
+    }
+
+    console.log("Achievement migration completed successfully!");
+    console.log(`Total achievements: ${achievementDefinitions.length}`);
+  } catch (error) {
+    console.error("Error during achievement migration:", error);
+    throw error;
+  }
+}
+
+// Exécutez la migration si le script est appelé directement
+if (require.main === module) {
+  const { sequelize } = require("../../models");
+  sequelize
+    .sync()
+    .then(() => seedAchievements())
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error("Migration failed:", error);
+      process.exit(1);
+    });
+}
+
+module.exports = { seedAchievements, achievementDefinitions };

@@ -2,11 +2,14 @@ const { serverMessage } = require("../../utils");
 const {
   Users,
   Profiles,
-  Activities,
   ActivityData,
   ChatMessages,
 } = require("./../../models");
 const askAI = require("../../services/askAI");
+const {
+  getUserData,
+  generateAthleteSuggestions,
+} = require("../../services/coach");
 
 module.exports = {
   sendMessage: async (req, res) => {
@@ -14,7 +17,7 @@ module.exports = {
     const userId = req.user.id;
 
     if (!message) {
-      return serverMessage(res, "BAD_REQUEST");
+      return serverMessage(res, "MESSAGE_TEXT_REQUIRED");
     }
 
     try {
@@ -80,6 +83,8 @@ module.exports = {
 
       const aiReply = await askAI(message, userContext, messagesHistory);
 
+      // console.log("aiReply: ", aiReply);
+
       const botMessage = await ChatMessages.create({
         user_id: userId,
         message_content: aiReply,
@@ -93,10 +98,10 @@ module.exports = {
         message: aiReply,
         sender: botMessage.sender,
       };
-      return serverMessage(res, "SUCCESS", data);
+      return serverMessage(res, "MESSAGE_SEND_SUCCESS", data);
     } catch (err) {
       console.error("Erreur IA coach:", err);
-      return serverMessage(res, "INTERNAL_SERVER_ERROR");
+      return serverMessage(res, "ERROR_SENDING_MESSAGE");
     }
   },
   getChatMessage: async (req, res) => {
@@ -118,350 +123,137 @@ module.exports = {
         createdAt: msg.created_at,
       }));
 
-      return serverMessage(res, "SUCCESS", formattedHistory);
+      return serverMessage(res, "MESSAGES_RETRIEVED", formattedHistory);
     } catch (err) {
       console.error(
         "Erreur lors de la récupération de l'historique du chat:",
         err.message
       );
-      return serverMessage(res, "INTERNAL_SERVER_ERROR");
+      return serverMessage(res, "ERROR_RETRIEVING_MESSAGES");
     }
   },
-  workOut: async (req, res) => {
-    const userId = req.user.id;
-
+  // Obtenir des suggestions de motivation
+  getMotivation: async (req, res) => {
     try {
-      const user = await Users.findByPk(userId, {
-        include: [
-          {
-            model: Profiles,
-            as: "profile",
-            attributes: ["fname", "lname", "bio"],
-          },
-          {
-            model: Subscriptions,
-            as: "subscriptions",
-            where: { is_active: true },
-            required: false,
-            include: [
-              {
-                model: Plans,
-                as: "plan",
-                attributes: ["name"],
-              },
-            ],
-          },
-        ],
-      });
+      const userId = req.user.id;
+      const userData = await getUserData(userId, req.app.get("models"));
 
-      if (!user) {
-        return res.status(404).json({
-          error: true,
-          status: 404,
-          message: "PROFILE_NOT_FOUND",
-          data: {},
-        });
+      const motivation = await generateAthleteSuggestions(
+        userData,
+        "motivation"
+      );
+
+      if (motivation.error) {
+        console.log({ error: motivation.error });
+
+        return serverMessage(res, "ERROR_GETTING_MOTIVATION");
       }
 
-      const recentActivities = await Activities.findAll({
-        where: { user_id: userId },
-        order: [["date", "DESC"]],
-        limit: 5,
-      });
-
-      const userContext = {
-        profile: {
-          firstName: user.profile?.fname,
-          lastName: user.profile?.lname,
-          bio: user.profile?.bio,
-          plan: user.subscriptions?.[0]?.plan?.name || "FREE",
-        },
-        activities: recentActivities.map((act) => ({
-          title: act.title,
-          type: act.type,
-          distance: act.distance,
-          duration: act.duration,
-          date: act.date,
-        })),
-      };
-
-      const aiPrompt = `
-Tu es un coach de course et fitness.  
-En te basant sur ces données utilisateur :  
-${JSON.stringify(userContext, null, 2)}  
-
-Suggère **3 à 5 workouts personnalisés** au format JSON suivant :  
-- title : nom court en français
-- description : distance/intensité brève
-- icon : mot-clé pour l'icône ("footsteps", "heart", "dumbbell", etc.)
-Réponds UNIQUEMENT avec le JSON valide, sans texte autour.
-        `;
-
-      const aiResponse = await askAI(aiPrompt, userContext);
-
-      let workouts;
-      try {
-        workouts = JSON.parse(aiResponse);
-      } catch (err) {
-        console.error("Erreur parsing JSON IA:", err.message);
-        return res.status(500).json({
-          error: true,
-          status: 500,
-          message: "INTERNAL_SERVER_ERROR",
-          data: { error: "Réponse IA invalide." },
-        });
+      if (!motivation) {
+        return serverMessage(res, "NO_MOTIVATION_FOUND");
       }
-
-      const standardizedWorkouts = Array.isArray(workouts)
-        ? workouts
-        : [workouts];
-
-      for (const workout of standardizedWorkouts) {
-        await ChatMessages.create({
-          user_id: userId,
-          message_content: `${workout.title}: ${workout.description}`,
-          sender: "bot",
-          message_type: "recommandation",
-          metadata: {
-            icon: workout.icon,
-            originalData: workout,
-          },
-        });
-      }
-
-      return res.status(200).json({
-        error: false,
-        status: 200,
-        message: "SUCCESS",
-        data: standardizedWorkouts.map((workout) => ({
-          id: generateId(),
-          type: "recommandation",
-          message: `${workout.title}: ${workout.description}`,
-          sender: "bot",
-          metadata: {
-            icon: workout.icon,
-            originalData: workout,
-          },
-        })),
-      });
-    } catch (err) {
-      console.error("Erreur IA coach workouts:", err.message);
-      return res.status(500).json({
-        error: true,
-        status: 500,
-        message: "INTERNAL_SERVER_ERROR",
-        data: { error: "Erreur interne du coach IA." },
-      });
+      return serverMessage(res, "SUCCESS", motivation);
+    } catch (error) {
+      console.error("Erreur contrôleur motivation:", error);
+      return serverMessage(res, "ERROR_GETTING_MOTIVATION");
     }
   },
 
-  runningPlan: async (req, res) => {
-    const { goal, level } = req.body;
-    const userId = req.user.id;
-
-    if (!goal || !level) {
-      return res.status(400).json({
-        error: true,
-        status: 400,
-        message: "BAD_REQUEST",
-        data: { error: "Le but et le niveau sont requis." },
-      });
-    }
-
+  // Obtenir des suggestions d'entraînement
+  getWorkoutSuggestions: async (req, res) => {
     try {
-      const user = await Users.findByPk(userId, {
-        include: [{ model: Profiles, as: "profile", attributes: ["fname"] }],
-      });
+      const userId = req.user.id;
+      const userData = await getUserData(userId, req.app.get("models"));
 
-      const aiPrompt = `
-        Tu es un coach de course expert.
-        Crée un plan de course hebdomadaire (7 jours) pour un utilisateur avec les caractéristiques suivantes :
-        - Nom: ${user.profile?.fname || "Utilisateur"}
-        - Objectif: ${goal}
-        - Niveau: ${level}
+      const workouts = await generateAthleteSuggestions(userData, "workout");
 
-        Le plan doit inclure une variété de séances : sorties longues, fractionnés, courses de récupération et jours de repos.
-
-        Réponds UNIQUEMENT avec un objet JSON valide contenant une clé "weekly_plan".
-        "weekly_plan" doit être un tableau de 7 objets, un pour chaque jour.
-        Chaque objet doit avoir les champs suivants :
-        - day: (e.g., "Lundi")
-        - title: (e.g., "Course de récupération", "Fractionné", "Repos")
-        - description: (e.g., "30 min à allure lente", "2x10 min à allure 10km", "Étirements légers")
-        - icon: (e.g., "footsteps", "heart", "dumbbell", "rest")
-        `;
-
-      const aiResponse = await askAI(aiPrompt, {});
-
-      let plan;
-      try {
-        plan = JSON.parse(aiResponse);
-      } catch (err) {
-        console.error("Erreur parsing JSON IA pour le plan:", err.message);
-        return res.status(500).json({
-          error: true,
-          status: 500,
-          message: "INVALID_AI_RESPONSE",
-          data: { error: "Réponse IA invalide." },
-        });
+      if (workouts.error) {
+        res.status(500).json({ error: workouts.error });
+        return serverMessage(res, "ERROR_GETTING_WORKOUT");
       }
 
-      const weeklyPlan = Array.isArray(plan.weekly_plan)
-        ? plan.weekly_plan
-        : [];
-
-      for (const dayPlan of weeklyPlan) {
-        await ChatMessages.create({
-          user_id: userId,
-          message_content: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
-          sender: "bot",
-          message_type: "advices",
-          metadata: {
-            icon: dayPlan.icon,
-            day: dayPlan.day,
-          },
-        });
+      if (!workouts || workouts.lenght === 0) {
+        return serverMessage(res, "NO_WORKOUTS_FOUND");
       }
 
-      return res.status(200).json({
-        error: false,
-        status: 200,
-        message: "SUCCESS",
-        data: weeklyPlan.map((dayPlan) => ({
-          id: generateId(),
-          type: "advices",
-          message: `${dayPlan.day} - ${dayPlan.title}: ${dayPlan.description}`,
-          sender: "bot",
-          metadata: {
-            icon: dayPlan.icon,
-            day: dayPlan.day,
-          },
-        })),
-      });
-    } catch (err) {
-      console.error("Erreur IA coach running plan:", err.message);
-      return res.status(500).json({
-        error: true,
-        status: 500,
-        message: "INTERNAL_SERVER_ERROR",
-        data: { error: "Erreur interne du coach IA." },
-      });
+      return serverMessage(res, "SUCCESS", workouts);
+    } catch (error) {
+      console.error("Erreur contrôleur workouts:", error.message);
+      return serverMessage(res, "ERROR_GETTING_WORKOUT");
     }
   },
-  recommandation: async (req, res) => {
-    const userId = req.user.id;
 
+  // Obtenir des plans d'entraînement
+  getTrainingPlans: async (req, res) => {
     try {
-      const user = await Users.findByPk(userId, {
-        include: [
-          {
-            model: Profiles,
-            as: "profile",
-            attributes: ["fname", "lname", "bio"],
-          },
-          {
-            model: Subscriptions,
-            as: "subscriptions",
-            where: { is_active: true },
-            required: false,
-            include: [{ model: Plans, as: "plan", attributes: ["name"] }],
-          },
-        ],
-      });
+      const userId = req.user.id;
+      const userData = await getUserData(userId, req.app.get("models"));
 
-      const recentActivities = await Activities.findAll({
-        where: { user_id: userId },
-        order: [["date", "DESC"]],
-        limit: 5,
-      });
+      const plans = await generateAthleteSuggestions(userData, "plan");
 
-      const userContext = {
-        profile: {
-          firstName: user.profile?.fname,
-          lastName: user.profile?.lname,
-          bio: user.profile?.bio,
-          plan: user.subscriptions?.[0]?.plan?.name || "FREE",
-        },
-        activities: recentActivities.map((act) => ({
-          title: act.title,
-          type: act.type,
-          distance: act.distance,
-          duration: act.duration,
-          date: act.date,
-        })),
-      };
-
-      const aiPrompt = `
-        Tu es un coach de fitness et de bien-être holistique.
-        En te basant sur le profil et les activités récentes de l'utilisateur suivant:
-        ${JSON.stringify(userContext, null, 2)}
-
-        Génère 3 à 5 recommandations personnalisées et actionnables.
-        Les recommandations peuvent porter sur la nutrition, la récupération, l'équipement, la motivation, ou d'autres aspects pertinents.
-
-        Réponds UNIQUEMENT avec un objet JSON valide contenant une clé "recommendations".
-        "recommendations" doit être un tableau d'objets.
-        Chaque objet doit avoir les champs suivants :
-        - title: Titre court et accrocheur
-        - description: Conseil détaillé (2-3 phrases)
-        - category: (e.g., "Nutrition", "Récupération", "Équipement", "Motivation")
-        `;
-
-      const aiResponse = await askAI(aiPrompt, userContext);
-
-      let recommendations;
-      try {
-        recommendations = JSON.parse(aiResponse);
-      } catch (err) {
-        console.error(
-          "Erreur parsing JSON IA pour les recommandations:",
-          err.message
-        );
-        return res.status(500).json({
-          error: true,
-          status: 500,
-          message: "Réponse IA invalide.",
-        });
+      if (plans.error) {
+        return serverMessage(res, "ERROR_GETTING_TRAINING_PLANT");
       }
 
-      const recs = Array.isArray(recommendations.recommendations)
-        ? recommendations.recommendations
-        : [];
-
-      for (const rec of recs) {
-        await db.ChatMessages.create({
-          user_id: userId,
-          message_content: `${rec.title} (${rec.category}): ${rec.description}`,
-          sender: "bot",
-          message_type: "recommandation",
-          metadata: {
-            category: rec.category,
-          },
-        });
+      if (!plans || plans.lenght === 0) {
+        return serverMessage(res, "NO_PLANTS_FOUND");
       }
 
-      return res.status(200).json({
-        error: false,
-        status: 200,
-        message: "SUCCESS",
-        data: recs.map((rec) => ({
-          id: generateId(),
-          type: "recommandation",
-          message: `${rec.title} (${rec.category}): ${rec.description}`,
-          sender: "bot",
-          metadata: {
-            category: rec.category,
-          },
-        })),
+      return serverMessage(res, "SUCCESS", plans);
+    } catch (error) {
+      console.error("Erreur contrôleur plans:", error.message);
+      return serverMessage(res, "ERROR_GETTING_TRAINING_PLANT");
+    }
+  },
+
+  // Obtenir des conseils nutritionnels
+  getNutritionTips: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const userData = await getUserData(userId, req.app.get("models"));
+
+      const nutrition = await generateAthleteSuggestions(userData, "nutrition");
+
+      if (nutrition.error) {
+        return serverMessage(res, "GETTING_NUTRITION_FAILED");
+      }
+
+      if (!nutrition) {
+        return serverMessage(res, "NO_NUTRITION_FOUND");
+      }
+
+      return serverMessage(res, "SUCCESS", nutrition);
+    } catch (error) {
+      console.error("Erreur contrôleur nutrition:", error.message);
+      return serverMessage(res, "GETTING_NUTRITION_FAILED");
+    }
+  },
+
+  // Obtenir toutes les suggestions
+  getAllSuggestions: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const userData = await getUserData(userId, req.app.get("models"));
+
+      const [motivation, workouts, plans, nutrition] = await Promise.all([
+        generateAthleteSuggestions(userData, "motivation"),
+        generateAthleteSuggestions(userData, "workout"),
+        generateAthleteSuggestions(userData, "plan"),
+        generateAthleteSuggestions(userData, "nutrition"),
+      ]);
+
+      if (!motivation && !workouts && !plans && !nutrition) {
+        return serverMessage(res, "NO_SUGGESTIONS_FOUND");
+      }
+      return serverMessage(res, "SUCCESS", {
+        motivation,
+        workouts,
+        plans,
+        nutrition,
       });
-    } catch (err) {
-      console.error("Erreur IA coach recommendations:", err.message);
-      return res.status(500).json({
-        error: true,
-        status: 500,
-        message: "INTERNAL_SERVER_ERROR",
-        data: { error: "Erreur interne du coach IA." },
-      });
+    } catch (error) {
+      console.error("Erreur contrôleur toutes suggestions:", error);
+      return serverMessage(res, "GETTTING_ALL_SUGGESTION_FAILED");
     }
   },
 };

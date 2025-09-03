@@ -2,6 +2,9 @@ const db = require("./src/models");
 const { Client } = require("pg");
 const config = require("./src/config");
 const seedPlans = require("./src/functions/components/seedPlan");
+const {
+  seedAchievements,
+} = require("./src/functions/components/seedAchievements");
 
 (async () => {
   try {
@@ -35,6 +38,7 @@ const seedPlans = require("./src/functions/components/seedPlan");
     await db.sequelize.sync({ force: false });
 
     await seedPlans();
+    await seedAchievements();
 
     console.log("Sequelize: Models synced to database.");
   } catch (error) {

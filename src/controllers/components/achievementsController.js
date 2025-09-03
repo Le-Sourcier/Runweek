@@ -1,5 +1,11 @@
 const Joi = require("joi");
-const { Achievement, User } = require("../../models");
+const { Op } = require("sequelize");
+const {
+  Achievement,
+  AchievementDefinition,
+  UserStats,
+} = require("../../models");
+const { serverMessage } = require("../../utils");
 
 // Validation schemas
 const unlockAchievementSchema = Joi.object({
@@ -12,43 +18,48 @@ module.exports = {
   getUserAchievements: async (req, res) => {
     try {
       const { category, earned } = req.query;
-      const filter = { userId: req.user.id };
+      const whereClause = { user_id: req.user.id };
 
       if (category && category !== "all") {
-        filter.category = category;
+        whereClause.category = category;
       }
 
-      let achievements = await Achievement.find(filter)
-        .sort({ earnedDate: -1 })
-        .lean();
+      // Récupérer les achievements de l'utilisateur
+      const userAchievements = await Achievement.findAll({
+        where: whereClause,
+        order: [["earnedDate", "DESC"]],
+        raw: true,
+      });
 
       // Récupérer tous les achievements disponibles
-      const availableAchievements = Achievement.getAvailableAchievements();
+      const availableAchievements = await AchievementDefinition.findAll({
+        where: { isActive: true },
+        raw: true,
+      });
 
       // Créer une liste complète avec les achievements non débloqués
-      const allAchievements = Object.entries(availableAchievements).map(
-        ([id, data]) => {
-          const userAchievement = achievements.find(
-            (a) => a.achievement_id === id
-          );
+      const allAchievements = availableAchievements.map((definition) => {
+        const userAchievement = userAchievements.find(
+          (a) => a.achievement_id === definition.id
+        );
 
-          if (userAchievement) {
-            return userAchievement;
-          } else {
-            return {
-              achievement_id: id,
-              title: data.title,
-              description: data.description,
-              icon: data.icon,
-              category: data.category,
-              points: data.points,
-              rarity: data.rarity,
-              earnedDate: null,
-              isLocked: true,
-            };
-          }
+        if (userAchievement) {
+          return userAchievement;
+        } else {
+          return {
+            achievement_id: definition.id,
+            title: definition.title,
+            description: definition.description,
+            icon: definition.icon,
+            category: definition.category,
+            points: definition.points,
+            rarity: definition.rarity,
+            earnedDate: null,
+            isLocked: true,
+            requirements: definition.requirements,
+          };
         }
-      );
+      });
 
       // Filtrer par statut si demandé
       let filteredAchievements = allAchievements;
@@ -58,17 +69,10 @@ module.exports = {
         filteredAchievements = allAchievements.filter((a) => !a.earnedDate);
       }
 
-      res.json({
-        error: false,
-        message: "Achievements récupérés avec succès",
-        data: filteredAchievements,
-      });
+      return serverMessage(res, "ACHIEVEMENTS_RETRIEVED", filteredAchievements);
     } catch (error) {
       console.error("Erreur lors de la récupération des achievements:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des achievements",
-      });
+      return serverMessage(res, "ACHIEVEMENTS_RETRIEVE_FAILED");
     }
   },
 
@@ -78,70 +82,58 @@ module.exports = {
       const { error, value } = unlockAchievementSchema.validate(req.body);
 
       if (error) {
-        return res.status(400).json({
-          error: true,
-          message: "Données invalides",
+        return serverMessage(res, "INVALID_DATA", {
           details: error.details[0].message,
         });
       }
 
       const { achievement_id, activityData } = value;
 
-      // Vérifier si l'achievement existe dans les achievements disponibles
-      const availableAchievements = Achievement.getAvailableAchievements();
-      const achievementData = availableAchievements[achievement_id];
+      // Vérifier si l'achievement existe dans les définitions
+      const achievementDefinition = await AchievementDefinition.findOne({
+        where: { id: achievement_id, isActive: true },
+      });
 
-      if (!achievementData) {
-        return res.status(404).json({
-          error: true,
-          message: "Achievement non trouvé",
-        });
+      if (!achievementDefinition) {
+        return serverMessage(res, "ACHIEVEMENT_NOT_FOUND");
       }
 
       // Vérifier si l'utilisateur a déjà cet achievement
       const existingAchievement = await Achievement.findOne({
-        userId: req.user.id,
-        achievement_id: achievement_id,
+        where: {
+          user_id: req.user.id,
+          achievement_id: achievement_id,
+        },
       });
 
       if (existingAchievement) {
-        return res.status(409).json({
-          error: true,
-          message: "Achievement déjà débloqué",
-        });
+        return serverMessage(res, "ACHIEVEMENT_ALREADY_UNLOCKED");
       }
 
       // Créer le nouvel achievement
-      const newAchievement = new Achievement({
-        userId: req.user.id,
+      const newAchievement = await Achievement.create({
+        user_id: req.user.id,
         achievement_id: achievement_id,
-        title: achievementData.title,
-        description: achievementData.description,
-        icon: achievementData.icon,
-        category: achievementData.category,
-        points: achievementData.points,
-        rarity: achievementData.rarity,
-        requirements: achievementData.requirements,
+        title: achievementDefinition.title,
+        description: achievementDefinition.description,
+        icon: achievementDefinition.icon,
+        category: achievementDefinition.category,
+        points: achievementDefinition.points,
+        rarity: achievementDefinition.rarity,
+        requirements: achievementDefinition.requirements,
+        earnedDate: new Date(),
       });
 
-      await newAchievement.save();
-
-      // Mettre à jour les points de l'utilisateur
-      await User.findByIdAndUpdate(req.user.id, {
-        $inc: { "stats.points": achievementData.points },
+      // Mettre à jour les points dans UserStats
+      await UserStats.increment("points", {
+        by: achievementDefinition.points,
+        where: { user_id: req.user.id },
       });
 
-      res.status(201).json({
-        error: false,
-        message: "Achievement débloqué avec succès",
-        data: newAchievement,
-      });
+      return serverMessage(res, "ACHIEVEMENT_UNLOCKED", newAchievement);
     } catch (error) {
       console.error("Erreur lors du déblocage de l'achievement:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors du déblocage de l'achievement",
-      });
+      return serverMessage(res, "ACHIEVEMENT_UNLOCK_FAILED");
     }
   },
 
@@ -150,20 +142,26 @@ module.exports = {
     try {
       const { userStats, activityData } = req.body;
 
-      const availableAchievements = Achievement.getAvailableAchievements();
-      const userAchievements = await Achievement.find({ userId: req.user.id });
-      const unlockedIds = userAchievements.map((a) => a.achievement_id);
+      // Récupérer toutes les définitions d'achievements
+      const availableAchievements = await AchievementDefinition.findAll({
+        where: { isActive: true },
+        raw: true,
+      });
 
+      const userAchievements = await Achievement.findAll({
+        where: { user_id: req.user.id },
+        raw: true,
+      });
+
+      const unlockedIds = userAchievements.map((a) => a.achievement_id);
       const newlyUnlocked = [];
 
       // Vérifier chaque achievement disponible
-      for (const [achievement_id, data] of Object.entries(
-        availableAchievements
-      )) {
-        if (unlockedIds.includes(achievement_id)) continue;
+      for (const definition of availableAchievements) {
+        if (unlockedIds.includes(definition.id)) continue;
 
         let shouldUnlock = false;
-        const requirements = data.requirements;
+        const requirements = definition.requirements;
 
         // Logique de vérification des requirements
         if (
@@ -194,40 +192,41 @@ module.exports = {
           shouldUnlock = true;
         }
 
+        // Ajoutez d'autres conditions selon vos requirements
+
         if (shouldUnlock) {
-          const newAchievement = new Achievement({
-            userId: req.user.id,
-            achievement_id: achievement_id,
-            title: data.title,
-            description: data.description,
-            icon: data.icon,
-            category: data.category,
-            points: data.points,
-            rarity: data.rarity,
-            requirements: data.requirements,
+          const newAchievement = await Achievement.create({
+            user_id: req.user.id,
+            achievement_id: definition.id,
+            title: definition.title,
+            description: definition.description,
+            icon: definition.icon,
+            category: definition.category,
+            points: definition.points,
+            rarity: definition.rarity,
+            requirements: definition.requirements,
+            earnedDate: new Date(),
           });
 
-          await newAchievement.save();
           newlyUnlocked.push(newAchievement);
 
-          // Mettre à jour les points
-          await User.findByIdAndUpdate(req.user.id, {
-            $inc: { "stats.points": data.points },
+          // Mettre à jour les points dans UserStats
+          await UserStats.increment("points", {
+            by: definition.points,
+            where: { user_id: req.user.id },
           });
         }
       }
 
-      res.json({
-        error: false,
-        message: `${newlyUnlocked.length} nouveaux achievements débloqués`,
-        data: newlyUnlocked,
-      });
+      const data = {
+        count: newlyUnlocked.length,
+        newlyUnlocked,
+      };
+
+      return serverMessage(res, "ACHIEVEMENTS_CHECKED", data);
     } catch (error) {
       console.error("Erreur lors de la vérification des achievements:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la vérification des achievements",
-      });
+      return serverMessage(res, "ACHIEVEMENTS_CHECK_FAILED");
     }
   },
 
@@ -235,84 +234,98 @@ module.exports = {
   getAchievementStats: async (req, res) => {
     try {
       const userId = req.user.id;
-      const availableAchievements = Achievement.getAvailableAchievements();
-      const totalAvailable = Object.keys(availableAchievements).length;
 
-      const stats = await Achievement.aggregate([
-        { $match: { userId: userId } },
-        {
-          $group: {
-            id: null,
-            totalEarned: { $sum: 1 },
-            totalPoints: { $sum: "$points" },
-            categoriesEarned: { $addToSet: "$category" },
-            raritiesEarned: { $addToSet: "$rarity" },
-            recentAchievements: {
-              $push: {
-                $cond: [
-                  {
-                    $gte: [
-                      "$earnedDate",
-                      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-                    ],
-                  },
-                  "$$ROOT",
-                  null,
-                ],
-              },
-            },
+      // Récupérer le nombre total d'achievements disponibles
+      const totalAvailable = await AchievementDefinition.count({
+        where: { isActive: true },
+      });
+
+      // Récupérer les statistiques de l'utilisateur
+      const userStats = await Achievement.findAll({
+        where: { user_id: userId },
+        attributes: [
+          [
+            Achievement.sequelize.fn("COUNT", Achievement.sequelize.col("id")),
+            "totalEarned",
+          ],
+          [
+            Achievement.sequelize.fn(
+              "SUM",
+              Achievement.sequelize.col("points")
+            ),
+            "totalPoints",
+          ],
+        ],
+        raw: true,
+      });
+
+      // Récupérer les catégories et rarités uniques
+      const categories = await Achievement.findAll({
+        where: { user_id: userId },
+        attributes: ["category"],
+        group: ["category"],
+        raw: true,
+      });
+
+      const rarities = await Achievement.findAll({
+        where: { user_id: userId },
+        attributes: ["rarity"],
+        group: ["rarity"],
+        raw: true,
+      });
+
+      // Récupérer les achievements récents (7 derniers jours)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentAchievements = await Achievement.findAll({
+        where: {
+          user_id: userId,
+          earnedDate: {
+            [Op.gte]: sevenDaysAgo,
           },
         },
-      ]);
+        order: [["earnedDate", "DESC"]],
+        raw: true,
+      });
 
-      const result = stats[0] || {
-        totalEarned: 0,
-        totalPoints: 0,
-        categoriesEarned: [],
-        raritiesEarned: [],
-        recentAchievements: [],
+      const result = {
+        totalEarned: parseInt(userStats[0]?.totalEarned) || 0,
+        totalPoints: parseInt(userStats[0]?.totalPoints) || 0,
+        categoriesEarned: categories.map((c) => c.category),
+        raritiesEarned: rarities.map((r) => r.rarity),
+        recentAchievements: recentAchievements,
+        totalAvailable: totalAvailable,
+        completionRate:
+          totalAvailable > 0
+            ? (parseInt(userStats[0]?.totalEarned) || 0 / totalAvailable) * 100
+            : 0,
       };
 
-      result.totalAvailable = totalAvailable;
-      result.completionRate =
-        totalAvailable > 0 ? (result.totalEarned / totalAvailable) * 100 : 0;
-      result.recentAchievements = result.recentAchievements.filter(
-        (a) => a !== null
-      );
-
-      res.json({
-        error: false,
-        message: "Statistiques récupérées avec succès",
-        data: result,
-      });
+      return serverMessage(res, "ACHIEVEMENT_STATS_RETRIEVED", result);
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques:", error);
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des statistiques",
-      });
+      return serverMessage(res, "ACHIEVEMENT_STATS_RETRIEVE_FAILED");
     }
   },
 
   // GET /api/achievements/available - Récupérer tous les achievements disponibles
   getAvailableAchievements: async (req, res) => {
     try {
-      const availableAchievements = Achievement.getAvailableAchievements();
-
-      res.json({
-        error: false,
-        message: "Achievements disponibles récupérés avec succès",
-        data: availableAchievements,
+      const availableAchievements = await AchievementDefinition.findAll({
+        where: { isActive: true },
+        raw: true,
       });
+
+      return serverMessage(
+        res,
+        "AVAILABLE_ACHIEVEMENTS_RETRIEVED",
+        availableAchievements
+      );
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des achievements disponibles:",
         error
       );
-      res.status(500).json({
-        error: true,
-        message: "Erreur lors de la récupération des achievements disponibles",
-      });
+      return serverMessage(res, "AVAILABLE_ACHIEVEMENTS_RETRIEVE_FAILED");
     }
   },
 };

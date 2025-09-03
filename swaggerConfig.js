@@ -22,7 +22,7 @@ const options = {
             ? `${process.env.APP_URL}`
             : // : `http://localhost:${process.env.PORT || 3016}`,
 
-              "https://abf1cadca4c3.ngrok-free.app/",
+              "https://0a5033df44c5.ngrok-free.app/",
         description: `${
           process.env.APP_URL === "production" ? "Production" : "Development"
         }  server`,
