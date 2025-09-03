@@ -22,7 +22,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   const { isAuthenticated } = useUserContext();
 
   useEffect(() => {
-    if (isAuthenticated) navigateWithParams(ROUTES.HOME);
+    if (isAuthenticated) navigateWithParams(ROUTES.WELCOME);
   }, [isAuthenticated]);
 
   const authLayoutContent = (

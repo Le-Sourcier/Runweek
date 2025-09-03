@@ -23,7 +23,7 @@ export const defineHeaders = (options: RequestInit, isSecure: boolean): HeadersI
 
   // Ajouter les headers communs
   Object.entries(commonHeaders).forEach(([key, value]) => {
-    headers.set(key, value);
+    headers.set(key, value as string);
   });
 
   if (isSecure) {
@@ -93,6 +93,7 @@ const apiFetch = async <T = never>(
             // Récupération d'un nouveau token
             const refreshResponse = await fetch(`${baseURL}${ApiUrl.REFRESH}`, {
               method: "POST",
+              // @ts-ignore
               headers: commonHeaders,
               body: JSON.stringify({ refreshToken }),
             });
