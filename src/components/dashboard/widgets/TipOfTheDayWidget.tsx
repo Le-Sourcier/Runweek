@@ -1,6 +1,7 @@
-// src/components/dashboard/widgets/TipOfTheDayWidget.tsx
 import React, { useState, useEffect } from 'react';
 import { Lightbulb } from 'lucide-react';
+import Card from '../../ui/Card';
+import MotivationOfTheDayWidget from './MotivationOfTheDayWidget';
 
 const tips = [
   "N'oubliez pas de vous hydrater tout au long de la journée !",
@@ -20,12 +21,17 @@ const TipOfTheDayWidget: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-1"> {/* Reduced padding as Card already has it */}
-      <h4 className="text-md font-semibold text-card-foreground mb-3">Conseil du Jour</h4>
-      <div className="flex items-start">
-        <Lightbulb size={20} className="text-yellow-500 dark:text-yellow-400 mr-3 mt-1 flex-shrink-0" />
-        <p className="text-sm text-card-foreground italic">{tip}</p>
-      </div>
+    <div className='mb-8'>
+      <Card className='mb-5'>
+        <div className="p-1">
+          <h4 className="text-md font-semibold text-card-foreground mb-3">Conseil du Jour</h4>
+          <div className="flex items-start">
+            <Lightbulb size={20} className="text-yellow-500 dark:text-yellow-400 mr-3 mt-1 flex-shrink-0" />
+            <p className="text-sm text-card-foreground italic">{tip}</p>
+          </div>
+        </div>
+      </Card>
+      <MotivationOfTheDayWidget />
     </div>
   );
 };

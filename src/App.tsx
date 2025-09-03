@@ -3,7 +3,7 @@ import React from "react";
 
 // Layout and Page Components
 import Layout from "./components/layout/Layout";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/dashboard/Dashboard";
 import Statistics from "./pages/Statistics";
 import Coach from "./pages/Coach";
 import Calendar from "./pages/Calendar";
