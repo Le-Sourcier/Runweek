@@ -16,7 +16,7 @@ import {
 } from "lucide-react"; // Added PlusCircle, Sunrise, MessageSquare
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useState } from "react"; // Added useState for modal
+import { useEffect, useState } from "react"; // Added useState for modal
 import { defaultDashboardWidgetsConfig } from "../providers/UserProvider"; // Added default config
 import WidgetManagementModal from "../components/dashboard/WidgetManagementModal"; // Added modal component
 import ProgressBar from "../components/ui/ProgressBar"; // Added ProgressBar for Goal Summary
@@ -26,10 +26,21 @@ import WeeklySummaryWidget from "../components/dashboard/widgets/WeeklySummaryWi
 import TipOfTheDayWidget from "../components/dashboard/widgets/TipOfTheDayWidget"; // Added
 import HeartRateTrendWidget from "../components/dashboard/widgets/HeartRateTrendWidget"; // Added
 import MotivationOfTheDayWidget from "../components/dashboard/widgets/MotivationOfTheDayWidget";
+import { useAchievementsStore } from "../stores/achievements";
+import { getBaseMessage } from "../utils/error-handler";
+import { useLanguage } from "../providers/LanguageProvider";
 
 export default function Dashboard() {
   const { user, updateUserPreferences } = useUserContext(); // Destructure updateUserPreferences
   const { processedPRs: prs } = usePRs();
+  const { achievements } = useAchievementsStore();
+  const { currentLanguage: language } = useLanguage();
+
+  const recentAchievements = achievements.filter(_ => !_.isLocked).slice(0, 3);
+
+  useEffect(() => {
+    useAchievementsStore.getState().getUserAchievements();
+  }, []);
 
   const [isWidgetModalOpen, setIsWidgetModalOpen] = useState(false);
 
@@ -89,20 +100,6 @@ export default function Dashboard() {
       time: "Dans 2 jours",
       distance: "5.0 km",
       duration: "45m",
-    },
-  ];
-
-  // Mock data for recent achievements
-  const recentAchievements = [
-    {
-      title: "Nouveau record de distance",
-      description: "15km en une séance",
-      time: "Il y a 2 jours",
-    },
-    {
-      title: "Objectif hebdomadaire atteint",
-      description: "4 entraînements cette semaine",
-      time: "Hier",
     },
   ];
 
@@ -329,32 +326,51 @@ export default function Dashboard() {
           <Trophy size={14} />
         </Link>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {recentAchievements.map((achievement, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700"
-          >
-            <div className="h-10 w-10 bg-card-dark rounded-full flex items-center justify-center">
-              <Trophy className="text-primary" size={20} />
-            </div>
-            <div>
-              <h4 className="font-medium text-card-foreground">
-                {achievement.title}
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                {achievement.description}
-              </p>
-              <p className="text-xs text-muted-foreground/80 mt-1">
-                {achievement.time}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      {
+        recentAchievements.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recentAchievements.map((achievement, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="achievement-card bg-white dark:bg-gray-800 border dark:border-gray-700"
+              >
+                <div className="h-10 w-10 bg-card-dark rounded-full flex items-center justify-center">
+                  <Trophy className="text-primary" size={20} />
+                </div>
+                <div>
+                  <h4 className="font-medium text-card-foreground">
+                    {getBaseMessage(achievement.title, language)}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {getBaseMessage(achievement.description, language)}
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 mt-1">
+                    {/* {async () => await parseDate(achievement.earnedDate!)} */}
+                    {new Date(achievement.earnedDate!).toLocaleDateString(
+                      language,
+                      { month: "long", day: "numeric", year: "numeric" }
+                    )}
+                  </p>
+                </div>
+              </motion.div>
+            ))}</div>
+        ) : (
+          <div className="text-center py-4">
+            <Trophy size={24} className="mx-auto text-muted-foreground mb-2" />
+            <p className="text-muted-foreground mb-3">
+              Aucune réalisation récente pour le moment.
+            </p>
+            <Link
+              to="/achievements"
+              className="btn btn-outline dark:hover:bg-gray-700 dark:border-gray-600 btn-sm"
+            >
+              Voir les réalisations
+            </Link>
+          </div>
+        )}
     </div>
   );
 

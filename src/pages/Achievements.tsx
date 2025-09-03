@@ -258,7 +258,7 @@ export const Achievements: FC = () => {
                   <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                     Earned on{" "}
                     {new Date(achievement.earnedDate).toLocaleDateString(
-                      "en-US",
+                      language,
                       { month: "long", day: "numeric", year: "numeric" }
                     )}
                   </p>

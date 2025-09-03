@@ -1,23 +1,33 @@
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
+import 'dayjs/locale/en';
 import relativeTime from "dayjs/plugin/relativeTime";
+import { Language } from '../types/message';
 
 dayjs.extend(relativeTime);
-dayjs.locale('fr');
 
-export const parseDate = (date: string, format: string = 'DD MMMM YYYY à HH:mm'): string => {
-	const parsedDate = dayjs(date);
+
+const loadLocale = async (locale: Language) => {
+	await import(`dayjs/locale/${locale}`);
+	dayjs.locale(locale);
+};
+
+export const parseDate = async (date: string, format: string = 'DD MMMM YYYY à HH:mm', locale: Language = 'fr'): Promise<string> => {
+	await loadLocale(locale);
+	const parsedDate = dayjs(date).locale(locale);
 
 	if (parsedDate.isSame(dayjs(), 'day')) {
-		return `Aujourd'hui à ${parsedDate.format('HH:mm')}`;
+		const todayString = locale === 'fr' ? 'Aujourd\'hui à' : 'Today at';
+		return `${todayString} ${parsedDate.format('HH:mm')}`;
 	}
 	if (parsedDate.isSame(dayjs().subtract(1, 'day'), 'day')) {
-		return `Hier à ${parsedDate.format('HH:mm')}`;
+		const yesterdayString = locale === 'fr' ? 'Hier à' : 'Yesterday at';
+		return `${yesterdayString} ${parsedDate.format('HH:mm')}`;
 	}
 	return parsedDate.format(format);
 }
 
-export const formatTimeAgo = (timestamp: string): string => {
-	const parsedDate = dayjs(timestamp);
-	return parsedDate.fromNow();
+export const formatTimeAgo = async (timestamp: string, locale: Language = 'fr'): Promise<string> => {
+	await loadLocale(locale);
+	return dayjs(timestamp).locale(locale).fromNow();
 }
