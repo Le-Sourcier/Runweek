@@ -25,6 +25,7 @@ import Card from "../components/ui/Card";
 import WeeklySummaryWidget from "../components/dashboard/widgets/WeeklySummaryWidget"; // Added
 import TipOfTheDayWidget from "../components/dashboard/widgets/TipOfTheDayWidget"; // Added
 import HeartRateTrendWidget from "../components/dashboard/widgets/HeartRateTrendWidget"; // Added
+import MotivationOfTheDayWidget from "../components/dashboard/widgets/MotivationOfTheDayWidget";
 
 export default function Dashboard() {
   const { user, updateUserPreferences } = useUserContext(); // Destructure updateUserPreferences
@@ -230,7 +231,7 @@ export default function Dashboard() {
           Voir tout
         </Link>
       }
-      // className="mb-8" // This was in the direct JSX before, now handled by the loop's wrapper.
+    // className="mb-8" // This was in the direct JSX before, now handled by the loop's wrapper.
     >
       {activeGoals.length > 0 ? (
         <div className="space-y-4">
@@ -446,9 +447,13 @@ export default function Dashboard() {
 
   const renderTipOfTheDayWidget = () => (
     <Card className="mb-8">
-      {" "}
-      {/* Card provides padding and mb-8 for spacing */}
       <TipOfTheDayWidget />
+    </Card>
+  );
+
+  const renderMotivationOfTheDayWidget = () => (
+    <Card className="mb-8">
+      <MotivationOfTheDayWidget />
     </Card>
   );
 
@@ -458,7 +463,7 @@ export default function Dashboard() {
       {" "}
       {/* Removed space-y-6 */}
       {/* Dashboard Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
           Bonjour, {userName}!
         </h1>
@@ -471,14 +476,14 @@ export default function Dashboard() {
         </button>
       </div>
       {/* Dynamically Rendered Widgets in a Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {sortedVisibleWidgetIds.map((widgetId) => {
           let widgetContent = null;
           // @ts-ignore
           const widgetConfig = activeWidgetConfig[widgetId];
           const span = widgetConfig?.defaultSpan || 1;
           // md:col-span-1 is default, md:col-span-2 for full width on medium screens if grid is md:grid-cols-2
-          const colSpanClass = span === 2 ? "md:col-span-2" : "md:col-span-1";
+          const colSpanClass = span === 2 ? "lg:col-span-2" : "lg:col-span-1";
 
           switch (widgetId) {
             case "statsGrid":
@@ -506,6 +511,9 @@ export default function Dashboard() {
             case "tipOfTheDay":
               widgetContent = renderTipOfTheDayWidget();
               break;
+            case "motivationOfTheDay":
+              widgetContent = renderMotivationOfTheDayWidget();
+              break;
             // case "nutritionSummary":
             //   widgetContent = renderNutritionSummary();
             //   break;
@@ -526,23 +534,23 @@ export default function Dashboard() {
       {!user?.connectedDevices?.some(
         (device) => device.status === "connected"
       ) && (
-        <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold text-xl mb-2">
-                Connectez votre appareil Garmin
-              </h3>
-              <p className="text-white dark:opacity-90">
-                Suivez vos activités automatiquement et obtenez des analyses
-                détaillées
-              </p>
+          <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-semibold text-xl mb-2">
+                  Connectez votre appareil Garmin
+                </h3>
+                <p className="text-white dark:opacity-90">
+                  Suivez vos activités automatiquement et obtenez des analyses
+                  détaillées
+                </p>
+              </div>
+              <button className="px-6 py-2.5 bg-white dark:bg-gray-100 text-primary dark:text-primary-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-200 transition-colors font-medium">
+                Connecter
+              </button>
             </div>
-            <button className="px-6 py-2.5 bg-white dark:bg-gray-100 text-primary dark:text-primary-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-200 transition-colors font-medium">
-              Connecter
-            </button>
           </div>
-        </div>
-      )}
+        )}
       {/* Last Updated Time */}
       <div className="text-xs text-muted-foreground/80 dark:text-muted-foreground/60 mt-8 text-center">
         <span>Dernière mise à jour: 21:30</span>

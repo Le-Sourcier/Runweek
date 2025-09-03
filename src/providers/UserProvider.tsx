@@ -29,6 +29,7 @@ export const defaultDashboardWidgetsConfig = {
   recentPRs: { isVisible: true, order: 6, defaultSpan: 1 },
   weeklySummary: { isVisible: true, order: 7, defaultSpan: 1 },
   tipOfTheDay: { isVisible: true, order: 8, defaultSpan: 1 },
+  motivationOfTheDay: { isVisible: true, order: 9, defaultSpan: 1 },
 };
 
 export function UserProvider({ children }: { children: ReactNode }) {
@@ -127,7 +128,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     };
 
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   const login = async (props: UserCredentials) => {
@@ -143,29 +143,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       handleAuthSuccess(data);
 
-      showMessage(
-        message as MessageCode,
-        {
-          name: user?.fname ?? "",
-        },
-        {
-          language: "fr",
-        }
-      );
+      showMessage(message as MessageCode, { username: user?.fname ?? "" });
 
-      console.log(message);
     } catch (err) {
       const error = extractErrorMessage(err);
 
       setMessage(error.message);
 
-      showMessage(
-        error.message as MessageCode,
-        {},
-        {
-          language: "fr",
-        }
-      );
+      showMessage(error.message as MessageCode);
       console.error("Erreur lors de la connexion (message) :", error);
       throw error;
     } finally {

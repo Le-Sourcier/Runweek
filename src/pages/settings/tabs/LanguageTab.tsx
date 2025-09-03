@@ -11,10 +11,10 @@ import { Language } from "../../../types/message";
 export const LanguageTab: FC = () => {
 
   const { user, updateUserPreferences } = useUserContext();
-  const { setLanguage } = useLanguage();
+  const { setLanguage, currentLanguage } = useLanguage();
 
   const [languageForm, setLanguageForm] = useState({
-    language: user?.preferences?.language || 'fr',
+    language: user?.preferences?.language || currentLanguage || 'fr',
     region: user?.preferences?.region || 'FR',
     timezone: 'Europe/Paris',
     dateFormat: 'DD/MM/YYYY',
@@ -23,10 +23,12 @@ export const LanguageTab: FC = () => {
 
   // Initialize forms when user data changes
   useEffect(() => {
+    console.log("user.prefs:", user);
+    
     if (user) {
 
       setLanguageForm({
-        language: user.preferences?.language || 'fr',
+        language: user.preferences?.language || currentLanguage || 'fr',
         region: user.preferences?.region || 'FR',
         // @ts-ignore
         timezone: user.preferences?.timezone || 'Europe/Paris',

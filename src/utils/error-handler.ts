@@ -189,7 +189,21 @@ export const MESSAGE_MAPPINGS = {
     "ACHIEVEMENT_STATS_RETRIEVE_FAILED": "Failed to retrieve achievement statistics",
     "AVAILABLE_ACHIEVEMENTS_RETRIEVED": "Available achievements retrieved successfully",
     "AVAILABLE_ACHIEVEMENTS_RETRIEVE_FAILED": "Failed to retrieve available achievements",
-    "TOKEN_EXPIRED": "Your session token has expired"
+    "TOKEN_EXPIRED": "Your session token has expired",
+    "GETTTING_ALL_SUGGESTION_FAILED": "Failed to get all suggestions",
+    "GETTING_NUTRITION_FAILED": "Failed to get nutrition tips",
+    "ERROR_GETTING_TRAINING_PLANT": "Error getting training plan",
+    "ERROR_GETTING_WORKOUT": "Error getting workout suggestions",
+    "ERROR_GETTING_MOTIVATION": "Error getting motivation message",
+    "NO_SUGGESTIONS_FOUND": "No suggestions found",
+    "NO_PLANTS_FOUND": "No training plans found",
+    "NO_WORKOUTS_FOUND": "No workouts found",
+    "NO_MOTIVATION_FOUND": "No motivation message found",
+    "ERROR_SENDING_MESSAGE": "Error sending message",
+    "MESSAGE_SEND_SUCCESS": "Message sent successfully",
+    "MESSAGE_TEXT_REQUIRED": "Message text is required",
+    "MESSAGES_RETRIEVED": "Messages retrieved successfully",
+    "ERROR_RETRIEVING_MESSAGES": "Error retrieving messages"
 
   },
   "fr": {
@@ -379,7 +393,21 @@ export const MESSAGE_MAPPINGS = {
     "ACHIEVEMENT_STATS_RETRIEVE_FAILED": "Échec de la récupération des statistiques des achievements",
     "AVAILABLE_ACHIEVEMENTS_RETRIEVED": "Achievements disponibles récupérés avec succès",
     "AVAILABLE_ACHIEVEMENTS_RETRIEVE_FAILED": "Échec de la récupération des achievements disponibles",
-    "TOKEN_EXPIRED": "Le token de votre session a expiré"
+    "TOKEN_EXPIRED": "Le token de votre session a expiré",
+    "GETTTING_ALL_SUGGESTION_FAILED": "Échec de la récupération des suggestions",
+    "GETTING_NUTRITION_FAILED": "Échec de la récupération des conseils nutritionnels",
+    "ERROR_GETTING_TRAINING_PLANT": "Erreur lors de la récupération du plan d'entraînement",
+    "ERROR_GETTING_WORKOUT": "Erreur lors de la récupération des suggestions d'entraînement",
+    "ERROR_GETTING_MOTIVATION": "Erreur lors de la récupération du message de motivation",
+    "NO_SUGGESTIONS_FOUND": "Aucune suggestion trouvée",
+    "NO_PLANTS_FOUND": "Aucun plan d'entraînement trouvé",
+    "NO_WORKOUTS_FOUND": "Aucun entraînement trouvé",
+    "NO_MOTIVATION_FOUND": "Aucun message de motivation trouvé",
+    "ERROR_SENDING_MESSAGE": "Erreur lors de l'envoi du message",
+    "MESSAGE_SEND_SUCCESS": "Message envoyé avec succès",
+    "MESSAGE_TEXT_REQUIRED": "Le texte du message est requis",
+    "MESSAGES_RETRIEVED": "Messages récupérés avec succès",
+    "ERROR_RETRIEVING_MESSAGES": "Erreur lors de la récupération des messages"
 
   }
 };
