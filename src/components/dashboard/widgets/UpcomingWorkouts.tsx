@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../../hooks/useAppNavigation";
 import { Calendar } from "lucide-react";
@@ -7,8 +7,12 @@ import { useLanguage } from "../../../providers/LanguageProvider";
 import { useCalendarStore } from "../../../stores/CalendarStore";
 
 export const UpcomingWorkouts: FC = () => {
-  const { events } = useCalendarStore();
+  const { events, getEvents } = useCalendarStore();
   const { currentLanguage } = useLanguage();
+
+  console.log("events:", events);
+  
+  useEffect(() => { getEvents();}, []);
 
   return (
     <div className="chart-container mb-8">

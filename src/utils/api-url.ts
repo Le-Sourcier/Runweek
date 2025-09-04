@@ -81,6 +81,7 @@ export const ApiUrl = {
   GET_MONTH_STATS: "/statistics/monthly",
   GET_ACTIVITY_TYPE_STATS: "/statistics/activity-types",
   GET_PERSONAL_RECORDS_STATS: "/statistics/personal-records",
+  GET_HEART_RATE_STATS: "/statistics/heart-rate",
 
 
   /**

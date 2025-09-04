@@ -1,4 +1,4 @@
-import React from "react";
+import { FC, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -8,37 +8,27 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useStatisticStore } from "../../../stores/StatisticStore";
 
 // Mock data for heart rate trend - this should ideally be passed as a prop or fetched
-const heartRateData = [
-  { day: "Mar", value: 72 },
-  { day: "Mer", value: 74 },
-  { day: "Jeu", value: 71 },
-  { day: "Ven", value: 73 },
-  { day: "Sam", value: 70 },
-  { day: "Dim", value: 71 },
-  { day: "Lun", value: 72 },
-];
+// const heartRateData = [
+//   { day: "Mar", value: 72 },
+//   { day: "Mer", value: 74 },
+//   { day: "Jeu", value: 71 },
+//   { day: "Ven", value: 73 },
+//   { day: "Sam", value: 70 },
+//   { day: "Dim", value: 71 },
+//   { day: "Lun", value: 72 },
+// ];
 
-const HeartRateTrendWidget: React.FC = () => {
-  // const [isDark] = React.useState(() => {
-  //   // Initial value: check localStorage or fallback to system preference
-  //   const storedTheme = localStorage.getItem("theme");
-  //   if (storedTheme) return storedTheme === "dark";
+const HeartRateTrendWidget: FC = () => {
 
-  //   const prefersDark = window.matchMedia(
-  //     "(prefers-color-scheme: dark)"
-  //   ).matches;
-  //   return prefersDark;
-  // });
+  const { heartRateData, getHeartRateData } = useStatisticStore();
 
-  // React.useEffect(() => {
-  //   // Synchronize localStorage whenever isDark changes
-  //   localStorage.setItem("theme", isDark ? "dark" : "light");
+  useEffect(() => {
+    getHeartRateData();
+  }, []);
 
-  //   // Optionally, apply a class to <body> or <html> (useful for CSS theming)
-  //   document.documentElement.classList.toggle("dark", isDark);
-  // }, [isDark]);
 
   return (
     <div className="chart-container mb-8">

@@ -26,3 +26,5 @@ export interface RunTypeData {
   name: string;
   value: number;
 }
+
+export interface HeartRateData { day: string, value: number }
