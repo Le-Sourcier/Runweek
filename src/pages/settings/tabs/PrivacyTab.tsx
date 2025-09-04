@@ -333,7 +333,7 @@ export const PrivacyTab: FC = () => {
     </Card>
 
     {/* Profile Visibility */}
-    <Card title="Visibilité du profil" className="bg-card text-card-foreground border-border">
+    {/* <Card title="Visibilité du profil" className="bg-card text-card-foreground border-border">
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
@@ -402,7 +402,7 @@ export const PrivacyTab: FC = () => {
           />
         </div>
       </div>
-    </Card>
+    </Card> */}
 
     {/* Data Export & Deletion */}
     <Card title="Gestion des données" className="bg-card text-card-foreground border-border">
