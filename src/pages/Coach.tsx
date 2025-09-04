@@ -14,6 +14,7 @@ import {
   Activity,
   CheckCircle,
   Plus,
+  CalendarDaysIcon,
 } from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
@@ -46,36 +47,36 @@ const coachTips = [
 ];
 
 // Mock data for training plans
-const trainingPlans = [
-  {
-    id: "p1",
-    title: "5K Improvement Plan",
-    duration: "8 weeks",
-    level: "Intermediate",
-    description:
-      "Structured plan to help you improve your 5K time with a mix of speed work and endurance training.",
-  },
-  {
-    id: "p2",
-    title: "Half Marathon Build-Up",
-    duration: "12 weeks",
-    level: "Intermediate to Advanced",
-    description:
-      "Progressive plan to prepare you for a half marathon with long runs, tempo sessions, and recovery days.",
-  },
-  {
-    id: "p3",
-    title: "Recovery & Injury Prevention",
-    duration: "4 weeks",
-    level: "All Levels",
-    description:
-      "Focus on proper recovery techniques, strength training, and mobility work to prevent injuries.",
-  },
-];
+// const trainingPlans = [
+//   {
+//     id: "p1",
+//     title: "5K Improvement Plan",
+//     duration: "8 weeks",
+//     level: "Intermediate",
+//     description:
+//       "Structured plan to help you improve your 5K time with a mix of speed work and endurance training.",
+//   },
+//   {
+//     id: "p2",
+//     title: "Half Marathon Build-Up",
+//     duration: "12 weeks",
+//     level: "Intermediate to Advanced",
+//     description:
+//       "Progressive plan to prepare you for a half marathon with long runs, tempo sessions, and recovery days.",
+//   },
+//   {
+//     id: "p3",
+//     title: "Recovery & Injury Prevention",
+//     duration: "4 weeks",
+//     level: "All Levels",
+//     description:
+//       "Focus on proper recovery techniques, strength training, and mobility work to prevent injuries.",
+//   },
+// ];
 
 export default function Coach() {
 
-  const { messages, getMessages, sendMessage: sendChatMessageToStore } = chatStore();
+  const { messages, getMessages, trainingPlans, sendMessage: sendChatMessageToStore, getTrainingPlans } = chatStore();
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
   const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
   const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
@@ -90,6 +91,7 @@ export default function Coach() {
 
   useEffect(() => {
     loadMessages();
+    getTrainingPlans();
   }, []);
 
   const loadMessages = async () => {
@@ -387,38 +389,48 @@ export default function Coach() {
 
           {/* Training plans */}
           <Card title="Training Plans">
-            <div className="space-y-3">
-              {trainingPlans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className="p-3 border dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:shadow-sm transition-all"
-                >
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">
-                      {plan.title}
-                    </h4>
-                    <span className="bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300 px-2 py-0.5 text-xs rounded-full font-medium">
-                      {plan.duration}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                    {plan.description}
-                  </p>
-                  <button className="group mt-2 text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1">
-                    <Link
-                      to={`/training-plan/${plan.id}`}
-                      className="group-hover:underline"
+            {
+              trainingPlans.length > 0 ? (
+                <div className="space-y-3">
+                  {trainingPlans.map((plan) => (
+                    <div
+                      key={plan.id}
+                      className="p-3 border dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:shadow-sm transition-all"
                     >
-                      View plan
-                    </Link>
-                    <ArrowRight
-                      size={14}
-                      className="transition-transform group-hover:translate-x-1"
-                    />
-                  </button>
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100">
+                          {plan.title}
+                        </h4>
+                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300 px-2 py-0.5 text-xs rounded-full font-medium">
+                          {plan.duration}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-2">
+                        {plan.description}
+                      </p>
+                      <button className="group mt-2 text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1">
+                        <Link
+                          to={`/training-plan/${plan.id}`}
+                          className="group-hover:underline"
+                        >
+                          View plan
+                        </Link>
+                        <ArrowRight
+                          size={14}
+                          className="transition-transform group-hover:translate-x-1"
+                        />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="text-center py-4">
+                  <CalendarDaysIcon size={24} className="mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground mb-3">
+                    Aucune suggestion pour le moment.
+                  </p>
+                </div>)
+            }
           </Card>
         </div>
       </div>

@@ -11,6 +11,7 @@ export const ApiUrl = {
   GET_AI_COACH_MESSAGES: "/aicoach/history",
   SEND_AI_COACH_MESSAGES: "/aicoach",
   MOTIVATION: "/aicoach/motivation",
+  GET_AI_COACH_TRAINING_PLANS: "/aicoach/plans",
 
   LINK_GOOGLE_ACCOUNT: "/auth/link-google",
   UNLINK_GOOGLE_ACCOUNT: "/auth/google/unlink",
