@@ -27,15 +27,18 @@ import { useMessages } from "../hooks/useMessage";
 import { MessageCode } from "../types/message";
 import { extractErrorMessage } from "../utils/error-handler";
 import Spiner from "../components/ui/Spiner";
+import FormattedDate from "../components/ui/FormattedDate";
+import { useLanguage } from "../providers/LanguageProvider";
 
 export default function Profile() {
   const { user, updateUserProfile, updateUserPreferences, logout } = useUserContext(); // Added logout
   const { showMessage } = useMessages();
+  const { currentLanguage } = useLanguage();
 
   const [activeTab, setActiveTab] = useState("account");
   const [accountSubView, setAccountSubView] = useState<
     | "overview"
-    | "personalInfo"
+    // | "personalInfo"
     | "notifications"
     | "password"
     | "connectedDevices"
@@ -183,13 +186,13 @@ export default function Profile() {
   };
 
   const accountSettings = [
-    {
-      id: "s1",
-      name: "Personal Information",
-      description: "Update your name, email, and profile picture",
-      icon: <User size={18} />,
-      action: () => setAccountSubView("personalInfo"),
-    },
+    // {
+    //   id: "s1",
+    //   name: "Personal Information",
+    //   description: "Update your name, email, and profile picture",
+    //   icon: <User size={18} />,
+    //   action: () => setAccountSubView("personalInfo"),
+    // },
     {
       id: "s2",
       name: "Notifications",
@@ -361,7 +364,7 @@ export default function Profile() {
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Calendar size={18} />
                   <span>
-                    Joined : {parseDate(user.createdAt)}
+                    Joined : <FormattedDate date={user.createdAt} mode="full" locale={currentLanguage} />
                   </span>
                 </div>
               </div>
@@ -493,11 +496,11 @@ export default function Profile() {
                   onBack={() => setAccountSubView("overview")}
                 />
               )}
-              {accountSubView === "personalInfo" && (
+              {/* {accountSubView === "personalInfo" && (
                 <PersonalInfoSettings
                   onBack={() => setAccountSubView("overview")}
                 />
-              )}
+              )} */}
               {accountSubView === "notifications" && (
                 <NotificationSettings
                   onBack={() => setAccountSubView("overview")}

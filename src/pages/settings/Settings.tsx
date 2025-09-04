@@ -143,12 +143,12 @@ export default function Settings() {
       description: "Gérez votre abonnement et vos paiements",
       icon: <CreditCard size={20} />,
     },
-    {
-      id: "support",
-      title: "Aide",
-      description: "Obtenez de l'aide et contactez le support",
-      icon: <HelpCircle size={20} />,
-    },
+    // {
+    //   id: "support",
+    //   title: "Aide",
+    //   description: "Obtenez de l'aide et contactez le support",
+    //   icon: <HelpCircle size={20} />,
+    // },
   ];
 
   return (
