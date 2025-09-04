@@ -31,16 +31,17 @@ export const useStatisticStore = create<StatisticState>((set) => ({
 
   getMonthlyData: async () => {
     const { data } = await apiUtils.get<MonthlyData[]>(ApiUrl.GET_MONTH_STATS);
-    let monthlyData = data;
-    if (data.length === 0)
-      monthlyData = Array(4)
-        .fill(null)
-        .map((_, index) => ({
-          name: `Week ${++index}`,
-          distance: 0
-        }));
-
-    set({ monthlyData: monthlyData });
+    const emptyData = Array(4)
+      .fill(null)
+      .map((_, index) => ({
+        name: `Week ${++index}`,
+        distance: 0
+      } as MonthlyData));
+    if (data.length === 0) {
+      set({ monthlyData: emptyData });
+      return;
+    }
+    set({ monthlyData: data });
   },
 
   getPaceData: async () => {
@@ -49,13 +50,16 @@ export const useStatisticStore = create<StatisticState>((set) => ({
       .map((_, index) => ({
         name: `Week ${++index}`,
         value: 0
-      }));
+      } as PaceData));
 
     try {
       const { data } = await apiUtils.get<PaceData[]>(ApiUrl.GET_MONTH_STATS);
 
-      if (data.length === 0)
+      if (data.length === 0) {
         set({ paceData: emptyData });
+        return;
+      }
+
       set({ paceData: data });
     } catch (error) {
       set({ paceData: emptyData });
@@ -65,6 +69,16 @@ export const useStatisticStore = create<StatisticState>((set) => ({
 
   getRunTypeData: async () => {
     const { data } = await apiUtils.get<RunTypeData[]>(ApiUrl.GET_ACTIVITY_TYPE_STATS);
+
+    if (data.length === 0) {
+      set({
+        runTypeData: [{
+          name: "Aucun type de course à afficher",
+          value: 0
+        } as RunTypeData]
+      });
+      return;
+    }
     set({ runTypeData: data });
   },
 
@@ -73,7 +87,7 @@ export const useStatisticStore = create<StatisticState>((set) => ({
     const emptyData = Array(7).fill(null).map((_, index) => ({
       day: days[index],
       value: 0
-    }));;
+    } as HeartRateData));
     try {
       const { data } = await apiUtils.get<HeartRateData[]>(ApiUrl.GET_HEART_RATE_STATS);
       if (data.length === 0 || data.length < 7) {

@@ -217,7 +217,9 @@ export const MESSAGE_MAPPINGS = {
     "ERROR_GETTING_WEEKLY_DATA": "Error getting weekly data",
     "WEEKLY_DATA_RETRIEVED": "Weekly data retrieved successfully",
     "ERROR_GETTING_STATISTICS": "Error getting statistics",
-    "STATISTICS_RETRIEVED": "Statistics retrieved successfully"
+    "STATISTICS_RETRIEVED": "Statistics retrieved successfully",
+    "DATA_SHARING_PREFERENCES_UPDATED": "Data sharing preferences updated successfully",
+    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Failed to update data sharing preferences"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -434,7 +436,9 @@ export const MESSAGE_MAPPINGS = {
     "ERROR_GETTING_WEEKLY_DATA": "Erreur lors de la récupération des données hebdomadaires",
     "WEEKLY_DATA_RETRIEVED": "Données hebdomadaires récupérées avec succès",
     "ERROR_GETTING_STATISTICS": "Erreur lors de la récupération des statistiques",
-    "STATISTICS_RETRIEVED": "Statistiques récupérées avec succès"
+    "STATISTICS_RETRIEVED": "Statistiques récupérées avec succès",
+    "DATA_SHARING_PREFERENCES_UPDATED": "Préférences de partage de données mises à jour avec succès",
+    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Échec de la mise à jour des préférences de partage de données"
   }
 };
 

@@ -525,7 +525,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           preferences: { ...(prevUser.preferences || {}), ...preferences },
         };
         sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes       
-        toast.success("Preferences saved successfully!");
+        showMessage("DATA_SHARING_PREFERENCES_UPDATED");
         return updatedUser;
       });
     } catch (error) {

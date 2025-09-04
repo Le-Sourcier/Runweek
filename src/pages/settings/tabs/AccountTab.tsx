@@ -6,7 +6,6 @@ import { FC, useEffect, useState } from "react";
 import { useUserContext } from "../../../hooks/useUser";
 import Input from "../../../components/ui/Input";
 import { useMessages } from "../../../hooks/useMessage";
-import { MessageCode } from "../../../types/message";
 import { extractErrorMessage } from "../../../utils/error-handler";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";

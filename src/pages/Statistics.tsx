@@ -40,12 +40,11 @@ import { useStatisticStore } from "../stores/StatisticStore";
 // ];
 
 // const paceData = [
-//   { name: "Week 1", value: 5.8 },
-//   { name: "Week 2", value: 5.5 },
-//   { name: "Week 3", value: 5.4 },
-//   { name: "Week 4", value: 5.2 },
-// ];
-
+//   { name: "Week 1", value: 0 },
+//   { name: "Week 2", value: 0 },
+//   { name: "Week 3", value: 0 },
+//   { name: "Week 4", value: 0 },
+// ]
 // const runTypeData = [
 //   { name: "Long Run", value: 42 },
 //   { name: "Recovery", value: 25 },
@@ -142,7 +141,7 @@ export default function Statistics() {
       await getMonthlyData();
       await getRunTypeData();
       await getWeeklyData();
-      await getPaceData();
+      await getPaceData().then(() => console.log("paceData:", paceData));
     };
 
     loadData();
@@ -192,7 +191,9 @@ export default function Statistics() {
         }
         // Note: heartRate and elevation are numbers, distance is a number. Type is string.
 
+        // @ts-ignore
         if (valA < valB) return sortConfig.direction === "ascending" ? -1 : 1;
+        // @ts-ignore
         if (valA > valB) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
