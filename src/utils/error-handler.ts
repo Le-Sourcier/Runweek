@@ -203,8 +203,21 @@ export const MESSAGE_MAPPINGS = {
     "MESSAGE_SEND_SUCCESS": "Message sent successfully",
     "MESSAGE_TEXT_REQUIRED": "Message text is required",
     "MESSAGES_RETRIEVED": "Messages retrieved successfully",
-    "ERROR_RETRIEVING_MESSAGES": "Error retrieving messages"
-
+    "ERROR_RETRIEVING_MESSAGES": "Error retrieving messages",
+    "ERROR_GETTING_SLEEP_DATA": "Error getting sleep data",
+    "SLEEP_DATA_RETRIEVED": "Sleep data retrieved successfully",
+    "ERROR_GETTING_PERSONAL_RECORDS": "Error getting personal records",
+    "PERSONAL_RECORDS_RETRIEVED": "Personal records retrieved successfully",
+    "ERROR_GETTING_ACTIVITY_TYPE_DATA": "Error getting activity type data",
+    "ACTIVITY_TYPE_DATA_RETRIEVED": "Activity type data retrieved successfully",
+    "ERROR_GETTING_PACE_DATA": "Error getting pace data",
+    "PACE_DATA_RETRIEVED": "Pace data retrieved successfully",
+    "ERROR_GETTING_MONTHLY_DATA": "Error getting monthly data",
+    "MONTHLY_DATA_RETRIEVED": "Monthly data retrieved successfully",
+    "ERROR_GETTING_WEEKLY_DATA": "Error getting weekly data",
+    "WEEKLY_DATA_RETRIEVED": "Weekly data retrieved successfully",
+    "ERROR_GETTING_STATISTICS": "Error getting statistics",
+    "STATISTICS_RETRIEVED": "Statistics retrieved successfully"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -407,8 +420,21 @@ export const MESSAGE_MAPPINGS = {
     "MESSAGE_SEND_SUCCESS": "Message envoyé avec succès",
     "MESSAGE_TEXT_REQUIRED": "Le texte du message est requis",
     "MESSAGES_RETRIEVED": "Messages récupérés avec succès",
-    "ERROR_RETRIEVING_MESSAGES": "Erreur lors de la récupération des messages"
-
+    "ERROR_RETRIEVING_MESSAGES": "Erreur lors de la récupération des messages",
+    "ERROR_GETTING_SLEEP_DATA": "Erreur lors de la récupération des données de sommeil",
+    "SLEEP_DATA_RETRIEVED": "Données de sommeil récupérées avec succès",
+    "ERROR_GETTING_PERSONAL_RECORDS": "Erreur lors de la récupération des records personnels",
+    "PERSONAL_RECORDS_RETRIEVED": "Records personnels récupérés avec succès",
+    "ERROR_GETTING_ACTIVITY_TYPE_DATA": "Erreur lors de la récupération des données de type d'activité",
+    "ACTIVITY_TYPE_DATA_RETRIEVED": "Données de type d'activité récupérées avec succès",
+    "ERROR_GETTING_PACE_DATA": "Erreur lors de la récupération des données d'allure",
+    "PACE_DATA_RETRIEVED": "Données d'allure récupérées avec succès",
+    "ERROR_GETTING_MONTHLY_DATA": "Erreur lors de la récupération des données mensuelles",
+    "MONTHLY_DATA_RETRIEVED": "Données mensuelles récupérées avec succès",
+    "ERROR_GETTING_WEEKLY_DATA": "Erreur lors de la récupération des données hebdomadaires",
+    "WEEKLY_DATA_RETRIEVED": "Données hebdomadaires récupérées avec succès",
+    "ERROR_GETTING_STATISTICS": "Erreur lors de la récupération des statistiques",
+    "STATISTICS_RETRIEVED": "Statistiques récupérées avec succès"
   }
 };
 

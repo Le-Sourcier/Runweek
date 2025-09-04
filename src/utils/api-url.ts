@@ -74,6 +74,14 @@ export const ApiUrl = {
   EVENTS: "/calendar/events",
   DELETE_EVENT: "/calendar/events/:id",
 
+  GET_PACE_STATS: "/statistics/pace",
+  GET_SLEEP_STATS: "/statistics/sleep",
+  GET_DAILY_STATS: "/statistics/daily",
+  GET_WEEKLY_STATS: "/statistics/weekly",
+  GET_MONTH_STATS: "/statistics/monthly",
+  GET_ACTIVITY_TYPE_STATS: "/statistics/activity-types",
+  GET_PERSONAL_RECORDS_STATS: "/statistics/personal-records",
+
 
   /**
    * Fonction pour les url à paramètres sous la forme url/:id

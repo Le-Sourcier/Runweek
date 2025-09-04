@@ -11,7 +11,6 @@ import {
   ArrowDown,
   ChevronDown,
   TrendingDown, // For negative changes
-  Utensils, // For nutrition stats
 } from "lucide-react";
 import { useState, useEffect } from "react"; // Added useEffect
 import {
@@ -31,38 +30,28 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useStatisticStore } from "../stores/StatisticStore";
 
-// Mock data for charts
-const weeklyData = [
-  { day: "Mon", distance: 5.2, time: 28, pace: 5.4 },
-  { day: "Tue", distance: 0, time: 0, pace: 0 },
-  { day: "Wed", distance: 7.5, time: 42, pace: 5.6 },
-  { day: "Thu", distance: 3.2, time: 18, pace: 5.6 },
-  { day: "Fri", distance: 0, time: 0, pace: 0 },
-  { day: "Sat", distance: 8.4, time: 48, pace: 5.7 },
-  { day: "Sun", distance: 0, time: 0, pace: 0 },
-];
+// const monthlyData = [
+//   { name: "Week 1", distance: 22.5 },
+//   { name: "Week 2", distance: 18.7 },
+//   { name: "Week 3", distance: 25.9 },
+//   { name: "Week 4", distance: 23.4 },
+// ];
 
-const monthlyData = [
-  { name: "Week 1", distance: 22.5 },
-  { name: "Week 2", distance: 18.7 },
-  { name: "Week 3", distance: 25.9 },
-  { name: "Week 4", distance: 23.4 },
-];
+// const paceData = [
+//   { name: "Week 1", value: 5.8 },
+//   { name: "Week 2", value: 5.5 },
+//   { name: "Week 3", value: 5.4 },
+//   { name: "Week 4", value: 5.2 },
+// ];
 
-const paceData = [
-  { name: "Week 1", value: 5.8 },
-  { name: "Week 2", value: 5.5 },
-  { name: "Week 3", value: 5.4 },
-  { name: "Week 4", value: 5.2 },
-];
-
-const runTypeData = [
-  { name: "Long Run", value: 42 },
-  { name: "Recovery", value: 25 },
-  { name: "Tempo", value: 18 },
-  { name: "Intervals", value: 15 },
-];
+// const runTypeData = [
+//   { name: "Long Run", value: 42 },
+//   { name: "Recovery", value: 25 },
+//   { name: "Tempo", value: 18 },
+//   { name: "Intervals", value: 15 },
+// ];
 
 const COLORS = ["#3B82F6", "#10B981", "#F97316", "#8B5CF6"];
 
@@ -133,13 +122,31 @@ const initialActivities: Activity[] = [
 
 export default function Statistics() {
   const { user } = useUserContext();
-  const [timeframe, setTimeframe] = useState("weekly");
-  const [sortedActivities, setSortedActivities] =
-    useState<Activity[]>(initialActivities);
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof Activity;
-    direction: "ascending" | "descending";
-  } | null>(null);
+  const {
+    weeklyData,
+    monthlyData,
+    paceData,
+    runTypeData,
+    getWeeklyData,
+    getMonthlyData,
+    getPaceData,
+    getRunTypeData,
+  } = useStatisticStore();
+
+  const [timeFrame, _setTimeFrame] = useState("weekly");
+  const [sortedActivities, setSortedActivities] = useState<Activity[]>(initialActivities);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Activity; direction: "ascending" | "descending"; } | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      await getMonthlyData();
+      await getRunTypeData();
+      await getWeeklyData();
+      await getPaceData();
+    };
+
+    loadData();
+  }, [])
 
   if (!user) return null;
 
@@ -210,11 +217,11 @@ export default function Statistics() {
             {" "}
             {/* This would be for a dropdown component later */}
             <button className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20 flex items-center gap-2">
-              {timeframe === "weekly"
+              {timeFrame === "weekly"
                 ? "This Week"
-                : timeframe === "monthly"
-                ? "This Month"
-                : "All Time"}
+                : timeFrame === "monthly"
+                  ? "This Month"
+                  : "All Time"}
               <ChevronDown size={16} />
             </button>
           </div>
@@ -449,7 +456,7 @@ export default function Statistics() {
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {runTypeData.map((entry, index) => (
+                  {runTypeData.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
