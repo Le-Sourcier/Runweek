@@ -13,8 +13,6 @@ import {
   CheckCircle,
   Plus,
   CalendarDaysIcon,
-  Footprints,
-  HeartPulse,
 } from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
@@ -22,29 +20,29 @@ import { toast } from "react-toastify";
 import { chatStore } from "../stores/userChatStore";
 
 // Mock data for coach tips
-const coachTips = [
-  {
-    id: "t1",
-    title: "Improve Your Cadence",
-    description:
-      "Aim for 170-180 steps per minute to optimize your running efficiency and reduce injury risk.",
-    icon: "Zap", // Updated icon
-  },
-  {
-    id: "t2",
-    title: "Post-Run Recovery",
-    description:
-      "Try foam rolling within 30 minutes of long runs to help release tension in muscles and fascia.",
-    icon: "ShieldCheck", // Updated icon
-  },
-  {
-    id: "t3",
-    title: "Hill Training",
-    description:
-      "Include hill repeats in your weekly routine to build strength and improve your form on flat terrain.",
-    icon: "TrendingUp",
-  },
-];
+// const coachTips = [
+//   {
+//     id: "t1",
+//     title: "Improve Your Cadence",
+//     description:
+//       "Aim for 170-180 steps per minute to optimize your running efficiency and reduce injury risk.",
+//     icon: "Zap", // Updated icon
+//   },
+//   {
+//     id: "t2",
+//     title: "Post-Run Recovery",
+//     description:
+//       "Try foam rolling within 30 minutes of long runs to help release tension in muscles and fascia.",
+//     icon: "ShieldCheck", // Updated icon
+//   },
+//   {
+//     id: "t3",
+//     title: "Hill Training",
+//     description:
+//       "Include hill repeats in your weekly routine to build strength and improve your form on flat terrain.",
+//     icon: "TrendingUp",
+//   },
+// ];
 
 // Mock data for training plans
 // const trainingPlans = [
@@ -107,10 +105,12 @@ export default function Coach() {
     messages,
     getMessages,
     trainingPlans,
+    suggestedNutrition,
     sendMessage: sendChatMessageToStore,
     getTrainingPlans,
     suggestedWorkouts,
-    getSuggestedWorkouts
+    getSuggestedWorkouts,
+    getSuggestedNutrition
   } = chatStore();
 
   const isEmpty = suggestedWorkouts.length === 0;
@@ -131,6 +131,7 @@ export default function Coach() {
     loadMessages();
     getTrainingPlans();
     getSuggestedWorkouts();
+    getSuggestedNutrition();
   }, []);
 
   const loadMessages = async () => {
@@ -479,8 +480,9 @@ export default function Coach() {
 
       {/* Running tips */}
       <Card title="Coach Tips">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {coachTips.map((tip) => (
+        {suggestedNutrition.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {suggestedNutrition.map((tip) => (
             <div
               key={tip.id}
               className="p-4 border dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition-all flex flex-col" // Added flex flex-col for consistent height if needed
@@ -514,10 +516,17 @@ export default function Coach() {
               <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">
                 {tip.description}
               </p>{" "}
-              {/* Added flex-grow to make text take available space */}
             </div>
           ))}
         </div>
+        ) : (
+          <div className="text-center py-4">
+            <Lightbulb size={24} className="mx-auto text-muted-foreground mb-2" />
+            <p className="text-muted-foreground mb-3">
+              Aucune suggestion pour le moment.
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );

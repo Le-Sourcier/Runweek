@@ -1,11 +1,11 @@
-export type MessageType = "text" | "recommendation" | "advice"; // Orthographe corrigée
+export type MessageType = "text" | "recommendation" | "advice";
 
 export type Message = {
   id?: string;
   type: MessageType;
-  message: string; // Changé de 'reply' à 'content'
+  message: string;
   sender: "bot" | "user" | "system";
-  createdAt?: string; // Optionnel: date de création
+  createdAt?: string;
 };
 
 export interface TrainingPlan {
@@ -25,6 +25,13 @@ export interface SuggestedWorkouts {
   intensity: string
 }
 
+export interface SuggestedNutrition {
+  id: string,
+  title: string,
+  description: string,
+  icon: string,
+}
+
 export interface ChatState {
   messages: Message[];
   isLoading: boolean;
@@ -32,9 +39,11 @@ export interface ChatState {
   initialMessage: Message;
   trainingPlans: TrainingPlan[];
   suggestedWorkouts: SuggestedWorkouts[];
+  suggestedNutrition: SuggestedNutrition[];
   sendMessage: (content: string) => Promise<Message>;
   getMessages: () => Promise<void>;
-  clearMessages: () => void; // Nouvelle méthode
+  clearMessages: () => void;
   getTrainingPlans: () => Promise<void>;
   getSuggestedWorkouts: () => Promise<void>;
+  getSuggestedNutrition: () =>  Promise<void>;
 }

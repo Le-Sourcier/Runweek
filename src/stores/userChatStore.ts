@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ChatState, Message, SuggestedWorkouts, TrainingPlan } from "../types/AiCoach";
+import { ChatState, Message, SuggestedNutrition, SuggestedWorkouts, TrainingPlan } from "../types/AiCoach";
 import { v4 as uuidv4 } from "uuid"; // npm install uuid
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
@@ -11,6 +11,7 @@ export const chatStore = create<ChatState>((set, get) => ({
   error: null,
   trainingPlans: [],
   suggestedWorkouts: [],
+  suggestedNutrition: [],
   initialMessage: {
     id: "init-" + Date.now(),
     message: "Hi there! I'm your running coach AI. How can I help you today with your training?",
@@ -106,6 +107,25 @@ export const chatStore = create<ChatState>((set, get) => ({
       }
       const error =
         err instanceof Error ? err : new Error("Getting suggested workouts failed");
+      set({ error: error.message, isLoading: false });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  getSuggestedNutrition: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await apiUtils.get<SuggestedNutrition[]>(ApiUrl.GET_AI_COACH_SUGGESTED_NUTRITION);
+      set({ suggestedNutrition: data });
+    } catch (err) {
+      if (extractErrorMessage(err).message === "NO_NUTRITION_FOUND") {
+        set({ suggestedNutrition: [], error: null });
+        return;
+      }
+      const error =
+        err instanceof Error ? err : new Error("Getting suggested nutrition failed");
       set({ error: error.message, isLoading: false });
       throw error;
     } finally {

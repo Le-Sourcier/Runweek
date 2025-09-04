@@ -219,7 +219,8 @@ export const MESSAGE_MAPPINGS = {
     "ERROR_GETTING_STATISTICS": "Error getting statistics",
     "STATISTICS_RETRIEVED": "Statistics retrieved successfully",
     "DATA_SHARING_PREFERENCES_UPDATED": "Data sharing preferences updated successfully",
-    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Failed to update data sharing preferences"
+    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Failed to update data sharing preferences",
+    "NO_NUTRITION_FOUND": "No nutrition tips found"
   },
   "fr": {
     "FOOD_NAME_REQUIRED": "Le nom de l'aliment est requis et ne peut pas être vide",
@@ -438,7 +439,8 @@ export const MESSAGE_MAPPINGS = {
     "ERROR_GETTING_STATISTICS": "Erreur lors de la récupération des statistiques",
     "STATISTICS_RETRIEVED": "Statistiques récupérées avec succès",
     "DATA_SHARING_PREFERENCES_UPDATED": "Préférences de partage de données mises à jour avec succès",
-    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Échec de la mise à jour des préférences de partage de données"
+    "DATA_SHARING_PREFERENCES_UPDATE_FAILED": "Échec de la mise à jour des préférences de partage de données",
+    "NO_NUTRITION_FOUND": "Aucun conseil nutritionnel trouvé"
   }
 };
 

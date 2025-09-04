@@ -15,10 +15,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   events: [],
   getEvents: async () => {
     try {
-      const { data } = await apiUtils.get<CalendarEventType[]>(
-        ApiUrl.EVENTS
-      );
-      console.log("data:", data);
+      const { data } = await apiUtils.get<CalendarEventType[]>(ApiUrl.EVENTS);
       
       set({ events: data });
     } catch (error) {
@@ -33,10 +30,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   addEvent: async (event: CalendarEventType) => {
     try {
       const { id, ..._ } = event;
-      const { data } = await apiUtils.post<CalendarEventType>(
-        ApiUrl.EVENTS,
-        _
-      );
+      const { data } = await apiUtils.post<CalendarEventType>(ApiUrl.EVENTS, _);
       set({ events: [...get().events, data] });
     } catch (error) {
       throw error;
