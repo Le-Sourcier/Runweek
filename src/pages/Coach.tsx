@@ -5,8 +5,6 @@ import {
   Clock,
   Target,
   ArrowRight,
-  Footprints,
-  HeartPulse,
   Zap,
   ShieldCheck,
   TrendingUp,
@@ -15,6 +13,8 @@ import {
   CheckCircle,
   Plus,
   CalendarDaysIcon,
+  Footprints,
+  HeartPulse,
 } from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
@@ -74,9 +74,47 @@ const coachTips = [
 //   },
 // ];
 
+
+// const suggestedWorkouts = [{
+//   id: "easy-run",
+//   type: "Easy Run",
+//   distance: "5-6 km",
+//   description: "conversational pace",
+//   icon: <Footprints size={18} className="text-blue-500 dark:text-blue-400" />,
+//   difficulty: "easy"
+// },
+// {
+//   id: "long-run",
+//   type: "Long Run",
+//   distance: "10-12 km",
+//   description: "easy pace",
+//   icon: <Footprints size={18} className="text-green-500 dark:text-green-400" />,
+//   difficulty: "moderate"
+// },
+// {
+//   id: "recovery",
+//   type: "Recovery",
+//   distance: "3-4 km",
+//   description: "very easy + strength",
+//   icon: <HeartPulse size={18} className="text-red-500 dark:text-red-400" />,
+//   difficulty: "easy"
+// }
+// ];
+
 export default function Coach() {
 
-  const { messages, getMessages, trainingPlans, sendMessage: sendChatMessageToStore, getTrainingPlans } = chatStore();
+  const {
+    messages,
+    getMessages,
+    trainingPlans,
+    sendMessage: sendChatMessageToStore,
+    getTrainingPlans,
+    suggestedWorkouts,
+    getSuggestedWorkouts
+  } = chatStore();
+
+  const isEmpty = suggestedWorkouts.length === 0;
+
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
   const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
   const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
@@ -85,13 +123,14 @@ export default function Coach() {
   const [weeklyFocus, setWeeklyFocus] = useState({
     title: "Building Base Endurance",
     description: "This week, focus on easy runs to build your aerobic base. Keep your heart rate below 75% of your max.",
-    progress: 2,
-    total: 4
+    progress: 0,
+    total: suggestedWorkouts.length
   });
 
   useEffect(() => {
     loadMessages();
     getTrainingPlans();
+    getSuggestedWorkouts();
   }, []);
 
   const loadMessages = async () => {
@@ -221,34 +260,7 @@ export default function Coach() {
     };
     setChatMessages((prev) => [...prev, systemMessage]);
     console.log("Talk to human requested from main Coach page.");
-  };
-
-  const suggestedWorkouts = [
-    {
-      id: "easy-run",
-      type: "Easy Run",
-      distance: "5-6 km",
-      description: "conversational pace",
-      icon: <Footprints size={18} className="text-blue-500 dark:text-blue-400" />,
-      difficulty: "easy"
-    },
-    {
-      id: "long-run",
-      type: "Long Run",
-      distance: "10-12 km",
-      description: "easy pace",
-      icon: <Footprints size={18} className="text-green-500 dark:text-green-400" />,
-      difficulty: "moderate"
-    },
-    {
-      id: "recovery",
-      type: "Recovery",
-      distance: "3-4 km",
-      description: "very easy + strength",
-      icon: <HeartPulse size={18} className="text-red-500 dark:text-red-400" />,
-      difficulty: "easy"
-    }
-  ];
+  }
 
   const handleCompleteWorkout = (workoutId: string, workoutType: string) => {
     if (completedWorkouts.has(workoutId)) {
@@ -307,8 +319,21 @@ export default function Coach() {
           {/* Coach insights */}
           <Card title="Weekly Focus">
             {/* Updated styling for Weekly Focus main section */}
-            <div className="border-l-4 border-green-500 bg-green-50/50 dark:bg-green-900/20 pl-3 py-3 pr-2 rounded-r-md flex items-start gap-3">
-              <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-green-500 shrink-0 border border-green-200">
+
+            <div
+              className={`border-l-4 pl-3 py-3 pr-2 rounded-r-md flex items-start gap-3
+                ${isEmpty
+                  ? "border-gray-400 bg-gray-50 dark:bg-gray-800/40"
+                  : "border-green-500 bg-green-50/50 dark:bg-green-900/20"
+                }`}
+            >
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 border
+                  ${isEmpty
+                    ? "bg-white text-gray-500 border-gray-300"
+                    : "bg-white text-green-500 border-green-200"
+                  }`}
+              >
                 <Target size={20} />
               </div>
               <div>
@@ -316,74 +341,91 @@ export default function Coach() {
                   <h4 className="font-semibold text-gray-700 dark:text-gray-200">
                     {weeklyFocus.title}
                   </h4>
-                  <span className="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+                  {!isEmpty && <span
+                    className={`text-xs px-2 py-0.5 rounded-full
+                      ${isEmpty
+                        ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                        : "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                      }`}
+                  >
                     {weeklyFocus.progress}/{weeklyFocus.total}
-                  </span>
+                  </span>}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   {weeklyFocus.description}
                 </p>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
-                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${(weeklyFocus.progress / weeklyFocus.total) * 100}%` }}
+                    className={`${isEmpty ? "bg-gray-400" : "bg-green-500"} h-2 rounded-full transition-all duration-500`}
+                    style={{
+                      width: isEmpty ? "0%" : `${(weeklyFocus.progress / weeklyFocus.total) * 100}%`,
+                    }}
                   />
                 </div>
               </div>
             </div>
 
+
             <div className="mt-4">
               <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-300">
                 Entraînements Suggérés
               </h4>
-              <div className="space-y-3">
-                {suggestedWorkouts.map((workout) => {
-                  const isCompleted = completedWorkouts.has(workout.id);
+              {
+                suggestedWorkouts.length > 0 ? (
+                  <div className="space-y-3">
+                    {suggestedWorkouts.map((workout) => {
+                      const isCompleted = completedWorkouts.has(workout.id);
 
-                  return (
-                    <div
-                      key={workout.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isCompleted
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:border-primary/50'
-                        }`}
-                    >
-                      {workout.icon}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className={`font-medium ${isCompleted ? 'text-green-700 dark:text-green-300 line-through' : 'text-gray-700 dark:text-gray-200'}`}>
-                            {workout.type}
-                          </p>
-                          {isCompleted && <CheckCircle size={16} className="text-green-500" />}
+                      return (
+                        <div
+                          key={workout.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isCompleted
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:border-primary/50'
+                            }`}
+                        >
+                          {workout.icon}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className={`font-medium ${isCompleted ? 'text-green-700 dark:text-green-300 line-through' : 'text-gray-700 dark:text-gray-200'}`}>
+                                {workout.type}
+                              </p>
+                              {isCompleted && <CheckCircle size={16} className="text-green-500" />}
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {workout.duration} at {workout.description}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            {!isCompleted && (
+                              <>
+                                <button
+                                  onClick={() => handleAddToCalendar(workout)}
+                                  className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded"
+                                  title="Ajouter au calendrier"
+                                >
+                                  <Plus size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleCompleteWorkout(workout.id, workout.type)}
+                                  className="p-1.5 text-gray-400 hover:text-green-500 transition-colors rounded"
+                                  title="Marquer comme terminé"
+                                >
+                                  <CheckCircle size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {workout.distance} at {workout.description}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        {!isCompleted && (
-                          <>
-                            <button
-                              onClick={() => handleAddToCalendar(workout)}
-                              className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded"
-                              title="Ajouter au calendrier"
-                            >
-                              <Plus size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleCompleteWorkout(workout.id, workout.type)}
-                              className="p-1.5 text-gray-400 hover:text-green-500 transition-colors rounded"
-                              title="Marquer comme terminé"
-                            >
-                              <CheckCircle size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>) : (
+                  <div className="text-center py-4">
+                    <CalendarDaysIcon size={24} className="mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground mb-3">Aucun entraînement suggéré pour le moment.</p>
+                  </div>
+                )
+              }
             </div>
           </Card>
 

@@ -16,14 +16,25 @@ export interface TrainingPlan {
   description: string;
 }
 
+export interface SuggestedWorkouts {
+  id: string,
+  type: string,
+  duration: string,
+  description: string,
+  icon: string,
+  intensity: string
+}
+
 export interface ChatState {
-  messages: Message[]; // Changé de 'message' à 'messages'
+  messages: Message[];
   isLoading: boolean;
   error: string | null;
   initialMessage: Message;
   trainingPlans: TrainingPlan[];
+  suggestedWorkouts: SuggestedWorkouts[];
   sendMessage: (content: string) => Promise<Message>;
   getMessages: () => Promise<void>;
   clearMessages: () => void; // Nouvelle méthode
   getTrainingPlans: () => Promise<void>;
+  getSuggestedWorkouts: () => Promise<void>;
 }
