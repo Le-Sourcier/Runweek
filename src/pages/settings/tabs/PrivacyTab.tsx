@@ -15,13 +15,13 @@ export const PrivacyTab: FC = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(initialSection || "");
 
   const [dataSharing, setDataSharing] = useState({
-    enabled: user?.preferences?.dataSharing?.enabled || false,
-    shareNutrition: user?.preferences?.dataSharing?.shareNutrition || false,
-    shareActivities: user?.preferences?.dataSharing?.shareActivities || false,
-    shareGoals: user?.preferences?.dataSharing?.shareGoals || false,
-    shareAchievements: user?.preferences?.dataSharing?.shareAchievements || false,
-    allowFriendRequests: user?.preferences?.dataSharing?.allowFriendRequests || false,
-    showInSearch: user?.preferences?.dataSharing?.showInSearch || false,
+    enabled: user?.preferences?.enabled || false,
+    shareNutrition: user?.preferences?.shareNutrition || false,
+    shareActivities: user?.preferences?.shareActivities || false,
+    shareGoals: user?.preferences?.shareGoals || false,
+    shareAchievements: user?.preferences?.shareAchievements || false,
+    allowFriendRequests: user?.preferences?.allowFriendRequests || false,
+    showInSearch: user?.preferences?.showInSearch || false,
   });
 
   useEffect(() => {
@@ -33,22 +33,22 @@ export const PrivacyTab: FC = () => {
   const handleShowInSearchChange = (showInSearch: boolean) => {
     const newDataSharing = { ...dataSharing, showInSearch };
     setDataSharing(newDataSharing);
+
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
   };
 
   const handleShareNutritionChange = (shareNutrition: boolean) => {
     const newDataSharing = { ...dataSharing, shareNutrition };
     setDataSharing(newDataSharing);
-    console.log("shareNutrition:", shareNutrition);
-    
+
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
   };
 
@@ -58,7 +58,7 @@ export const PrivacyTab: FC = () => {
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
   };
 
@@ -68,7 +68,7 @@ export const PrivacyTab: FC = () => {
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
   };
 
@@ -78,20 +78,20 @@ export const PrivacyTab: FC = () => {
     // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
   };
 
   const handleShareActivitiesChange = (shareActivities: boolean) => {
     const newDataSharing = { ...dataSharing, shareActivities };
-    
+
     setDataSharing(newDataSharing);
     //@ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
-  }; 
+  };
 
   return <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -146,7 +146,7 @@ export const PrivacyTab: FC = () => {
                     // @ts-ignore
                     updateUserPreferences({
                       ...user.preferences,
-                      dataSharing: newDataSharing
+                      ...newDataSharing
                     });
                   }
                 }}

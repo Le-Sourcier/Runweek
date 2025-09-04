@@ -516,7 +516,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateUserPreferences = async (preferences: UserPreferences) => {
     try {
-      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences.dataSharing);
+      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences);
       await fetchUser();
       setUser((prevUser) => {
         if (!prevUser) return null;
@@ -524,7 +524,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           ...prevUser,
           preferences: { ...(prevUser.preferences || {}), ...preferences },
         };
-        sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
+        sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes       
         toast.success("Preferences saved successfully!");
         return updatedUser;
       });

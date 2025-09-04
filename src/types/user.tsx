@@ -76,7 +76,7 @@ export interface UserPreferences {
   // Privacy settings added here
   activityVisibility?: "only_me" | "friends" | "public";
   profileVisibility?: "only_me" | "friends" | "public";
-  dataSharing?: {
+  // dataSharing?: {
     enabled: boolean;
     shareNutrition: boolean;
     shareActivities: boolean;
@@ -84,7 +84,7 @@ export interface UserPreferences {
     shareAchievements: boolean;
     allowFriendRequests: boolean;
     showInSearch: boolean;
-  };
+  // };
   locationSharing?: boolean;
   // Language and Region settings
   language?: string; // e.g., 'en', 'fr'
