@@ -3,6 +3,17 @@ import { HeartRateData, MonthlyData, PaceData, RunTypeData, WeeklyStats } from "
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
 
+const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const emptyHeartRateData = Array(7).fill(null).map((_, index) => ({
+  day: days[index],
+  value: 0
+} as HeartRateData));
+
+const emptyRunTypeData = {
+  name: "Aucun type de course à afficher",
+  value: 0
+} as RunTypeData
+
 interface StatisticState {
   weeklyData: WeeklyStats[];
   monthlyData: MonthlyData[];
@@ -21,7 +32,7 @@ export const useStatisticStore = create<StatisticState>((set) => ({
   monthlyData: [],
   runTypeData: [],
   paceData: [],
-  heartRateData: [],
+  heartRateData: emptyHeartRateData,
 
   getWeeklyData: async () => {
     const { data } = await apiUtils.get<WeeklyStats[]>(ApiUrl.GET_WEEKLY_STATS);
@@ -68,35 +79,30 @@ export const useStatisticStore = create<StatisticState>((set) => ({
   },
 
   getRunTypeData: async () => {
-    const { data } = await apiUtils.get<RunTypeData[]>(ApiUrl.GET_ACTIVITY_TYPE_STATS);
+    try {
+      const { data } = await apiUtils.get<RunTypeData[]>(ApiUrl.GET_ACTIVITY_TYPE_STATS);
 
-    if (data.length === 0) {
-      set({
-        runTypeData: [{
-          name: "Aucun type de course à afficher",
-          value: 0
-        } as RunTypeData]
-      });
-      return;
+      if (data.length === 0) {
+        set({ runTypeData: [emptyRunTypeData] });
+        return;
+      }
+      set({ runTypeData: data });
+    } catch (error) {
+      set({ runTypeData: [emptyRunTypeData] });
+      throw error;
     }
-    set({ runTypeData: data });
   },
 
   getHeartRateData: async () => {
-    const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-    const emptyData = Array(7).fill(null).map((_, index) => ({
-      day: days[index],
-      value: 0
-    } as HeartRateData));
     try {
       const { data } = await apiUtils.get<HeartRateData[]>(ApiUrl.GET_HEART_RATE_STATS);
       if (data.length === 0 || data.length < 7) {
-        set({ heartRateData: emptyData });
+        set({ heartRateData: emptyHeartRateData });
         return;
       }
       set({ heartRateData: data });
     } catch (error) {
-      set({ heartRateData: emptyData });
+      set({ heartRateData: emptyHeartRateData });
       throw error;
     }
   },

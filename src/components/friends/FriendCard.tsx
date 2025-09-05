@@ -20,6 +20,8 @@ import ConversationModal from "./ConversationModal";
 import BlockFriendModal from "./BlockFriendModal";
 import { getInitials } from "../../utils/get-initial";
 import { ProfileNameCircle } from "../ui/ProfileNameCircle";
+import FormattedDate from "../ui/FormattedDate";
+import { useLanguage } from "../../providers/LanguageProvider";
 
 interface FriendCardProps {
   friend: Friend;
@@ -38,12 +40,12 @@ const FriendCard: React.FC<FriendCardProps> = ({
   onReportUser,
   onSendMessage,
 }) => {
+
+  const { currentLanguage } = useLanguage();
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
-  const [isBlockedFriendModalOpen, setIsBlockedFriendModalOpen] =
-    useState(false);
-
-  const _formatTimeAgo = (t: string) => formatTimeAgo(t);
+  const [isBlockedFriendModalOpen, setIsBlockedFriendModalOpen] = useState(false);
 
   const handleReportUser = () => {
     const reasons = [
@@ -58,8 +60,7 @@ const FriendCard: React.FC<FriendCardProps> = ({
     const reasonIndex = prompt(
       `Sélectionnez une raison:\n${reasons
         .map((r, i) => `${i + 1}. ${r}`)
-        .join("\n")}\n\nEntrez le numéro (1-${
-        reasons.length
+        .join("\n")}\n\nEntrez le numéro (1-${reasons.length
       }) ou décrivez une autre raison:`
     );
 
@@ -96,7 +97,8 @@ const FriendCard: React.FC<FriendCardProps> = ({
             <p className="text-sm text-muted-foreground">
               {friend.isOnline
                 ? "En ligne"
-                : `Vu ${_formatTimeAgo(friend.lastActivity)}`}
+                : <>Vu <FormattedDate date={friend.lastActivity} mode="relative" locale={currentLanguage} /></>
+              }
             </p>
             {friend.mutualFriends > 0 && (
               <p className="text-xs text-primary flex items-center gap-1 mt-1">
@@ -220,7 +222,7 @@ const FriendCard: React.FC<FriendCardProps> = ({
           setIsConversationModalOpen(false);
         }}
         friend={friend}
-        onSendMessage={onSendMessage}
+      // onSendMessage={onSendMessage}
       />
       <BlockFriendModal
         isOpen={isBlockedFriendModalOpen}

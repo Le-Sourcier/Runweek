@@ -10,9 +10,11 @@ export const UpcomingWorkouts: FC = () => {
   const { events, getEvents } = useCalendarStore();
   const { currentLanguage } = useLanguage();
 
-  console.log("events:", events);
-  
-  useEffect(() => { getEvents();}, []);
+  const filteredEvents = events
+    .filter((event) => new Date(`${event.date}T${event.time || "00:00"}`) >= new Date())
+    .slice(0, 2);
+
+  useEffect(() => { getEvents(); }, []);
 
   return (
     <div className="chart-container mb-8">
@@ -29,11 +31,9 @@ export const UpcomingWorkouts: FC = () => {
         </Link>
       </div>
       {
-        events.length > 0 ? (
+        filteredEvents.length > 0 ? (
           <div className="space-y-4">
-            {events
-              .filter((event) => new Date(event.date) >= new Date())
-              .slice(0, 2)
+            {filteredEvents
               .map((workout, index) => (
                 <div
                   key={index}

@@ -482,43 +482,43 @@ export default function Coach() {
       <Card title="Coach Tips">
         {suggestedNutrition.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {suggestedNutrition.map((tip) => (
-            <div
-              key={tip.id}
-              className="p-4 border dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition-all flex flex-col" // Added flex flex-col for consistent height if needed
-            >
-              <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center text-primary dark:text-primary-400 mb-3 shrink-0">
-                {tip.icon === "Zap" && <Zap size={20} />}
-                {tip.icon === "ShieldCheck" && <ShieldCheck size={20} />}
-                {tip.icon === "TrendingUp" && <TrendingUp size={20} />}
-                {tip.icon === "Clock" && <Clock size={20} />}{" "}
-                {/* Default/fallback */}
-                {tip.icon === "Activity" && <Activity size={20} />}{" "}
-                {/* Default/fallback */}
-                {tip.icon === "Lightbulb" && <Lightbulb size={20} />}{" "}
-                {/* Default/fallback */}
-                {
-                  ![
-                    "Zap",
-                    "ShieldCheck",
-                    "TrendingUp",
-                    "Clock",
-                    "Activity",
-                    "Lightbulb",
-                  ].includes(tip.icon) && (
-                    <Lightbulb size={20} />
-                  ) /* Fallback for any other unspecified icon */
-                }
+            {suggestedNutrition.map((tip) => (
+              <div
+                key={tip.id}
+                className="p-4 border dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition-all flex flex-col" // Added flex flex-col for consistent height if needed
+              >
+                <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center text-primary dark:text-primary-400 mb-3 shrink-0">
+                  {tip.icon === "Zap" && <Zap size={20} />}
+                  {tip.icon === "ShieldCheck" && <ShieldCheck size={20} />}
+                  {tip.icon === "TrendingUp" && <TrendingUp size={20} />}
+                  {tip.icon === "Clock" && <Clock size={20} />}{" "}
+                  {/* Default/fallback */}
+                  {tip.icon === "Activity" && <Activity size={20} />}{" "}
+                  {/* Default/fallback */}
+                  {tip.icon === "Lightbulb" && <Lightbulb size={20} />}{" "}
+                  {/* Default/fallback */}
+                  {
+                    ![
+                      "Zap",
+                      "ShieldCheck",
+                      "TrendingUp",
+                      "Clock",
+                      "Activity",
+                      "Lightbulb",
+                    ].includes(tip.icon) && (
+                      <Lightbulb size={20} />
+                    ) /* Fallback for any other unspecified icon */
+                  }
+                </div>
+                <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-100">
+                  {tip.title}
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                  {tip.description}
+                </p>
               </div>
-              <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-100">
-                {tip.title}
-              </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">
-                {tip.description}
-              </p>{" "}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-4">
             <Lightbulb size={24} className="mx-auto text-muted-foreground mb-2" />

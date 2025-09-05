@@ -168,10 +168,10 @@ const FriendsTab: React.FC = () => {
         friend={selectedFriend}
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        onSendMessage={handleRealSendMessage}
-        onRemoveFriend={removeFriend}
-        onBlockUser={blockUser}
-        onReportUser={reportUser}
+        // onSendMessage={handleRealSendMessage}
+        // onRemoveFriend={removeFriend}
+        // onBlockUser={blockUser}
+        // onReportUser={reportUser}
       />
     </div>
   );

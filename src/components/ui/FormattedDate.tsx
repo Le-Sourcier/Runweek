@@ -1,6 +1,7 @@
 import { useState, useEffect, FC } from 'react';
-import { formatTimeUntil, parseDate } from '../../utils/date-formatter';
+import { formatTimeUntil, formatTimeAgo, parseDate } from '../../utils/date-formatter';
 import { Language } from '../../types/message';
+import { toast } from 'react-toastify';
 interface FormattedDateProps {
   date: string;
   locale?: Language;
@@ -17,13 +18,18 @@ const FormattedDate: FC<FormattedDateProps> = ({ date, locale = 'fr', mode }) =>
           const result = await parseDate(date, undefined, locale);
           setFormattedDate(result);
         } else if (mode === 'relative') {
-          const result = await formatTimeUntil(date, locale);
-          // console.log("result:", result);
-          
-          setFormattedDate(result);
+          const dateObj = new Date(date);
+          if (dateObj < new Date()) {
+            const result = await formatTimeAgo(date, locale);
+            setFormattedDate(result);
+          } else {
+            const result = await formatTimeUntil(date, locale);
+            setFormattedDate(result);
+          }
         }
       } catch (error) {
         console.error("Erreur lors du formatage de la date:", error);
+        toast.error("Erreur lors du formatage de la date");
         // Gérer l'erreur, par exemple en affichant une date par défaut
         setFormattedDate(date);
       }
