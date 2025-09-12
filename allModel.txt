@@ -1,0 +1,3837 @@
+// const { DataTypes } = require("sequelize");
+
+// module.exports = (sequelize) => {
+//   const Achievement = sequelize.define(
+//     "Achievement",
+//     {
+//       id: {
+//         type: DataTypes.UUID,
+//         defaultValue: DataTypes.UUIDV4,
+//         primaryKey: true,
+//       },
+//       user_id: {
+//         type: DataTypes.UUID,
+//         allowNull: false,
+//         references: {
+//           model: "Users",
+//           key: "id",
+//         },
+//       },
+//       achievement_id: {
+//         type: DataTypes.STRING(50),
+//         allowNull: false,
+//       },
+//       title: {
+//         type: DataTypes.STRING(100),
+//         allowNull: false,
+//       },
+//       description: {
+//         type: DataTypes.TEXT,
+//         allowNull: false,
+//       },
+//       icon: {
+//         type: DataTypes.STRING(50),
+//         allowNull: false,
+//       },
+//       category: {
+//         type: DataTypes.ENUM(
+//           "beginner",
+//           "distance",
+//           "speed",
+//           "habit",
+//           "consistency",
+//           "challenge",
+//           "milestone"
+//         ),
+//         allowNull: false,
+//       },
+//       earnedDate: {
+//         type: DataTypes.DATE,
+//         defaultValue: DataTypes.NOW,
+//       },
+//       points: {
+//         type: DataTypes.INTEGER,
+//         defaultValue: 0,
+//       },
+//       rarity: {
+//         type: DataTypes.ENUM("common", "rare", "epic", "legendary"),
+//         defaultValue: "common",
+//       },
+//       requirements: {
+//         type: DataTypes.JSONB,
+//       },
+//       isVisible: {
+//         type: DataTypes.BOOLEAN,
+//         defaultValue: true,
+//       },
+//     },
+//     {
+//       tableName: "achievements",
+//       indexes: [
+//         {
+//           fields: ["user_id", "earnedDate"],
+//         },
+//         {
+//           fields: ["achievement_id"],
+//         },
+//         {
+//           fields: ["category"],
+//         },
+//         {
+//           unique: true,
+//           fields: ["user_id", "achievement_id"],
+//         },
+//       ],
+//     }
+//   );
+
+//   // Ajoutez cette méthode dans votre modèle Achievement
+//   Achievement.associate = (models) => {
+//     Achievement.belongsTo(models.Users, {
+//       foreignKey: "user_id",
+//       as: "user",
+//     });
+//   };
+
+//   // Définition des achievements disponibles
+//   const AVAILABLE_ACHIEVEMENTS = {
+//     first_run: {
+//       title: "Premier Pas",
+//       description: "Complété votre première course",
+//       icon: "Award",
+//       category: "beginner",
+//       points: 50,
+//       rarity: "common",
+//       requirements: { totalRuns: 1 },
+//     },
+//     distance_5k: {
+//       title: "Club 5K",
+//       description: "Complété une course de 5 kilomètres",
+//       icon: "Medal",
+//       category: "distance",
+//       points: 100,
+//       rarity: "common",
+//       requirements: { singleRunDistance: 5 },
+//     },
+//     distance_10k: {
+//       title: "Club 10K",
+//       description: "Complété une course de 10 kilomètres",
+//       icon: "Trophy",
+//       category: "distance",
+//       points: 200,
+//       rarity: "rare",
+//       requirements: { singleRunDistance: 10 },
+//     },
+//     half_marathon: {
+//       title: "Semi-Marathonien",
+//       description: "Complété un semi-marathon (21.1 km)",
+//       icon: "Flag",
+//       category: "distance",
+//       points: 500,
+//       rarity: "epic",
+//       requirements: { singleRunDistance: 21.1 },
+//     },
+//     marathon: {
+//       title: "Marathonien",
+//       description: "Complété un marathon complet (42.2 km)",
+//       icon: "Trophy",
+//       category: "distance",
+//       points: 1000,
+//       rarity: "legendary",
+//       requirements: { singleRunDistance: 42.2 },
+//     },
+//     early_bird: {
+//       title: "Lève-tôt",
+//       description: "Complété 5 courses avant 7h du matin",
+//       icon: "Zap",
+//       category: "habit",
+//       points: 150,
+//       rarity: "rare",
+//       requirements: { earlyMorningRuns: 5 },
+//     },
+//     week_streak: {
+//       title: "Série Hebdomadaire",
+//       description: "Couru 7 jours consécutifs",
+//       icon: "Flame",
+//       category: "consistency",
+//       points: 300,
+//       rarity: "rare",
+//       requirements: { consecutiveDays: 7 },
+//     },
+//     speed_demon: {
+//       title: "Démon de Vitesse",
+//       description: "Couru 1 km en moins de 4 minutes",
+//       icon: "Timer",
+//       category: "speed",
+//       points: 400,
+//       rarity: "epic",
+//       requirements: { bestPace: 4.0 },
+//     },
+//     elevation_master: {
+//       title: "Maître de l'Élévation",
+//       description: "Accumulé 1000m de dénivelé positif",
+//       icon: "MapPin",
+//       category: "challenge",
+//       points: 250,
+//       rarity: "rare",
+//       requirements: { totalElevation: 1000 },
+//     },
+//     total_100k: {
+//       title: "Club 100K",
+//       description: "Couru un total de 100 kilomètres",
+//       icon: "Medal",
+//       category: "milestone",
+//       points: 300,
+//       rarity: "rare",
+//       requirements: { totalDistance: 100 },
+//     },
+//     total_500k: {
+//       title: "Club 500K",
+//       description: "Couru un total de 500 kilomètres",
+//       icon: "Trophy",
+//       category: "milestone",
+//       points: 750,
+//       rarity: "epic",
+//       requirements: { totalDistance: 500 },
+//     },
+//     night_runner: {
+//       title: "Coureur Nocturne",
+//       description: "Complété 5 courses après 20h",
+//       icon: "Zap",
+//       category: "habit",
+//       points: 150,
+//       rarity: "rare",
+//       requirements: { nightRuns: 5 },
+//     },
+//   };
+
+//   Achievement.getAvailableAchievements = function () {
+//     return AVAILABLE_ACHIEVEMENTS;
+//   };
+
+//   return Achievement;
+// };
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Achievement = sequelize.define(
+    "Achievement",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      achievement_id: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      title: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      icon: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      category: {
+        type: DataTypes.ENUM(
+          "beginner",
+          "distance",
+          "speed",
+          "habit",
+          "consistency",
+          "challenge",
+          "milestone"
+        ),
+        allowNull: false,
+      },
+      earnedDate: {
+        type: DataTypes.DATE,
+        defaultValue: null, // Changez à null par défaut
+      },
+      points: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      rarity: {
+        type: DataTypes.ENUM("common", "rare", "epic", "legendary"),
+        defaultValue: "common",
+      },
+      requirements: {
+        type: DataTypes.JSONB,
+      },
+      isVisible: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+    },
+    {
+      tableName: "achievements",
+      indexes: [
+        {
+          fields: ["user_id", "earnedDate"],
+        },
+        {
+          fields: ["achievement_id"],
+        },
+        {
+          fields: ["category"],
+        },
+        {
+          unique: true,
+          fields: ["user_id", "achievement_id"],
+        },
+      ],
+    }
+  );
+
+  Achievement.associate = (models) => {
+    Achievement.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+    });
+
+    // Ajoutez cette association
+    Achievement.belongsTo(models.AchievementDefinition, {
+      foreignKey: "achievement_id",
+      targetKey: "id",
+      as: "definition",
+    });
+  };
+
+  // Supprimez la méthode getAvailableAchievements et AVAILABLE_ACHIEVEMENTS
+  // Elles seront maintenant gérées par le modèle AchievementDefinition
+
+  return Achievement;
+};
+
+// models/AchievementDefinition.js
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const AchievementDefinition = sequelize.define(
+    "AchievementDefinition",
+    {
+      id: {
+        type: DataTypes.STRING(50),
+        primaryKey: true,
+      },
+      title: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      icon: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      category: {
+        type: DataTypes.ENUM(
+          "beginner",
+          "distance",
+          "speed",
+          "habit",
+          "consistency",
+          "challenge",
+          "milestone"
+        ),
+        allowNull: false,
+      },
+      points: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      rarity: {
+        type: DataTypes.ENUM("common", "rare", "epic", "legendary"),
+        defaultValue: "common",
+      },
+      requirements: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+    },
+    {
+      tableName: "achievement_definitions",
+      timestamps: true,
+    }
+  );
+
+  return AchievementDefinition;
+};
+
+module.exports = (sequelize) => {
+  // Table pour stocker les données d'activité quotidiennes
+  const ActivityData = sequelize.define(
+    "ActivityData",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+      },
+      steps: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      distance: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      calories: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      activeMinutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      dataSource: {
+        type: DataTypes.STRING(50),
+        defaultValue: "google_fit",
+      },
+      rawData: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+    },
+    {
+      tableName: "activity_data",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id", "date"],
+        },
+      ],
+    }
+  );
+  // Association avec le modèle Users
+  ActivityData.associate = (models) => {
+    ActivityData.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+    });
+  };
+  return ActivityData;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const ActivityShare = sequelize.define(
+    "ActivityShare",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      shared_by_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      activityType: {
+        type: DataTypes.ENUM(
+          "run",
+          "achievement",
+          "goal_completed",
+          "personal_record",
+          "nutrition"
+        ),
+        allowNull: false,
+      },
+      activityData: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        validate: {
+          len: [0, 500],
+        },
+      },
+      visibility: {
+        type: DataTypes.ENUM("friends", "public"),
+        defaultValue: "friends",
+      },
+      likes: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      comments: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+    },
+    {
+      tableName: "activity_shares",
+      indexes: [
+        {
+          fields: ["shared_by_id", "createdAt"],
+        },
+        {
+          fields: ["visibility", "createdAt"],
+        },
+      ],
+    }
+  );
+
+  return ActivityShare;
+};
+
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+    const AdminPreferencies = sequelize.define("AdminPreferencies", {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: uuidv4,
+            primaryKey: true,
+        },
+        permissions: {
+            type: DataTypes.JSON, // Exemple : { campagnes: true, analytics: false, ... }
+            allowNull: false,
+        },
+    });
+
+    AdminPreferencies.associate = (models) => {
+        AdminPreferencies.belongsTo(models.Roles, {
+            foreignKey: "role_id",
+            as: "role",
+        });
+    };
+
+    return AdminPreferencies;
+};
+
+// models/CalendarEvent.js
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const CalendarEvent = sequelize.define(
+    "CalendarEvent",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      title: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+          len: [1, 100],
+        },
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        validate: {
+          isDate: true,
+          isAfter: new Date().toISOString().split("T")[0],
+        },
+      },
+      time: {
+        type: DataTypes.TIME,
+        allowNull: true,
+        validate: {
+          is: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+        },
+      },
+      type: {
+        type: DataTypes.ENUM("Run", "Bike", "Swim", "Gym", "Other"),
+        allowNull: false,
+      },
+      distance: {
+        type: DataTypes.DECIMAL(6, 2),
+        allowNull: true,
+        validate: {
+          min: 0,
+          max: 1000,
+        },
+      },
+      duration: {
+        type: DataTypes.STRING(10),
+        allowNull: true,
+        validate: {
+          is: /^([0-9]{1,2}:)?[0-5][0-9]:[0-5][0-9]$/,
+        },
+      },
+      location: {
+        type: DataTypes.STRING(200),
+        allowNull: true,
+      },
+      notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        validate: {
+          len: [0, 500],
+        },
+      },
+      completed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      completedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      reminderSent: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+    },
+    {
+      tableName: "calendar_events",
+      indexes: [
+        {
+          fields: ["user_id", "date"],
+        },
+        {
+          fields: ["user_id", "completed"],
+        },
+        {
+          fields: ["date"],
+        },
+      ],
+    }
+  );
+
+  CalendarEvent.associate = (models) => {
+    CalendarEvent.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  // Méthode pour vérifier si l'événement est dans le futur
+  CalendarEvent.prototype.isFutureEvent = function () {
+    const eventDateTime = new Date(`${this.date}T${this.time || "23:59"}`);
+    return eventDateTime > new Date();
+  };
+
+  // Méthode pour vérifier si l'événement est aujourd'hui
+  CalendarEvent.prototype.isToday = function () {
+    const today = new Date().toISOString().split("T")[0];
+    return this.date === today;
+  };
+
+  return CalendarEvent;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const ChatMessages = sequelize.define(
+    "ChatMessages",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      message_content: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      sender: {
+        type: DataTypes.ENUM("bot", "user"),
+        allowNull: false,
+      },
+      message_type: {
+        type: DataTypes.ENUM("text", "recommandation", "conseil", "advices"),
+        allowNull: false,
+      },
+      metadata: {
+        type: DataTypes.JSONB, // Store additional data like icon, category, originalData
+        allowNull: true,
+      },
+    },
+    {
+      tableName: "chat_messages",
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    }
+  );
+
+  ChatMessages.associate = (models) => {
+    ChatMessages.belongsTo(models.Users, { foreignKey: "user_id", as: "user" });
+  };
+
+  return ChatMessages;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Conversation = sequelize.define(
+    "Conversation",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      last_message_id: {
+        type: DataTypes.UUID,
+        references: {
+          model: "messages",
+          key: "id",
+        },
+      },
+      lastActivity: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+    },
+    {
+      tableName: "conversations",
+      indexes: [
+        {
+          fields: ["lastActivity"],
+        },
+      ],
+    }
+  );
+  Conversation.associate = (models) => {
+    Conversation.belongsTo(models.Message, {
+      foreignKey: "last_message_id",
+      as: "lastMessage",
+    });
+
+    Conversation.belongsToMany(models.Users, {
+      through: models.ConversationParticipant,
+      foreignKey: "conversation_id",
+      as: "participants",
+    });
+
+    Conversation.hasMany(models.Message, {
+      foreignKey: "conversation_id",
+      as: "messages",
+    });
+
+    Conversation.hasMany(models.ConversationParticipant, {
+      foreignKey: "conversation_id",
+      as: "conversationParticipants", // Use a different alias to avoid conflict
+    });
+  };
+
+  return Conversation;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  // Table de liaison pour les participants de conversation
+  const ConversationParticipant = sequelize.define(
+    "ConversationParticipant",
+    {
+      conversation_id: {
+        type: DataTypes.UUID,
+        references: {
+          model: "conversations",
+          key: "id",
+        },
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      joinedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      leftAt: {
+        type: DataTypes.DATE,
+      },
+    },
+    {
+      tableName: "conversation_participants",
+      indexes: [
+        {
+          fields: ["conversation_id"],
+        },
+        {
+          fields: ["user_id"],
+        },
+      ],
+    }
+  );
+
+  return ConversationParticipant;
+};
+
+// const { DataTypes } = require("sequelize");
+
+// module.exports = (sequelize) => {
+//   const DailyNutrition = sequelize.define(
+//     "DailyNutrition",
+//     {
+//       id: {
+//         type: DataTypes.UUID,
+//         defaultValue: DataTypes.UUIDV4,
+//         primaryKey: true,
+//       },
+//       user_id: {
+//         type: DataTypes.UUID,
+//         allowNull: false,
+//         references: {
+//           model: "Users",
+//           key: "id",
+//         },
+//       },
+//       date: {
+//         type: DataTypes.DATEONLY,
+//         allowNull: false,
+//       },
+//       meals: {
+//         type: DataTypes.JSONB,
+//         defaultValue: [],
+//       },
+//       totalCalories: {
+//         type: DataTypes.DECIMAL(8, 2),
+//         defaultValue: 0,
+//       },
+//       totalProtein: {
+//         type: DataTypes.DECIMAL(8, 2),
+//         defaultValue: 0,
+//       },
+//       totalCarbs: {
+//         type: DataTypes.DECIMAL(8, 2),
+//         defaultValue: 0,
+//       },
+//       totalFat: {
+//         type: DataTypes.DECIMAL(8, 2),
+//         defaultValue: 0,
+//       },
+//       waterIntake: {
+//         type: DataTypes.INTEGER,
+//         defaultValue: 0,
+//       },
+//       notes: {
+//         type: DataTypes.TEXT,
+//       },
+//       mood: {
+//         type: DataTypes.ENUM(
+//           "excellent",
+//           "good",
+//           "average",
+//           "poor",
+//           "terrible"
+//         ),
+//       },
+//       energyLevel: {
+//         type: DataTypes.INTEGER,
+//         validate: {
+//           min: 1,
+//           max: 10,
+//         },
+//       },
+//     },
+//     {
+//       tableName: "daily_nutrition",
+//       indexes: [
+//         {
+//           fields: ["user_id", "date"],
+//         },
+//       ],
+//     }
+//   );
+
+//   // Méthodes pour calculer les totaux nutritionnels
+//   // DailyNutrition.prototype.calculateTotals = async function () {
+//   //   let totalCalories = 0;
+//   //   let totalProtein = 0;
+//   //   let totalCarbs = 0;
+//   //   let totalFat = 0;
+
+//   //   for (const meal of this.meals) {
+//   //     if (meal.foodItemId) {
+//   //       const foodItem = await sequelize.FoodItem.findByPk(meal.foodItemId);
+//   //       if (foodItem) {
+//   //         const multiplier =
+//   //           meal.unit === "g" ? meal.quantity / 100 : meal.quantity;
+//   //         totalCalories += foodItem.calories * multiplier;
+//   //         totalProtein += foodItem.protein * multiplier;
+//   //         totalCarbs += foodItem.carbs * multiplier;
+//   //         totalFat += foodItem.fat * multiplier;
+//   //       }
+//   //     }
+//   //   }
+
+//   //   this.totalCalories = totalCalories;
+//   //   this.totalProtein = totalProtein;
+//   //   this.totalCarbs = totalCarbs;
+//   //   this.totalFat = totalFat;
+//   // };
+
+//   DailyNutrition.prototype.calculateTotals = async function () {
+//     let totalCalories = 0;
+//     let totalProtein = 0;
+//     let totalCarbs = 0;
+//     let totalFat = 0;
+
+//     for (const meal of this.meals) {
+//       if (meal.foodItem_id) {
+//         const foodItem = await sequelize.models.FoodItem.findByPk(
+//           meal.foodItem_id
+//         );
+//         if (foodItem) {
+//           const multiplier =
+//             meal.unit === "g" ? meal.quantity / 100 : meal.quantity;
+//           totalCalories += parseFloat(foodItem.calories) * multiplier;
+//           totalProtein += parseFloat(foodItem.protein) * multiplier;
+//           totalCarbs += parseFloat(foodItem.carbs) * multiplier;
+//           totalFat += parseFloat(foodItem.fat) * multiplier;
+//         }
+//       }
+//     }
+
+//     this.totalCalories = totalCalories;
+//     this.totalProtein = totalProtein;
+//     this.totalCarbs = totalCarbs;
+//     this.totalFat = totalFat;
+//   };
+//   // Associations
+//   DailyNutrition.associate = (models) => {
+//     DailyNutrition.belongsTo(models.Users, {
+//       foreignKey: "user_id",
+//       as: "user",
+//       onDelete: "CASCADE",
+//     });
+//   };
+
+//   // Hook avant sauvegarde pour recalculer les totaux
+//   DailyNutrition.beforeSave(async (record) => {
+//     await record.calculateTotals();
+//   });
+
+//   return DailyNutrition;
+// };
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+  const DailyNutrition = sequelize.define(
+    "DailyNutrition",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+      },
+      meals: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+        // Ajouter un getter pour s'assurer que chaque meal a un ID
+        get() {
+          const meals = this.getDataValue("meals") || [];
+          return meals.map((meal) => {
+            if (!meal.id) {
+              return {
+                ...meal,
+                id: uuidv4(), // Générer un ID si absent
+              };
+            }
+            return meal;
+          });
+        },
+        // Ajouter un setter pour normaliser les données
+        set(value) {
+          const meals = (value || []).map((meal) => {
+            // Garder l'ID existant ou en générer un nouveau
+            return {
+              ...meal,
+              id: meal.id || uuidv4(),
+            };
+          });
+          this.setDataValue("meals", meals);
+        },
+      },
+      totalCalories: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+      },
+      totalProtein: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+      },
+      totalCarbs: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+      },
+      totalFat: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+      },
+      waterIntake: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      notes: {
+        type: DataTypes.TEXT,
+      },
+      mood: {
+        type: DataTypes.ENUM(
+          "excellent",
+          "good",
+          "average",
+          "poor",
+          "terrible"
+        ),
+      },
+      energyLevel: {
+        type: DataTypes.INTEGER,
+        validate: {
+          min: 1,
+          max: 10,
+        },
+      },
+    },
+    {
+      tableName: "daily_nutrition",
+      indexes: [
+        {
+          fields: ["user_id", "date"],
+        },
+      ],
+    }
+  );
+
+  // Méthode pour calculer les totaux nutritionnels
+  DailyNutrition.prototype.calculateTotals = async function () {
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+
+    const meals = this.meals || [];
+
+    for (const meal of meals) {
+      if (meal.foodItem_id) {
+        const foodItem = await sequelize.models.FoodItem.findByPk(
+          meal.foodItem_id
+        );
+        if (foodItem) {
+          const multiplier =
+            meal.unit === "g" ? meal.quantity / 100 : meal.quantity;
+          totalCalories += parseFloat(foodItem.calories) * multiplier;
+          totalProtein += parseFloat(foodItem.protein) * multiplier;
+          totalCarbs += parseFloat(foodItem.carbs) * multiplier;
+          totalFat += parseFloat(foodItem.fat) * multiplier;
+        }
+      }
+    }
+
+    this.totalCalories = totalCalories;
+    this.totalProtein = totalProtein;
+    this.totalCarbs = totalCarbs;
+    this.totalFat = totalFat;
+  };
+
+  // Hook pour s'assurer que chaque meal a un ID avant la sauvegarde
+  DailyNutrition.beforeSave(async (record) => {
+    // S'assurer que chaque meal a un ID
+    const meals = (record.meals || []).map((meal) => {
+      return {
+        ...meal,
+        id: meal.id || uuidv4(),
+      };
+    });
+
+    record.meals = meals;
+    await record.calculateTotals();
+  });
+
+  // Associations
+  DailyNutrition.associate = (models) => {
+    DailyNutrition.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return DailyNutrition;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const DataSharingPreferences = sequelize.define(
+    "DataSharingPreferences",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        unique: true,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      enabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Global toggle for data sharing",
+      },
+      shareNutrition: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: "Share nutrition data with friends",
+      },
+      shareActivities: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Share activity data with friends",
+      },
+      shareGoals: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Share goals with friends",
+      },
+      shareAchievements: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Share achievements with friends",
+      },
+      allowFriendRequests: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Allow other users to send friend requests",
+      },
+      showInSearch: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+        comment: "Show profile in user search results",
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "data_sharing_preferences",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id"],
+        },
+      ],
+    }
+  );
+
+  DataSharingPreferences.associate = (models) => {
+    DataSharingPreferences.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return DataSharingPreferences;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  // Table pour les synchronisations
+  const DataSync = sequelize.define(
+    "DataSync",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      syncType: {
+        type: DataTypes.ENUM("full", "incremental", "manual"),
+        defaultValue: "incremental",
+      },
+      dataTypes: {
+        type: DataTypes.JSONB,
+        defaultValue: ["activity", "heartRate", "sleep", "exercise"],
+      },
+      startDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      endDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM("pending", "in_progress", "completed", "failed"),
+        defaultValue: "pending",
+      },
+      recordsProcessed: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      errors: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      completedAt: {
+        type: DataTypes.DATE,
+      },
+    },
+    {
+      tableName: "data_syncs",
+      indexes: [
+        {
+          fields: ["user_id", "status"],
+        },
+      ],
+    }
+  );
+  // Associations
+
+  DataSync.associate = (models) => {
+    DataSync.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+  return DataSync;
+};
+
+
+const { DataTypes, Op } = require("sequelize");
+module.exports = (sequelize) => {
+  const Friendship = sequelize.define(
+    "Friendship",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      requester_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      recipient_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      status: {
+        type: DataTypes.ENUM("pending", "accepted", "declined", "blocked"),
+        defaultValue: "pending",
+      },
+      type: {
+        type: DataTypes.VIRTUAL, // Champ virtuel pour déterminer le type
+        get() {
+          // Cette logique peut être adaptée selon le contexte
+          if (this.requester_id && this.recipient_id) {
+            return this.requester_id === this.userContext ? "sent" : "received";
+          }
+          return null;
+        },
+      },
+      requestMessage: {
+        type: DataTypes.TEXT,
+        validate: {
+          len: [0, 300],
+        },
+      },
+      acceptedAt: {
+        type: DataTypes.DATE,
+      },
+      declinedAt: {
+        type: DataTypes.DATE,
+      },
+      blockedAt: {
+        type: DataTypes.DATE,
+      },
+      blockedBy: {
+        type: DataTypes.UUID,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+    },
+    {
+      tableName: "friendships",
+      indexes: [
+        {
+          unique: true,
+          fields: ["requester_id", "recipient_id"],
+        },
+        {
+          fields: ["recipient_id", "status"],
+        },
+        {
+          fields: ["requester_id", "status"],
+        },
+      ],
+    }
+  );
+
+  // Méthode pour définir le contexte utilisateur
+  Friendship.prototype.setUserContext = function (userId) {
+    this.userContext = userId;
+    return this;
+  };
+
+  // Méthodes statiques pour les amitiés
+  Friendship.findFriendship = function (user_id_1, user_id_2) {
+    return this.findOne({
+      where: {
+        [Op.or]: [
+          { requester_id: user_id_1, recipient_id: user_id_2 },
+          { requester_id: user_id_2, recipient_id: user_id_1 },
+        ],
+      },
+    });
+  };
+
+  // Friendship.getFriends = function (user_id) {
+  //   return this.findAll({
+  //     where: {
+  //       [Op.or]: [
+  //         { requester_id: user_id, status: "accepted" },
+  //         { recipient_id: user_id, status: "accepted" },
+  //       ],
+  //     },
+  //     include: [
+  //       {
+  //         association: "requester",
+  //         attributes: ["id", "email"],
+  //         include: [
+  //           {
+  //             model: sequelize.models.Profiles,
+  //             as: "profile",
+  //             attributes: ["fname", "lname", "image"],
+  //           },
+  //         ],
+  //       },
+  //       {
+  //         association: "recipient",
+  //         attributes: ["id", "email"],
+  //         include: [
+  //           {
+  //             model: sequelize.models.Profiles,
+  //             as: "profile",
+  //             attributes: ["fname", "lname", "image"],
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //   }).then((friendships) => {
+  //     return friendships.map((friendship) => {
+  //       // Déterminer qui est l'ami (l'autre utilisateur)
+  //       const friend =
+  //         friendship.requester.id === user_id
+  //           ? friendship.recipient
+  //           : friendship.requester;
+
+  //       return {
+  //         id: friendship.id,
+  //         friend: {
+  //           id: friend.id,
+  //           fname: friend.profile?.fname,
+  //           lname: friend.profile?.lname,
+  //           email: friend.email,
+  //           profile_image: friend.profile?.image,
+  //           // Ajouter les stats si nécessaire
+  //         },
+  //         status: friendship.status,
+  //         createdAt: friendship.createdAt,
+  //       };
+  //     });
+  //   });
+  // };
+
+  // Méthode spécifique pour les demandes d'amis - CORRIGÉE
+  Friendship.getFriends = function (user_id, status = "accepted") {
+    return this.findAll({
+      where: {
+        [Op.or]: [
+          { requester_id: user_id, status: status },
+          { recipient_id: user_id, status: status },
+        ],
+      },
+      include: [
+        {
+          association: "requester",
+          attributes: ["id", "email", "createdAt"],
+          include: [
+            {
+              model: sequelize.models.Profiles,
+              as: "profile",
+              attributes: ["fname", "lname", "image"],
+            },
+            {
+              model: sequelize.models.UserStats,
+              as: "stats",
+              attributes: ["level", "experience"],
+            },
+          ],
+        },
+        {
+          association: "recipient",
+          attributes: ["id", "email", "createdAt"],
+          include: [
+            {
+              model: sequelize.models.Profiles,
+              as: "profile",
+              attributes: ["fname", "lname", "image"],
+            },
+            {
+              model: sequelize.models.UserStats,
+              as: "stats",
+              attributes: ["level", "experience"],
+            },
+          ],
+        },
+      ],
+    });
+  };
+
+  // Friendship.getFriendRequests = function (user_id, requestType = "received") {
+  //   let whereCondition = { status: "pending" };
+
+  //   if (requestType === "received") {
+  //     whereCondition.recipient_id = user_id;
+  //   } else if (requestType === "sent") {
+  //     whereCondition.requester_id = user_id;
+  //   }
+
+  //   // Déterminer l'association à inclure selon le type
+  //   const includeAssociation =
+  //     requestType === "received" ? "requester" : "recipient";
+
+  //   return this.findAll({
+  //     where: whereCondition,
+  //     include: [
+  //       {
+  //         association: includeAssociation, // Utiliser 'association' au lieu de 'model'
+  //         attributes: ["id", "email"],
+  //         include: [
+  //           {
+  //             model: sequelize.models.Profiles,
+  //             as: "profile",
+  //             attributes: ["fname", "lname", "image"],
+  //           },
+  //           // {
+  //           //   model: sequelize.models.UserStats,
+  //           //   as: "stats",
+  //           //   attributes: ["level"],
+  //           // },
+  //         ],
+  //       },
+  //     ],
+  //     order: [["createdAt", "DESC"]],
+  //   }).then((requests) => {
+  //     return requests.map((request) => {
+  //       const otherUser = request[includeAssociation];
+
+  //       return {
+  //         type: otherUser.type || requestType,
+  //         id: request.id,
+  //         user_id: otherUser.id,
+  //         fname: otherUser.profile?.fname || "",
+  //         lname: otherUser.profile?.lname || "",
+  //         email: otherUser.email,
+  //         image: otherUser.profile?.image || null,
+  //         stats: otherUser.stats
+  //           ? { level: otherUser.stats.level }
+  //           : { level: 0 },
+  //         status: request.status,
+  //         requestMessage: request.requestMessage,
+  //         createdAt: request.createdAt,
+  //       };
+  //     });
+  //   });
+  // };
+  // Méthode pour compter les amis communs entre deux utilisateurs
+
+  Friendship.getFriendRequests = function (user_id, requestType = "all") {
+    let whereCondition = { status: "pending" };
+    let includeAssociations = [];
+
+    if (requestType === "received") {
+      whereCondition.recipient_id = user_id;
+      includeAssociations = ["requester"];
+    } else if (requestType === "sent") {
+      whereCondition.requester_id = user_id;
+      includeAssociations = ["recipient"];
+    } else if (requestType === "all") {
+      // Pour les deux types, on modifie la condition where
+      whereCondition = {
+        status: "pending",
+        [Op.or]: [{ recipient_id: user_id }, { requester_id: user_id }],
+      };
+      includeAssociations = ["requester", "recipient"];
+    }
+
+    return this.findAll({
+      where: whereCondition,
+      include: includeAssociations.map((association) => ({
+        association: association,
+        attributes: ["id", "email"],
+        include: [
+          {
+            model: sequelize.models.Profiles,
+            as: "profile",
+            attributes: ["fname", "lname", "image"],
+          },
+        ],
+      })),
+      order: [["createdAt", "DESC"]],
+    }).then((requests) => {
+      return requests.map((request) => {
+        // Déterminer le type de demande et l'utilisateur concerné
+        let type;
+        let otherUser;
+
+        if (request.requester_id === user_id) {
+          type = "sent";
+          otherUser = request.recipient;
+        } else {
+          type = "received";
+          otherUser = request.requester;
+        }
+
+        return {
+          type: type,
+          id: request.id,
+          user_id: otherUser.id,
+          fname: otherUser.profile?.fname || "",
+          lname: otherUser.profile?.lname || "",
+          email: otherUser.email,
+          image: otherUser.profile?.image || null,
+          status: request.status,
+          requestMessage: request.requestMessage,
+          createdAt: request.createdAt,
+          // Informations supplémentaires sur la relation
+          requester_id: request.requester_id,
+          recipient_id: request.recipient_id,
+          is_requester: request.requester_id === user_id,
+        };
+      });
+    });
+  };
+  Friendship.countMutualFriendsAlt = function (user_id_1, user_id_2) {
+    return this.sequelize
+      .query(
+        `
+      SELECT COUNT(*) AS mutual_count
+      FROM friendships f1
+      INNER JOIN friendships f2 ON
+        (f1.requester_id = :user_id_1 OR f1.recipient_id = :user_id_1)
+        AND (f2.requester_id = :user_id_2 OR f2.recipient_id = :user_id_2)
+        AND (
+          (f1.requester_id = f2.requester_id AND f1.recipient_id = f2.recipient_id)
+          OR (f1.requester_id = f2.recipient_id AND f1.recipient_id = f2.requester_id)
+        )
+      WHERE f1.status = 'accepted' AND f2.status = 'accepted'
+    `,
+        {
+          replacements: { user_id_1, user_id_2 },
+          type: this.sequelize.QueryTypes.SELECT,
+        }
+      )
+      .then((result) => {
+        return result[0]?.mutual_count || 0;
+      });
+  };
+
+  // Alternative plus simple si la méthode ci-dessus ne fonctionne pas
+  Friendship.countMutualFriends = function (user_id_1, user_id_2) {
+    return this.findAll({
+      where: {
+        status: "accepted",
+        [Op.or]: [{ requester_id: user_id_1 }, { recipient_id: user_id_1 }],
+      },
+    }).then((friendshipsA) => {
+      const friendIdsA = friendshipsA.map((friendship) =>
+        friendship.requester_id === user_id_1
+          ? friendship.recipient_id
+          : friendship.requester_id
+      );
+
+      return this.findAll({
+        where: {
+          status: "accepted",
+          [Op.or]: [{ requester_id: user_id_2 }, { recipient_id: user_id_2 }],
+        },
+      }).then((friendshipsB) => {
+        const friendIdsB = friendshipsB.map((friendship) =>
+          friendship.requester_id === user_id_2
+            ? friendship.recipient_id
+            : friendship.requester_id
+        );
+
+        // Compter les amis communs
+        const mutualFriends = friendIdsA.filter((id) =>
+          friendIdsB.includes(id)
+        );
+        return mutualFriends.length;
+      });
+    });
+  };
+
+  Friendship.associate = (models) => {
+    Friendship.belongsTo(models.Users, {
+      foreignKey: "requester_id",
+      as: "requester",
+    });
+
+    Friendship.belongsTo(models.Users, {
+      foreignKey: "recipient_id",
+      as: "recipient",
+    });
+
+    Friendship.belongsTo(models.Users, {
+      foreignKey: "blockedBy",
+      as: "blockedByUser",
+    });
+  };
+
+  return Friendship;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Goal = sequelize.define(
+    "Goal",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      title: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+          len: [1, 100],
+        },
+      },
+      description: {
+        type: DataTypes.TEXT,
+        validate: {
+          len: [0, 500],
+        },
+      },
+      category: {
+        type: DataTypes.ENUM(
+          "distance",
+          "speed",
+          "consistency",
+          "event",
+          "other"
+        ),
+        allowNull: false,
+      },
+      target: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      current: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      unit: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+      },
+      deadline: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      completed: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      completedAt: {
+        type: DataTypes.DATE,
+      },
+      priority: {
+        type: DataTypes.ENUM("low", "medium", "high"),
+        defaultValue: "medium",
+      },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+      progress: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      progressPercentage: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+          max: 100,
+        },
+      },
+    },
+    {
+      tableName: "goals",
+      indexes: [
+        {
+          fields: ["user_id", "completed"],
+        },
+        {
+          fields: ["user_id", "deadline"],
+        },
+        {
+          fields: ["category"],
+        },
+        {
+          fields: ["isActive"],
+        },
+        {
+          fields: ["progressPercentage"], // Nouvel index
+        },
+      ],
+    }
+  );
+
+  Goal.associate = (models) => {
+    Goal.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+    });
+  };
+
+  // Hook pour calculer automatiquement le pourcentage de progression
+  Goal.beforeSave(async (goal) => {
+    if (goal.target > 0) {
+      goal.progressPercentage = Math.min(
+        (goal.current / goal.target) * 100,
+        100
+      );
+    } else {
+      goal.progressPercentage = 0;
+    }
+
+    // Marquer comme complété si la progression atteint 100%
+    if (goal.progressPercentage >= 100 && !goal.completed) {
+      goal.completed = true;
+      goal.completedAt = new Date();
+    } else if (goal.progressPercentage < 100 && goal.completed) {
+      goal.completed = false;
+      goal.completedAt = null;
+    }
+  });
+
+  // Méthode pour calculer le pourcentage de progression
+  Goal.prototype.getProgressPercentage = function () {
+    return this.target > 0
+      ? Math.min((this.current / this.target) * 100, 100)
+      : 0;
+  };
+
+  // Méthode pour vérifier si l'objectif est en retard
+  Goal.prototype.isOverdue = function () {
+    return !this.completed && new Date() > this.deadline;
+  };
+
+  return Goal;
+};
+
+// models/GoogleAuth.js
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const GoogleAuth = sequelize.define(
+    "GoogleAuth",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        allowNull: false,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      google_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "Google user ID",
+      },
+      refresh_token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: "Google refresh token",
+      },
+      access_token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: "Google access token",
+      },
+      token_expiry: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: "Access token expiration date",
+      },
+      scopes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: "Authorized scopes (comma-separated)",
+      },
+      is_linked: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      last_sync: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: "Last time Google data was synchronized",
+      },
+    },
+    {
+      tableName: "google_auth",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id"],
+        },
+        {
+          fields: ["google_id"],
+        },
+      ],
+    }
+  );
+
+  GoogleAuth.associate = (models) => {
+    GoogleAuth.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return GoogleAuth;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  // Table pour les données de fréquence cardiaque
+  const HeartRateData = sequelize.define(
+    "HeartRateData",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      timestamp: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      heartRate: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 30,
+          max: 250,
+        },
+      },
+      context: {
+        type: DataTypes.ENUM("resting", "active", "exercise", "recovery"),
+        defaultValue: "active",
+      },
+      confidence: {
+        type: DataTypes.DECIMAL(3, 2),
+        validate: {
+          min: 0,
+          max: 1,
+        },
+      },
+      dataSource: {
+        type: DataTypes.STRING(50),
+        defaultValue: "google_fit",
+      },
+    },
+    {
+      tableName: "heart_rate_data",
+      indexes: [
+        {
+          fields: ["user_id", "timestamp"],
+        },
+        {
+          fields: ["user_id", "context"],
+        },
+      ],
+    }
+  );
+  // Associations
+  HeartRateData.associate = (models) => {
+    // Association avec le modèle Users
+    HeartRateData.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE", // Supprime les données de fréquence cardiaque si l'utilisateur est supprimé
+    });
+  };
+
+  return HeartRateData;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Message = sequelize.define(
+    "Message",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      conversation_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "conversations",
+          key: "id",
+        },
+      },
+      sender_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      content: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        validate: {
+          len: [1, 1000],
+        },
+      },
+      messageType: {
+        type: DataTypes.ENUM(
+          "text",
+          "emoji",
+          "system",
+          "image",
+          "video",
+          "file"
+        ),
+        defaultValue: "text",
+      },
+      readBy: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      isEdited: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      editedAt: {
+        type: DataTypes.DATE,
+      },
+      reply_to_id: {
+        type: DataTypes.UUID,
+        references: {
+          model: "messages",
+          key: "id",
+        },
+      },
+    },
+    {
+      tableName: "messages",
+      indexes: [
+        {
+          fields: ["conversation_id", "createdAt"],
+        },
+        {
+          fields: ["sender_id"],
+        },
+      ],
+    }
+  );
+
+  Message.associate = (models) => {
+    Message.belongsTo(models.Conversation, {
+      foreignKey: "conversation_id",
+      as: "conversation",
+    });
+
+    Message.belongsTo(models.Users, {
+      foreignKey: "sender_id",
+      as: "sender",
+    });
+
+    Message.belongsTo(models.Message, {
+      foreignKey: "reply_to_id",
+      as: "replyTo",
+    });
+  };
+
+  return Message;
+};
+
+// Notifications
+// models/Notifications.js
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+    const Notifications = sequelize.define("Notifications", {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        type: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        content: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        metadata: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+        },
+        is_read: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+    });
+
+    Notifications.associate = (models) => {
+        Notifications.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+        });
+    };
+
+    return Notifications;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const FoodItem = sequelize.define(
+    "FoodItem",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      name: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+          len: [1, 100],
+        },
+      },
+      calories: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      protein: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      carbs: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      fat: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      fiber: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      sugar: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      sodium: {
+        type: DataTypes.DECIMAL(8, 2),
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      isCustom: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      createdBy: {
+        type: DataTypes.UUID,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      isPublic: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      category: {
+        type: DataTypes.ENUM(
+          "fruits",
+          "vegetables",
+          "grains",
+          "protein",
+          "dairy",
+          "fats",
+          "beverages",
+          "snacks",
+          "other"
+        ),
+        defaultValue: "other",
+      },
+      barcode: {
+        type: DataTypes.STRING(50),
+      },
+      brand: {
+        type: DataTypes.STRING(100),
+      },
+      servingSize: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+    },
+    {
+      tableName: "food_items",
+      indexes: [
+        {
+          fields: ["name"],
+        },
+        {
+          fields: ["category"],
+        },
+        {
+          fields: ["isPublic", "isCustom"],
+        },
+        {
+          fields: ["createdBy"],
+        },
+      ],
+    }
+  );
+  // Associations
+  FoodItem.associate = (models) => {
+    FoodItem.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+
+    FoodItem.belongsTo(models.Users, {
+      foreignKey: "createdBy",
+      as: "creator",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return FoodItem;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const NutritionGoals = sequelize.define(
+    "NutritionGoals",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        unique: true,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      dailyCalories: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 1000,
+          max: 5000,
+        },
+      },
+      dailyProtein: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 20,
+          max: 300,
+        },
+      },
+      dailyCarbs: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 50,
+          max: 500,
+        },
+      },
+      dailyFat: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 20,
+          max: 200,
+        },
+      },
+      dailyWater: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 1000,
+          max: 5000,
+        },
+      },
+      activityLevel: {
+        type: DataTypes.ENUM(
+          "sedentary",
+          "light",
+          "moderate",
+          "active",
+          "very_active"
+        ),
+        defaultValue: "moderate",
+      },
+      goal: {
+        type: DataTypes.ENUM(
+          "maintain",
+          "lose_weight",
+          "gain_weight",
+          "build_muscle",
+          "improve_performance"
+        ),
+        defaultValue: "maintain",
+      },
+    },
+    {
+      tableName: "nutrition_goals",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id"],
+        },
+      ],
+    }
+  );
+  // Associations
+  NutritionGoals.associate = (models) => {
+    NutritionGoals.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return NutritionGoals;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const PersonalRecord = sequelize.define(
+    "PersonalRecord",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      distance: {
+        type: DataTypes.DECIMAL(8, 2),
+        allowNull: false,
+        validate: {
+          min: 0,
+        },
+      },
+      time: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        validate: {
+          is: /^([0-9]{1,2}:)?[0-9]{1,2}:[0-9]{2}$/,
+        },
+      },
+      timeInSeconds: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+      },
+      notes: {
+        type: DataTypes.TEXT,
+        validate: {
+          len: [0, 500],
+        },
+      },
+      location: {
+        type: DataTypes.STRING(100),
+        validate: {
+          len: [0, 100],
+        },
+      },
+      weather: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+      heartRate: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+      pace: {
+        type: DataTypes.STRING(10),
+      },
+      elevation: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+      splits: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      verificationSource: {
+        type: DataTypes.STRING(50),
+      },
+      tags: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
+    },
+    {
+      tableName: "personal_records",
+      indexes: [
+        {
+          fields: ["user_id", "distance"],
+        },
+        {
+          fields: ["user_id", "date"],
+        },
+        {
+          fields: ["user_id", "timeInSeconds"],
+        },
+      ],
+    }
+  );
+
+  // Méthode pour calculer l'allure
+  PersonalRecord.prototype.calculatePace = function () {
+    if (this.distance <= 0 || this.timeInSeconds <= 0) return "0:00";
+
+    const paceInSecondsPerKm = this.timeInSeconds / this.distance;
+    const minutes = Math.floor(paceInSecondsPerKm / 60);
+    const seconds = Math.round(paceInSecondsPerKm % 60);
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  // Méthode statique pour convertir le temps en secondes
+  PersonalRecord.timeStringToSeconds = function (timeString) {
+    const parts = timeString.split(":").map(Number);
+    let seconds = 0;
+
+    if (parts.length === 3) {
+      // HH:MM:SS
+      seconds += parts[0] * 3600;
+      seconds += parts[1] * 60;
+      seconds += parts[2];
+    } else if (parts.length === 2) {
+      // MM:SS
+      seconds += parts[0] * 60;
+      seconds += parts[1];
+    }
+
+    return seconds;
+  };
+
+  // Hook avant sauvegarde pour calculer timeInSeconds et pace
+  PersonalRecord.beforeSave((record) => {
+    if (record.time) {
+      record.timeInSeconds = PersonalRecord.timeStringToSeconds(record.time);
+      record.pace = record.calculatePace();
+    }
+  });
+
+  // Associations
+  PersonalRecord.associate = (models) => {
+    PersonalRecord.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return PersonalRecord;
+};
+
+// const { DataTypes } = require("sequelize");
+// const { v4: uuidv4 } = require("uuid");
+
+// const defaultFeatures = {
+//     FREE: [
+//         "search_basic",
+//         "basic_data",
+//         "1_csv_export_daily",
+//         "email_support",
+//         "history_3_days",
+//         "basic_integrations",
+//     ],
+//     STARTER: [
+//         "search_basic",
+//         "basic_data",
+//         "csv_export",
+//         "email_support",
+//         "history_30_days",
+//         "basic_integrations",
+//     ],
+//     PRO: [
+//         "search_advanced",
+//         "premium_data",
+//         "prospecting_ai",
+//         "crm_integration",
+//         "email_campaigns",
+//         "priority_support",
+//         "unlimited_history",
+//         "api_access",
+//         "dashboard_advanced",
+//         "multi_format_export",
+//     ],
+//     EXPERT: [
+//         "multi_users",
+//         "predictive_ai",
+//         "exclusive_data",
+//         // "unlimited_integrations",
+//         "dedicated_support",
+//         "custom_training",
+//         "white_label",
+//         "custom_reports",
+//         "account_manager",
+//         "sla_999",
+//     ],
+// };
+
+// const defaultCredits = {
+//     FREE: 1000,
+//     STARTER: 10000,
+//     PRO: 100000,
+//     EXPERT: 800000,
+// };
+
+// module.exports = (sequelize) => {
+//     const Plans = sequelize.define(
+//         "Plans",
+//         {
+//             id: {
+//                 type: DataTypes.UUID,
+//                 defaultValue: uuidv4,
+//                 primaryKey: true,
+//                 allowNull: false,
+//             },
+//             name: {
+//                 type: DataTypes.ENUM("FREE", "STARTER", "PRO", "EXPERT"),
+//                 allowNull: false,
+//                 defaultValue: "FREE",
+//             },
+//             description: {
+//                 type: DataTypes.STRING,
+//                 allowNull: true,
+//             },
+//             price_monthly: {
+//                 type: DataTypes.FLOAT,
+//                 allowNull: false,
+//                 defaultValue: 0,
+//                 validate: {
+//                     min: 0,
+//                 },
+//             },
+//             price_annual: {
+//                 type: DataTypes.FLOAT,
+//                 allowNull: false,
+//                 defaultValue: 0,
+//                 validate: {
+//                     min: 0,
+//                 },
+//             },
+//             monthly_credits: {
+//                 type: DataTypes.INTEGER,
+//                 allowNull: false,
+//                 defaultValue: 1000,
+//             },
+//             features: {
+//                 type: DataTypes.JSONB,
+//                 allowNull: true,
+//             },
+//         },
+//         {
+//             hooks: {
+//                 beforeValidate: (plan) => {
+//                     if (
+//                         !plan.features &&
+//                         plan.name &&
+//                         defaultFeatures[plan.name]
+//                     ) {
+//                         plan.features = defaultFeatures[plan.name];
+//                     }
+
+//                     if (
+//                         !plan.monthly_credits &&
+//                         plan.name &&
+//                         defaultCredits[plan.name]
+//                     ) {
+//                         plan.monthly_credits = defaultCredits[plan.name];
+//                     }
+//                 },
+//             },
+//         }
+//     );
+
+//     Plans.associate = (models) => {
+//         Plans.hasMany(models.Subscriptions, {
+//             foreignKey: "plan_id",
+//             as: "subscriptions",
+//         });
+//     };
+
+//     return Plans;
+// };
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+const defaultFeatures = {
+    FREE: [
+        "search_basic",
+        "basic_data",
+        "1_csv_export_daily",
+        "email_support",
+        "history_3_days",
+        "basic_integrations",
+    ],
+};
+
+const defaultCredits = {
+    FREE: 1000,
+};
+
+module.exports = (sequelize) => {
+    const Plans = sequelize.define(
+        "Plans",
+        {
+            id: {
+                type: DataTypes.UUID,
+                defaultValue: uuidv4,
+                primaryKey: true,
+                allowNull: false,
+            },
+            product_id: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                unique: true,
+            },
+
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
+            description: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
+            prices: {
+                type: DataTypes.JSONB,
+                allowNull: true,
+            },
+
+            credit_allocated: {
+                type: DataTypes.FLOAT,
+                defaultValue: 0.0,
+            },
+
+            features: {
+                type: DataTypes.JSONB,
+                allowNull: true,
+            },
+
+            active: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: true,
+            },
+
+            is_free: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: true,
+            },
+        },
+        {
+            hooks: {
+                beforeValidate: (plan) => {
+                    if (
+                        !plan.features &&
+                        plan.name &&
+                        defaultFeatures[plan.name]
+                    ) {
+                        plan.features = defaultFeatures[plan.name];
+                    }
+
+                    if (
+                        !plan.monthly_credits &&
+                        plan.name &&
+                        defaultCredits[plan.name]
+                    ) {
+                        plan.monthly_credits = defaultCredits[plan.name];
+                    }
+                },
+            },
+        }
+    );
+
+    Plans.associate = (models) => {
+        Plans.hasMany(models.Subscriptions, {
+            foreignKey: "plan_id",
+            as: "subscriptions",
+        });
+    };
+
+    return Plans;
+};
+
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+  const Profiles = sequelize.define("Profiles", {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: uuidv4,
+      primaryKey: true,
+      allowNull: false,
+    },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+    fname: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lname: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    address: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    agree_to_terms: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+  });
+
+  Profiles.associate = (models) => {
+    Profiles.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+
+  return Profiles;
+};
+
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Report = sequelize.define(
+    "Report",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      reporter_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      reported_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      reason: {
+        type: DataTypes.ENUM(
+          "inappropriate_content",
+          "harassment",
+          "spam",
+          "fake_profile",
+          "abusive_behavior",
+          "other"
+        ),
+        allowNull: false,
+      },
+      details: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        validate: {
+          len: [1, 1000],
+        },
+      },
+      severity: {
+        type: DataTypes.ENUM("low", "medium", "high"),
+        defaultValue: "medium",
+      },
+      status: {
+        type: DataTypes.ENUM(
+          "pending",
+          "under_review",
+          "resolved",
+          "dismissed"
+        ),
+        defaultValue: "pending",
+      },
+      reviewedBy: {
+        type: DataTypes.UUID,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      reviewedAt: {
+        type: DataTypes.DATE,
+      },
+      action: {
+        type: DataTypes.ENUM(
+          "none",
+          "warning",
+          "temporary_ban",
+          "permanent_ban",
+          "content_removal"
+        ),
+      },
+      actionDetails: {
+        type: DataTypes.TEXT,
+      },
+    },
+    {
+      tableName: "reports",
+      indexes: [
+        {
+          fields: ["reported_id"],
+        },
+        {
+          fields: ["reporter_id"],
+        },
+        {
+          fields: ["status", "createdAt"],
+        },
+      ],
+    }
+  );
+
+  return Report;
+};
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+    const Roles = sequelize.define("Roles", {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: uuidv4,
+            primaryKey: true,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        account_type: {
+            type: DataTypes.ENUM(
+                "GUEST",
+                "SPONSORED",
+                "USER",
+                "ADMIN",
+                "MANAGER"
+            ),
+            defaultValue: "USER",
+            allowNull: false,
+        },
+    });
+
+    Roles.associate = (models) => {
+        Roles.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+        });
+        Roles.hasOne(models.AdminPreferencies, {
+            foreignKey: "role_id",
+            as: "preferences",
+        });
+    };
+
+    return Roles;
+};
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+    const Sessions = sequelize.define("Sessions", {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: uuidv4,
+            primaryKey: true,
+            allowNull: false,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        ip_address: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        user_agent: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        token: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        expires_at: {
+            type: DataTypes.DATE,
+            allowNull: false,
+        },
+    });
+
+    Sessions.associate = (models) => {
+        Sessions.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+            onDelete: "CASCADE",
+        });
+    };
+
+    return Sessions;
+};
+
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  // Table pour les données de sommeil
+  const SleepData = sequelize.define(
+    "SleepData",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+      },
+      bedTime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      wakeTime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      totalSleepMinutes: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 0,
+          max: 1440, // 24 heures max
+        },
+      },
+      deepSleepMinutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      lightSleepMinutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      remSleepMinutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      awakeMinutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      sleepQuality: {
+        type: DataTypes.ENUM("poor", "fair", "good", "excellent"),
+        defaultValue: "good",
+      },
+      dataSource: {
+        type: DataTypes.STRING(50),
+        defaultValue: "google_fit",
+      },
+      rawData: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+    },
+    {
+      tableName: "sleep_data",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id", "date"],
+        },
+      ],
+    }
+  );
+  // Associations
+  SleepData.associate = (models) => {
+    SleepData.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+      onDelete: "CASCADE",
+    });
+  };
+  return SleepData;
+};
+
+// models/Subscriptions.js
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+module.exports = (sequelize) => {
+    const Subscriptions = sequelize.define("Subscriptions", {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: uuidv4,
+            primaryKey: true,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        plan_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        is_annual: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        start_date: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        },
+        end_date: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        status: {
+            type: DataTypes.ENUM("ACTIVE", "PAUSED", "CANCELED", "EXPIRED"),
+            defaultValue: "ACTIVE",
+        },
+        is_active: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+        },
+        credit_allocated: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1000,
+        },
+        auto_renew: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+        },
+        billing_type: {
+            type: DataTypes.ENUM("MONTHLY", "ANNUAL", "FREE"),
+            defaultValue: "FREE",
+        },
+    });
+
+    Subscriptions.associate = (models) => {
+        Subscriptions.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+        });
+        Subscriptions.belongsTo(models.Plans, {
+            foreignKey: "plan_id",
+            as: "plan",
+        });
+    };
+
+    return Subscriptions;
+};
+
+// models/Suggestion.js
+module.exports = (sequelize, DataTypes) => {
+  const Suggestion = sequelize.define(
+    "Suggestion",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      type: {
+        type: DataTypes.ENUM("motivation", "workout", "plan", "nutrition"),
+        allowNull: false,
+      },
+      frequency: {
+        type: DataTypes.ENUM("daily", "3days", "weekly"),
+        defaultValue: "daily",
+      },
+      content: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+      },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+      expires_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      generated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "suggestions",
+      underscored: true,
+      indexes: [
+        {
+          fields: ["user_id", "type", "frequency"],
+        },
+        {
+          fields: ["expires_at"],
+        },
+      ],
+    }
+  );
+
+  Suggestion.associate = function (models) {
+    Suggestion.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+    });
+  };
+
+  return Suggestion;
+};
+
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+// await UserRelations.create({
+//   user_id: invitedUser.id,
+//   related_by: sponsor.id,
+//   type: "SPONSOR",
+//   status: "PENDING",
+//   custom_quota: 300,
+//   message: "Voici un bonus de bienvenue 🎁"
+// });
+
+module.exports = (sequelize) => {
+    const UserRelations = sequelize.define("UserRelations", {
+        id: {
+            type: DataTypes.UUID,
+            primaryKey: true,
+            defaultValue: uuidv4,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            index: true,
+        },
+        related_by: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            index: true,
+        },
+        relation_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true,
+        },
+        type: {
+            type: DataTypes.ENUM("SPONSOR", "TEAM_INVITE"),
+            allowNull: false,
+        },
+        status: {
+            type: DataTypes.ENUM("PENDING", "ACCEPTED", "DECLINED", "EXPIRED"),
+            defaultValue: "PENDING",
+        },
+        // message: {
+        //     type: DataTypes.STRING,
+        //     allowNull: true,
+        // },
+        custom_quota: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        accepted_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        expires_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+    });
+
+    UserRelations.associate = (models) => {
+        UserRelations.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+            // as: "invitee", // 👈 changement ici
+        });
+
+        UserRelations.belongsTo(models.Users, {
+            foreignKey: "related_by",
+            as: "inviter",
+        });
+    };
+
+    return UserRelations;
+};
+
+const { DataTypes } = require("sequelize");
+const { v4: uuidv4 } = require("uuid");
+
+// await UserRelations.create({
+//   user_id: invitedUser.id,
+//   related_by: sponsor.id,
+//   type: "SPONSOR",
+//   status: "PENDING",
+//   custom_quota: 300,
+//   message: "Voici un bonus de bienvenue 🎁"
+// });
+
+module.exports = (sequelize) => {
+    const UserRelations = sequelize.define("UserRelations", {
+        id: {
+            type: DataTypes.UUID,
+            primaryKey: true,
+            defaultValue: uuidv4,
+        },
+        user_id: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            index: true,
+        },
+        related_by: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            index: true,
+        },
+        relation_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true,
+        },
+        type: {
+            type: DataTypes.ENUM("SPONSOR", "TEAM_INVITE"),
+            allowNull: false,
+        },
+        status: {
+            type: DataTypes.ENUM("PENDING", "ACCEPTED", "DECLINED", "EXPIRED"),
+            defaultValue: "PENDING",
+        },
+        // message: {
+        //     type: DataTypes.STRING,
+        //     allowNull: true,
+        // },
+        custom_quota: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        accepted_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        expires_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+    });
+
+    UserRelations.associate = (models) => {
+        UserRelations.belongsTo(models.Users, {
+            foreignKey: "user_id",
+            as: "user",
+            // as: "invitee", // 👈 changement ici
+        });
+
+        UserRelations.belongsTo(models.Users, {
+            foreignKey: "related_by",
+            as: "inviter",
+        });
+    };
+
+    return UserRelations;
+};
+
+const { DataTypes } = require("sequelize");
+const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
+const jwt = require("jsonwebtoken");
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error("JWT_SECRET env var is required");
+}
+
+module.exports = (sequelize) => {
+  const Users = sequelize.define(
+    "Users",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: uuidv4,
+        primaryKey: true,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: { isEmail: true },
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+      },
+      status: {
+        type: DataTypes.ENUM("UNVERIFIED", "VERIFIED", "ARCHIVED", "BLOCKED"),
+        allowNull: false,
+        defaultValue: "UNVERIFIED",
+      },
+      role: {
+        type: DataTypes.ENUM("USER", "ADMIN", "SUPER_ADMIN"),
+        allowNull: false,
+        defaultValue: "USER",
+      },
+      reset_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
+      reset_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+    },
+    {
+      hooks: {
+        // 1) Ensure an ID and a token exist BEFORE validation
+        beforeValidate: (user, options) => {
+          // If no id, generate one (though defaultValue usually does this)
+          if (!user.id) {
+            user.id = uuidv4();
+          }
+        },
+
+        // 2) Hash password right before saving to DB
+        beforeCreate: async (user, options) => {
+          user.password = await bcrypt.hash(user.password, 10);
+        },
+        afterCreate: async (user, options) => {
+          try {
+            // Créer des préférences de partage par défaut pour le nouvel utilisateur
+            await sequelize.models.DataSharingPreferences.create({
+              user_id: user.id,
+              // Les valeurs par défaut sont déjà définies dans le modèle
+            });
+          } catch (error) {
+            console.error(
+              "Error creating default data sharing preferences:",
+              error
+            );
+          }
+        },
+      },
+      paranoid: true, // Activer la suppression douce (soft delete)
+    }
+  );
+
+  // Définition des associations
+  Users.associate = (models) => {
+    // 1. Relation One-to-One avec Profile
+    Users.hasOne(models.Profiles, {
+      foreignKey: "user_id",
+      as: "profile",
+      onDelete: "CASCADE", // Supprime le profil si l'utilisateur est supprimé
+      hooks: true, // Active les hooks pour la suppression en cascade
+    });
+
+    // 2. Relation One-to-One avec Role (si nécessaire)
+    Users.hasOne(models.Roles, {
+      foreignKey: "user_id",
+      as: "role_data",
+      onDelete: "CASCADE",
+    });
+
+    // 3. Relation One-to-Many avec Sessions
+    Users.hasMany(models.Sessions, {
+      foreignKey: "user_id",
+      as: "sessions",
+      onDelete: "CASCADE",
+    });
+
+    // 4. Relation One-to-Many avec Subscriptions
+    Users.hasMany(models.Subscriptions, {
+      foreignKey: "user_id",
+      as: "subscriptions",
+    });
+
+    // 5. Relation One-to-Many avec Notifications
+    Users.hasMany(models.Notifications, {
+      foreignKey: "user_id",
+      as: "notifications",
+      onDelete: "CASCADE",
+    });
+
+    // 6. Relations d'amitié (requérant et receveur)
+    Users.hasMany(models.Friendship, {
+      foreignKey: "requester_id",
+      as: "sentFriendRequests",
+    });
+
+    Users.hasMany(models.Friendship, {
+      foreignKey: "recipient_id",
+      as: "receivedFriendRequests",
+    });
+
+    // 7. Relations de conversation
+    Users.belongsToMany(models.Conversation, {
+      through: models.ConversationParticipant,
+      foreignKey: "user_id",
+      as: "conversations",
+    });
+
+    // 8. Messages envoyés
+    Users.hasMany(models.Message, {
+      foreignKey: "sender_id",
+      as: "messages",
+    });
+
+    // 9. Activités partagées
+    Users.hasMany(models.ActivityShare, {
+      foreignKey: "shared_by_id",
+      as: "sharedActivities",
+    });
+
+    // 10. Rapports envoyés/reçus
+    Users.hasMany(models.Report, {
+      foreignKey: "reporter_id",
+      as: "reportsSent",
+    });
+
+    Users.hasMany(models.Report, {
+      foreignKey: "reported_id",
+      as: "reportsReceived",
+    });
+
+    // 11. Relations de parrainage
+    Users.hasMany(models.UserRelations, {
+      foreignKey: "user_id",
+      as: "relationsReceived",
+    });
+
+    Users.hasMany(models.UserRelations, {
+      foreignKey: "related_by",
+      as: "relationsSent",
+    });
+
+    // 12. Relation One-to-Many avec Achievements
+    Users.hasMany(models.Achievement, {
+      foreignKey: "user_id",
+      as: "achievements",
+      onDelete: "CASCADE", // Supprime les goals si l'utilisateur est supprimé
+    });
+
+    // 13. Relation One-to-Many avec ActivityData
+    Users.hasMany(models.ActivityData, {
+      foreignKey: "user_id",
+      as: "activity_data",
+      onDelete: "CASCADE", // Supprime les goals si l'utilisateur est supprimé
+    });
+
+    // 14. Relation One-to-Many avec Goals
+    Users.hasMany(models.Goal, {
+      foreignKey: "user_id",
+      as: "goals",
+      onDelete: "CASCADE", // Supprime les goals si l'utilisateur est supprimé
+    });
+
+    // 15. Relation One-to-Many avec HeartRateData
+    Users.hasMany(models.HeartRateData, {
+      foreignKey: "user_id",
+      as: "heartRateData",
+      onDelete: "CASCADE", // Supprime les données de fréquence cardiaque si l'utilisateur est supprimé
+    });
+    // 16. Relation One-to-Many avec SleepData
+    Users.hasMany(models.SleepData, {
+      foreignKey: "user_id",
+      as: "sleepData",
+      onDelete: "CASCADE", // Supprime les données de sommeil si l'utilisateur est supprimé
+    });
+    // 17. Relation One-to-Many avec ExerciseSession
+    Users.hasMany(models.ExerciseSession, {
+      foreignKey: "user_id",
+      as: "exerciseSessions",
+      onDelete: "CASCADE", // Supprime les sessions d'exercice si l'utilisateur est supprimé
+    });
+
+    // 18. Relation One-to-Many avec DataSync
+    Users.hasMany(models.DataSync, {
+      foreignKey: "user_id",
+      as: "dataSyncs",
+      onDelete: "CASCADE", // Supprime les synchronisations de données si l'utilisateur est supprimé
+    });
+
+    // 19. Relation One-to-Many avec Nutrition
+    Users.hasMany(models.FoodItem, {
+      foreignKey: "user_id",
+      as: "foodItem",
+      onDelete: "CASCADE", // Supprime les données de nutrition si l'utilisateur est supprimé
+    });
+
+    // 20. Relation One-to-Many avec DailyNutrition
+    Users.hasMany(models.DailyNutrition, {
+      foreignKey: "user_id",
+      as: "dailyNutrition",
+      onDelete: "CASCADE", // Supprime les données de DailyNutrition si l'utilisateur est supprimé
+    });
+
+    // 21. Relation One-to-Many avec NutritionGoals
+    Users.hasMany(models.NutritionGoals, {
+      foreignKey: "user_id",
+      as: "nutritionGoals",
+      onDelete: "CASCADE", // Supprime les données de NutritionGoals si l'utilisateur est supprimé
+    });
+    // 22. Relation One-to-Many avec PersonalRecord
+    Users.hasMany(models.PersonalRecord, {
+      foreignKey: "user_id",
+      as: "personalRecord",
+      onDelete: "CASCADE", // Supprime les Records personelles de repas si l'utilisateur est supprimé
+    });
+
+    // 23. Relation One-to-One avec GoogleAuth
+    Users.hasOne(models.GoogleAuth, {
+      foreignKey: "user_id",
+      as: "googleAuth",
+      onDelete: "CASCADE",
+    });
+
+    //24. Relation on-to-One whith DataSharingPreferences
+    Users.hasOne(models.DataSharingPreferences, {
+      foreignKey: "user_id",
+      as: "dataSharingPreferences",
+      onDelete: "CASCADE",
+    });
+
+    //25. Relation on-to-One whith UserStats
+    Users.hasOne(models.UserStats, {
+      foreignKey: "user_id",
+      as: "stats",
+      onDelete: "CASCADE",
+    });
+
+    Users.hasMany(models.CalendarEvent, {
+      foreignKey: "user_id",
+      as: "calendar_event",
+      onDelete: "CASCADE",
+    });
+  };
+  Users.prototype.generateTokens = function () {
+    const payload = { id: this.id, email: this.email };
+
+    const accessToken = jwt.sign(payload, SECRET, {
+      expiresIn: "2h",
+    });
+
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
+
+    return { accessToken, refreshToken };
+  };
+
+  Users.prototype.generateVerificationToken = function () {
+    const expiresIn = "15m";
+
+    const payload = { id: this.id, email: this.email };
+    return jwt.sign(payload, SECRET, { expiresIn: expiresIn }); // Plus court et temporaire
+  };
+
+  Users.prototype.verifyPassword = function (password) {
+    // Verify if the password matches the stored password
+    // Use bcrypt to compare the plain text password with the hashed password
+    const isMatch = bcrypt.compareSync(password, this.password);
+
+    return isMatch;
+  };
+  return Users;
+};
+
+
+// models/UserStats.js
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const UserStats = sequelize.define(
+    "UserStats",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        unique: true,
+        references: {
+          model: "Users",
+          key: "id",
+        },
+      },
+      points: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+          max: 100,
+        },
+      },
+      level: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+        validate: {
+          min: 1,
+          max: 100,
+        },
+      },
+      experience: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+        },
+      },
+      // total_distance: {
+      //   type: DataTypes.DECIMAL(10, 2),
+      //   defaultValue: 0,
+      // },
+      weekly_distance: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      },
+      // total_runs: {
+      //   type: DataTypes.INTEGER,
+      //   defaultValue: 0,
+      // },
+      streak_days: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      average_pace: {
+        type: DataTypes.STRING,
+        defaultValue: "0:00",
+      },
+    },
+    {
+      tableName: "user_stats",
+      indexes: [
+        {
+          unique: true,
+          fields: ["user_id"],
+        },
+      ],
+    }
+  );
+
+  UserStats.associate = (models) => {
+    UserStats.belongsTo(models.Users, {
+      foreignKey: "user_id",
+      as: "user",
+    });
+  };
+
+  return UserStats;
+};

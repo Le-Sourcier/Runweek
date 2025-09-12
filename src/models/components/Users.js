@@ -66,18 +66,24 @@ module.exports = (sequelize) => {
         beforeCreate: async (user, options) => {
           user.password = await bcrypt.hash(user.password, 10);
         },
+        // Dans le hook afterCreate (option moins recommandée)
         afterCreate: async (user, options) => {
           try {
-            // Créer des préférences de partage par défaut pour le nouvel utilisateur
-            await sequelize.models.DataSharingPreferences.create({
-              user_id: user.id,
-              // Les valeurs par défaut sont déjà définies dans le modèle
-            });
+            // Utilisez la transaction passée en option si elle existe
+            const transaction = options.transaction;
+
+            await sequelize.models.DataSharingPreferences.create(
+              {
+                user_id: user.id,
+              },
+              { transaction }
+            );
           } catch (error) {
             console.error(
               "Error creating default data sharing preferences:",
-              error
+              error.message
             );
+            // Ne pas throw l'erreur pour ne pas interrompre le flux principal
           }
         },
       },

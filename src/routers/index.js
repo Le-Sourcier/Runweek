@@ -8,11 +8,8 @@ router
   .use("/notif", authorize, require("./components/notificationsRouter"))
   .use("/sponsor", authorize, require("./components/sponsorRouter"))
   .use("/stripe", authorize, require("./components/stripeProductRouter"))
-  .use("/activities", authorize, require("./components/activityRouter"))
 
   .use("/auth", require("./components/googleAuthRouter"))
-  .use("/google/fit", authorize, require("./components/googleFitRouter"))
-
   .use("/aicoach", authorize, require("./components/aiCoachRouter"))
 
   .use(
@@ -30,7 +27,8 @@ router
     authorize,
     require("./components/dataSharingPreferencesRouter")
   )
-  .use("/calendar", require("./components/calendarRoutes"));
+  .use("/calendar", require("./components/calendarRoutes"))
+  .use("/statistics", require("./components/statisticsRouter"));
 // router.use("/comments", authorize, require("./components/commentRouter"));
 // router.use("/reports", authorize, require("./components/reportRouter"));
 // router.use("/challenges", authorize, require("./components/challengeRouter"));

@@ -19,6 +19,7 @@ const {
   UserRelations,
   Notifications,
   GoogleAuth,
+  Lang,
 } = db;
 const sendMail = require("../../functions/components/sendMail");
 const MailInvitationTemplate = require("../../../lib/MailInvitationTemplate");
@@ -312,7 +313,15 @@ module.exports = {
           {
             model: Profiles,
             as: "profile",
-            attributes: ["fname", "lname", "phone", "address", "bio", "image"],
+            attributes: [
+              "fname",
+              "lname",
+              "phone",
+              "address",
+              "bio",
+              "image",
+              "lang",
+            ],
           },
           {
             model: GoogleAuth,
@@ -332,6 +341,19 @@ module.exports = {
               },
             ],
           },
+          {
+            model: db.DataSharingPreferences,
+            as: "dataSharingPreferences",
+            attributes: [
+              "enabled",
+              "shareNutrition",
+              "shareActivities",
+              "shareGoals",
+              "shareAchievements",
+              "allowFriendRequests",
+              "showInSearch",
+            ],
+          },
         ],
       });
 
@@ -346,6 +368,30 @@ module.exports = {
       const planName = subc?.plan?.name || "FREE";
       const currentCredits = subc?.credit_allocated ?? 0;
 
+      const prefData = user.dataSharingPreferences;
+
+      // const langs = await Lang.findAll();
+
+      // const avLangs = langs.map((lang) => {
+      //   return {
+      //     code: lang.code,
+      //     name: lang.name,
+      //     flag: lang.flag,
+      //     enabled: lang.enabled,
+      //   };
+      // });
+
+      // Preferences:
+      const pref = {
+        enabled: prefData.enabled,
+        shareNutrition: prefData.shareNutrition,
+        shareActivities: prefData.shareActivities,
+        shareGoals: prefData.shareGoals,
+        shareAchievements: prefData.shareAchievements,
+        allowFriendRequests: prefData.allowFriendRequests,
+        showInSearch: prefData.showInSearch,
+      };
+
       const data = {
         id: user.id,
         email: user.email,
@@ -357,6 +403,7 @@ module.exports = {
         phone: user.profile?.phone,
         address: user.profile.address ?? null,
         image: user.profile?.image ?? null,
+        lang: user.profile?.lang,
         bio: user.profile?.bio ?? null,
 
         socialAccounts: user.googleAuth && [
@@ -367,6 +414,7 @@ module.exports = {
             refresh_token: user.googleAuth.refresh_token,
           },
         ],
+        preferences: pref,
         // Date
         createdAt: user.createdAt,
       };
@@ -427,7 +475,7 @@ module.exports = {
       const userId = req.user?.id;
       if (!userId) return serverMessage(res, "UNAUTHORIZED", 401);
 
-      const { fname, lname, phone, address, bio } = req.body;
+      const { fname, lname, phone, address, bio, lang } = req.body;
 
       const profile = await Profiles.findOne({
         where: { user_id: userId },
@@ -445,6 +493,7 @@ module.exports = {
         phone,
         address,
         bio,
+        lang,
       };
 
       Object.entries(updatableFields).forEach(([key, value]) => {
@@ -470,6 +519,7 @@ module.exports = {
         address: profile.address ?? null,
         image: profile?.image ?? null,
         bio: profile?.bio ?? null,
+        lang: profile?.lang,
         // Date
         createdAt: profile?.updatedAt,
       };
@@ -610,6 +660,24 @@ module.exports = {
     }
   },
 
+  getAvailableLang: async (req, res) => {
+    try {
+      const langs = await Lang.findAll();
+
+      const data = langs.map((lang) => {
+        return {
+          code: lang.code,
+          name: lang.name,
+          flag: lang.flag,
+          enabled: lang.enabled,
+        };
+      });
+      return serverMessage(res, "SUCESS", data);
+    } catch (error) {
+      return serverMessage("ERROR_RETRIEVES_APP_LANGUAGES_CONFIG");
+    }
+  },
+
   verifyPasswordToken: async (req, res) => {
     try {
       const { token } = req.body;
@@ -648,7 +716,7 @@ module.exports = {
       });
       const result = await sendMail({
         to: email,
-        subject: "Reset Your Password - Your Prospect Pro",
+        subject: "Reset Your Password - RunWeek",
         text: rLink,
         html,
       });
@@ -947,29 +1015,198 @@ module.exports = {
   // Initialisation de l'authentification Google
   initiateGoogleAuth: (req, res) => {
     try {
-      passport.authenticate("google", {
-        scope: [
-          "profile",
-          "email",
-          "https://www.googleapis.com/auth/userinfo.profile",
-          "https://www.googleapis.com/auth/userinfo.email",
-          "https://www.googleapis.com/auth/fitness.activity.read",
-          "https://www.googleapis.com/auth/fitness.heart_rate.read",
-          "https://www.googleapis.com/auth/fitness.sleep.read",
-          "https://www.googleapis.com/auth/fitness.location.read",
-          "openid", // ← Ajouter openid
-        ],
-        accessType: "offline", // ← ESSENTIEL
-        prompt: "consent", // ← Force le consentement
-        session: false,
-        include_granted_scopes: true,
-      })(req, res);
+      // Construire l'URL d'authentification Google manuellement
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams(
+        {
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+          response_type: "code",
+          scope: [
+            "profile",
+            "email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/fitness.activity.read",
+            "https://www.googleapis.com/auth/fitness.heart_rate.read",
+            "https://www.googleapis.com/auth/fitness.sleep.read",
+            "https://www.googleapis.com/auth/fitness.location.read",
+            "openid",
+          ].join(" "),
+          access_type: "offline",
+          prompt: "consent",
+          include_granted_scopes: "true",
+        }
+      ).toString()}`;
+
+      res.redirect(authUrl);
     } catch (error) {
-      console.error("Google auth initiation error:", error);
+      console.error("Google auth initiation error:", error.message);
       return serverMessage(res, "GOOGLE_AUTH_INITIATION_FAILED");
     }
   },
-  // Callback Google OAuth
+
+  // Échanger le code Google contre des tokens
+  exchangeGoogleCode: async (req, res) => {
+    try {
+      const { code } = req.body;
+
+      if (!code) {
+        return serverMessage(res, "GOOGLE_AUTH_CODE_REQUIRED");
+      }
+
+      // Initialiser le client OAuth2 Google
+      const oAuth2Client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI
+      );
+
+      let tokenResponse;
+      try {
+        tokenResponse = await oAuth2Client.getToken({
+          code: code,
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        });
+      } catch (error) {
+        const err = error.response?.data.error;
+        if (err) {
+          return serverMessage(res, "INVALID_GOOGLE_GRANT");
+        }
+        console.error("Token exchange error details:", error.response?.data);
+        return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+      }
+
+      const { tokens } = tokenResponse;
+
+      // Vérifier le token ID pour obtenir les infos utilisateur
+      const ticket = await oAuth2Client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      const googleId = payload.sub;
+      const email = payload.email;
+
+      // Chercher l'utilisateur par Google ID ou email
+      let user = await Users.findOne({
+        where: { email },
+        include: [
+          { model: Profiles, as: "profile" },
+          { model: GoogleAuth, as: "googleAuth" },
+        ],
+      });
+
+      // Si l'utilisateur n'existe pas, le créer
+      if (!user) {
+        const transaction = await db.sequelize.transaction();
+
+        try {
+          // Générer un mot de passe aléatoire
+          const randomPassword = require("crypto")
+            .randomBytes(16)
+            .toString("hex");
+          const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+          // Créer l'utilisateur
+          user = await Users.create(
+            {
+              email: email,
+              password: hashedPassword,
+              status: "VERIFIED",
+            },
+            { transaction }
+          );
+
+          // Créer le profil
+          await Profiles.create(
+            {
+              user_id: user.id,
+              fname: payload.given_name || "",
+              lname: payload.family_name || "",
+              image: payload.picture || null,
+            },
+            { transaction }
+          );
+
+          // Créer l'enregistrement GoogleAuth
+          await GoogleAuth.create(
+            {
+              user_id: user.id,
+              google_id: googleId,
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+              token_expiry: tokens.expiry_date
+                ? new Date(tokens.expiry_date)
+                : new Date(Date.now() + 3500 * 1000),
+              scopes: tokens.scope || "",
+              is_linked: true,
+              last_sync: new Date(),
+            },
+            { transaction }
+          );
+
+          await transaction.commit();
+        } catch (error) {
+          await transaction.rollback();
+          console.error("Error creating user:", error.message);
+          return serverMessage(res, "USER_CREATION_FAILED");
+        }
+      } else {
+        // Mettre à jour les tokens Google pour l'utilisateur existant
+        await GoogleAuth.upsert({
+          user_id: user.id,
+          google_id: googleId,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          token_expiry: tokens.expiry_date
+            ? new Date(tokens.expiry_date)
+            : new Date(Date.now() + 3500 * 1000),
+          scopes: tokens.scope || "",
+          is_linked: true,
+          last_sync: new Date(),
+        });
+      }
+
+      const { accessToken, refreshToken } = user.generateTokens();
+      // Créer ou mettre à jour la session
+      const expiresAt = dayjs().add(7, "days").toDate();
+      const ip = getClientIp(req);
+
+      await Sessions.upsert({
+        user_id: user.id,
+        token: refreshToken,
+        expires_at: expiresAt,
+        ip_address: ip,
+        user_agent: req.headers["user-agent"],
+      });
+
+      // Mettre à jour le token de l'utilisateur
+      await Users.update({ token: accessToken }, { where: { id: user.id } });
+
+      return serverMessage(res, "LOGIN_SUCCESS", {
+        accessToken,
+        refreshToken,
+      });
+    } catch (error) {
+      // console.error("Google code exchange error:", error);
+      // return serverMessage(res, "GOOGLE_AUTH_EXCHANGE_FAILED");
+
+      console.error("Google code exchange error:", error);
+
+      // Gestion plus spécifique des erreurs
+      if (error.message.includes("invalid_grant")) {
+        return serverMessage(res, "GOOGLE_AUTH_CODE_EXPIRED");
+      }
+      if (error.message.includes("invalid_client")) {
+        return serverMessage(res, "GOOGLE_CLIENT_CONFIG_ERROR");
+      }
+
+      return serverMessage(res, "GOOGLE_AUTH_EXCHANGE_FAILED");
+    }
+  },
+
+  // Modifiez le callback pour juste rediriger avec le code
   handleGoogleCallback: async (req, res, next) => {
     passport.authenticate(
       "google",
@@ -978,82 +1215,35 @@ module.exports = {
         try {
           if (err) {
             console.error("Google auth error:", err);
-
-            // Vérifier si c'est une erreur de code d'authentification invalide
-            if (err.message && err.message.includes("authorization code")) {
-              return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
-            }
-
-            return serverMessage(res, "GOOGLE_AUTHENTICATION_FAILED");
+            const frontendUrl =
+              process.env.NODE_ENV !== "production"
+                ? process.env.FRONTEND_URL_DEV
+                : process.env.FRONTEND_URL;
+            return res.redirect(`${frontendUrl}/login?error=auth_failed`);
           }
 
-          if (!user) {
-            console.error("No user from Google auth");
-            return serverMessage(res, "GOOGLE_AUTHENTICATION_FAILED");
-          }
-
-          // Vérifier si le paramètre "error" est présent dans la requête (venant de Google)
-          if (req.query.error) {
-            console.error("Google returned error:", req.query.error);
-            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
-          }
-
-          // Vérifier si le code d'autorisation est présent
-          if (!req.query.code) {
-            console.error("No authorization code from Google");
-            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
-          }
-
-          // Générer les tokens JWT
-          const accessToken = jwt.sign(
-            { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-          );
-
-          const refreshToken = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d" }
-          );
-
-          // Créer ou mettre à jour la session
-          const expiresAt = dayjs().add(7, "days").toDate();
-          const ip = getClientIp(req);
-
-          await Sessions.upsert({
-            user_id: user.id,
-            token: refreshToken,
-            expires_at: expiresAt,
-            ip_address: ip,
-            user_agent: req.headers["user-agent"],
-          });
-
-          // Mettre à jour le token de l'utilisateur
-          await Users.update(
-            { token: accessToken },
-            { where: { id: user.id } }
-          );
-
-          // Rediriger vers le frontend avec les tokens
+          // Rediriger vers le frontend avec le code d'autorisation
           const frontendUrl =
             process.env.NODE_ENV !== "production"
-              ? process.env.FRONTEND_URL_DEV + "/profile"
-              : process.env.FRONTEND_URL || "http://localhost:5173";
-          res.redirect(
-            `${frontendUrl}/auth/callback?token=${accessToken}&refresh=${refreshToken}&userId=${
-              user.id
-            }&firstLogin=${!user.createdAt}`
-          );
-        } catch (error) {
-          console.error("Erreur lors du callback Google:", error);
+              ? process.env.FRONTEND_URL_DEV
+              : process.env.FRONTEND_URL;
 
-          // Vérifier si c'est une erreur liée au code d'authentification
-          if (error.message && error.message.includes("authorization code")) {
-            return serverMessage(res, "INVALID_GOOGLE_AUTH_CODE");
+          frontendUrl = "http://localhost:5173";
+
+          if (req.query.code) {
+            res.redirect(
+              `${frontendUrl}/auth/google/callback?code=${req.query.code}`
+            );
+          } else {
+            res.redirect(`${frontendUrl}/login?error=no_code`);
           }
-
-          return serverMessage(res, "GOOGLE_AUTH_CALLBACK_FAILED");
+        } catch (error) {
+          console.error("Error in Google callback:", error);
+          const frontendUrl =
+            process.env.NODE_ENV !== "production"
+              ? process.env.FRONTEND_URL_DEV
+              : process.env.FRONTEND_URL;
+          res.redirect(`${frontendUrl}/login?error=auth_failed`);
         }
       }
     )(req, res, next);

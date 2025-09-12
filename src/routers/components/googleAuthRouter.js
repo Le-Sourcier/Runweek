@@ -127,6 +127,7 @@ router
    *                   example: GOOGLE_AUTH_CALLBACK_FAILED
    */
   .get("/google/callback", authController.handleGoogleCallback)
+  .post("/google/exchange-code", authController.exchangeGoogleCode)
 
   /**
    * @openapi

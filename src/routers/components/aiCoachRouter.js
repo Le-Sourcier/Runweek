@@ -10,7 +10,34 @@ const ctr = require("./../../controllers/components/chatController");
  *       type: http
  *       scheme: bearer
  *       bearerFormat: JWT
+ *
  *   schemas:
+ *     BaseResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: boolean
+ *           description: Indicates if an error occurred
+ *           example: false
+ *         status:
+ *           type: integer
+ *           description: HTTP status code
+ *           example: 200
+ *         message:
+ *           type: string
+ *           description: Response message key
+ *           example: "SUCCESS"
+ *
+ *     ErrorResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               description: Empty data array for errors
+ *               example: []
+ *
  *     MessageCoachIA:
  *       type: object
  *       properties:
@@ -39,201 +66,268 @@ const ctr = require("./../../controllers/components/chatController");
  *             sentiment: "positive"
  *             confidence: 0.92
  *             category: "fitness"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Message creation timestamp
+ *           example: "2023-12-01T10:30:00.000Z"
  *
- *     SuggestionResponse:
+ *     WorkoutSuggestion:
  *       type: object
  *       properties:
- *         error:
- *           type: boolean
- *           description: Indicates if an error occurred
- *           example: false
- *         status:
- *           type: integer
- *           description: HTTP status code
- *           example: 200
- *         message:
+ *         title:
  *           type: string
- *           description: Response message key
- *           example: "SUCCESS"
- *         data:
- *           type: object
- *           description: Response data containing suggestions
- *           properties:
- *             suggestions:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   title:
- *                     type: string
- *                     example: "Interval Training"
- *                   description:
- *                     type: string
- *                     example: "4x800m at fast pace with 400m recovery"
- *                   type:
- *                     type: string
- *                     example: "cardio"
- *                   duration:
- *                     type: string
- *                     example: "45 minutes"
- *                   intensity:
- *                     type: string
- *                     example: "high"
- *                   icon:
- *                     type: string
- *                     example: "⚡"
+ *           example: "Interval Training"
+ *         description:
+ *           type: string
+ *           example: "4x800m at fast pace with 400m recovery"
+ *         type:
+ *           type: string
+ *           example: "cardio"
+ *         duration:
+ *           type: string
+ *           example: "45 minutes"
+ *         intensity:
+ *           type: string
+ *           example: "high"
+ *         icon:
+ *           type: string
+ *           example: "⚡"
  *
- *     TrainingPlanResponse:
+ *     TrainingPlan:
  *       type: object
  *       properties:
- *         error:
- *           type: boolean
- *           example: false
- *         status:
- *           type: integer
- *           example: 200
- *         message:
+ *         title:
  *           type: string
- *           example: "SUCCESS"
- *         data:
- *           type: object
- *           properties:
- *             plans:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   title:
- *                     type: string
- *                     example: "10K Preparation Plan"
- *                   duration:
- *                     type: string
- *                     example: "8 weeks"
- *                   level:
- *                     type: string
- *                     example: "intermediate"
- *                   description:
- *                     type: string
- *                     example: "Progressive plan to prepare for a 10K race"
- *                   goal:
- *                     type: string
- *                     example: "10K race"
- *                   frequency:
- *                     type: string
- *                     example: "4 times/week"
- *                   icon:
- *                     type: string
- *                     example: "🏃‍♂️"
+ *           example: "10K Preparation Plan"
+ *         duration:
+ *           type: string
+ *           example: "8 weeks"
+ *         level:
+ *           type: string
+ *           example: "intermediate"
+ *         description:
+ *           type: string
+ *           example: "Progressive plan to prepare for a 10K race"
+ *         goal:
+ *           type: string
+ *           example: "10K race"
+ *         frequency:
+ *           type: string
+ *           example: "4 times/week"
+ *         icon:
+ *           type: string
+ *           example: "🏃‍♂️"
  *
- *     NutritionResponse:
+ *     NutritionTip:
  *       type: object
  *       properties:
- *         error:
- *           type: boolean
- *           example: false
- *         status:
- *           type: integer
- *           example: 200
- *         message:
+ *         title:
  *           type: string
- *           example: "SUCCESS"
- *         data:
- *           type: object
- *           properties:
- *             tips:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   title:
- *                     type: string
- *                     example: "Post-Run Nutrition"
- *                   description:
- *                     type: string
- *                     example: "Consume protein and carbs within 30 minutes after your run"
- *                   category:
- *                     type: string
- *                     example: "recovery"
- *                   icon:
- *                     type: string
- *                     example: "💧"
+ *           example: "Post-Run Nutrition"
+ *         description:
+ *           type: string
+ *           example: "Consume protein and carbs within 30 minutes after your run"
+ *         category:
+ *           type: string
+ *           example: "recovery"
+ *         icon:
+ *           type: string
+ *           example: "💧"
  *
- *     MotivationResponse:
+ *     MotivationMessage:
  *       type: object
  *       properties:
- *         error:
- *           type: boolean
- *           example: false
- *         status:
- *           type: integer
- *           example: 200
  *         message:
  *           type: string
- *           example: "SUCCESS"
- *         data:
- *           type: object
- *           properties:
- *             message:
- *               type: string
- *               example: "Great job on your 15km this week! 💪 You're making real progress toward your marathon goal."
+ *           example: "Great job on your 15km this week! 💪 You're making real progress toward your marathon goal."
  *
- *     AllSuggestionsResponse:
- *       type: object
- *       properties:
- *         error:
- *           type: boolean
- *           example: false
- *         status:
- *           type: integer
- *           example: 200
- *         message:
- *           type: string
- *           example: "SUCCESS"
- *         data:
- *           type: object
+ *     # Response Schemas
+ *     MessageResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
  *           properties:
- *             motivation:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Keep up the great work! 🚀"
- *             workouts:
+ *             data:
+ *               $ref: '#/components/schemas/MessageCoachIA'
+ *
+ *     WorkoutsResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
  *               type: object
  *               properties:
  *                 suggestions:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       title:
- *                         type: string
- *                         example: "Hill Repeats"
- *                       description:
- *                         type: string
- *                         example: "6x400m hill repeats with jog back recovery"
- *             plans:
+ *                     $ref: '#/components/schemas/WorkoutSuggestion'
+ *
+ *     TrainingPlansResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
  *               type: object
  *               properties:
  *                 plans:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       title:
- *                         type: string
- *                         example: "Marathon Builder"
- *             nutrition:
+ *                     $ref: '#/components/schemas/TrainingPlan'
+ *
+ *     NutritionResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
  *               type: object
  *               properties:
  *                 tips:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       title:
- *                         type: string
- *                         example: "Hydration Strategy"
+ *                     $ref: '#/components/schemas/NutritionTip'
+ *
+ *     MotivationResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/MotivationMessage'
+ *
+ *     HistoryResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/MessageCoachIA'
+ *
+ *     AllSuggestionsResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               properties:
+ *                 motivation:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: "Keep up the great work! 🚀"
+ *                 workouts:
+ *                   type: object
+ *                   properties:
+ *                     suggestions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/WorkoutSuggestion'
+ *                 plans:
+ *                   type: object
+ *                   properties:
+ *                     plans:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/TrainingPlan'
+ *                 nutrition:
+ *                   type: object
+ *                   properties:
+ *                     tips:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/NutritionTip'
+ *
+ *   parameters:
+ *     FrequencyQueryParam:
+ *       name: frequency
+ *       in: query
+ *       description: Frequency for suggestions (daily, weekly, monthly)
+ *       required: false
+ *       schema:
+ *         type: string
+ *         enum: [daily, weekly, monthly]
+ *         default: daily
+ *         example: daily
+ *
+ *   requestBodies:
+ *     SendMessageRequest:
+ *       description: Message to send to AI coach
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: User's question or message for the coach
+ *                 example: "How can I improve my running pace for a 10K?"
+ *
+ *   responses:
+ *     UnauthorizedError:
+ *       description: Unauthorized access
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *           examples:
+ *             unauthorized:
+ *               value:
+ *                 error: true
+ *                 status: 401
+ *                 message: "UNAUTHORIZED_ACCESS"
+ *                 data: []
+ *
+ *     BadRequestError:
+ *       description: Bad request
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *           examples:
+ *             badRequest:
+ *               value:
+ *                 error: true
+ *                 status: 400
+ *                 message: "MESSAGE_TEXT_REQUIRED"
+ *                 data: []
+ *
+ *     NotFoundError:
+ *       description: Resource not found
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *           examples:
+ *             notFound:
+ *               value:
+ *                 error: true
+ *                 status: 404
+ *                 message: "NO_WORKOUTS_FOUND"
+ *                 data: []
+ *
+ *     ServerError:
+ *       description: Internal server error
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *           examples:
+ *             serverError:
+ *               value:
+ *                 error: true
+ *                 status: 500
+ *                 message: "ERROR_SENDING_MESSAGE"
+ *                 data: []
  */
 
 /**
@@ -247,107 +341,34 @@ const ctr = require("./../../controllers/components/chatController");
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - message
- *             properties:
- *               message:
- *                 type: string
- *                 description: User's question or message for the coach
- *                 example: "How can I improve my running pace for a 10K?"
+ *       $ref: '#/components/requestBodies/SendMessageRequest'
  *     responses:
  *       200:
  *         description: AI coach response in standardized format
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "MESSAGE_SEND_SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
- *                     type:
- *                       type: string
- *                       example: "text"
- *                     message:
- *                       type: string
- *                       example: "To improve your 10K pace, try incorporating interval training..."
- *                     sender:
- *                       type: string
- *                       example: "bot"
+ *               $ref: '#/components/schemas/MessageResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "MESSAGE_SEND_SUCCESS"
+ *                   data:
+ *                     id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+ *                     type: "text"
+ *                     message: "To improve your 10K pace, try incorporating interval training..."
+ *                     sender: "bot"
+ *                     metadata:
+ *                       sentiment: "positive"
+ *                       confidence: 0.92
  *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: "MESSAGE_TEXT_REQUIRED"
- *                 data:
- *                   type: array
- *                   example: []
+ *         $ref: '#/components/responses/BadRequestError'
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 401
- *                 message:
- *                   type: string
- *                   example: "UNAUTHORIZED_ACCESS"
- *                 data:
- *                   type: array
- *                   example: []
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "ERROR_SENDING_MESSAGE"
- *                 data:
- *                   type: array
- *                   example: []
+ *         $ref: '#/components/responses/ServerError'
  */
 router.post("/", ctr.sendMessage);
 
@@ -361,87 +382,55 @@ router.post("/", ctr.sendMessage);
  *     description: Returns personalized workout suggestions based on user data and activities
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/FrequencyQueryParam'
  *     responses:
  *       200:
  *         description: Workout suggestions retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
+ *               $ref: '#/components/schemas/WorkoutsResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "SUCCESS"
+ *                   data:
  *                     suggestions:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           title:
- *                             type: string
- *                             example: "Interval Training"
- *                           description:
- *                             type: string
- *                             example: "4x800m at fast pace with 400m recovery"
- *                           type:
- *                             type: string
- *                             example: "cardio"
- *                           duration:
- *                             type: string
- *                             example: "45 minutes"
- *                           intensity:
- *                             type: string
- *                             example: "high"
- *                           icon:
- *                             type: string
- *                             example: "⚡"
+ *                       - title: "Interval Training"
+ *                         description: "4x800m at fast pace with 400m recovery"
+ *                         type: "cardio"
+ *                         duration: "45 minutes"
+ *                         intensity: "high"
+ *                         icon: "⚡"
  *       404:
  *         description: No workouts found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "NO_WORKOUTS_FOUND"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               notFound:
+ *                 value:
+ *                   error: true
+ *                   status: 404
+ *                   message: "NO_WORKOUTS_FOUND"
+ *                   data: []
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "ERROR_GETTING_WORKOUT"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               serverError:
+ *                 value:
+ *                   error: true
+ *                   status: 500
+ *                   message: "ERROR_GETTING_WORKOUT"
+ *                   data: []
  */
 router.get("/workouts", ctr.getWorkoutSuggestions);
 
@@ -455,90 +444,56 @@ router.get("/workouts", ctr.getWorkoutSuggestions);
  *     description: Returns personalized training plans based on user goals and fitness level
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/FrequencyQueryParam'
  *     responses:
  *       200:
  *         description: Training plans retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
+ *               $ref: '#/components/schemas/TrainingPlansResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "SUCCESS"
+ *                   data:
  *                     plans:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           title:
- *                             type: string
- *                             example: "10K Preparation Plan"
- *                           duration:
- *                             type: string
- *                             example: "8 weeks"
- *                           level:
- *                             type: string
- *                             example: "intermediate"
- *                           description:
- *                             type: string
- *                             example: "Progressive plan to prepare for a 10K race"
- *                           goal:
- *                             type: string
- *                             example: "10K race"
- *                           frequency:
- *                             type: string
- *                             example: "4 times/week"
- *                           icon:
- *                             type: string
- *                             example: "🏃‍♂️"
+ *                       - title: "10K Preparation Plan"
+ *                         duration: "8 weeks"
+ *                         level: "intermediate"
+ *                         description: "Progressive plan to prepare for a 10K race"
+ *                         goal: "10K race"
+ *                         frequency: "4 times/week"
+ *                         icon: "🏃‍♂️"
  *       404:
  *         description: No training plans found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "NO_PLANTS_FOUND"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               notFound:
+ *                 value:
+ *                   error: true
+ *                   status: 404
+ *                   message: "NO_PLANTS_FOUND"
+ *                   data: []
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "ERROR_GETTING_TRAINING_PLANT"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               serverError:
+ *                 value:
+ *                   error: true
+ *                   status: 500
+ *                   message: "ERROR_GETTING_TRAINING_PLANT"
+ *                   data: []
  */
 router.get("/plans", ctr.getTrainingPlans);
 
@@ -552,81 +507,53 @@ router.get("/plans", ctr.getTrainingPlans);
  *     description: Returns personalized nutrition advice based on user activities and goals
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/FrequencyQueryParam'
  *     responses:
  *       200:
  *         description: Nutrition tips retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
+ *               $ref: '#/components/schemas/NutritionResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "SUCCESS"
+ *                   data:
  *                     tips:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           title:
- *                             type: string
- *                             example: "Post-Run Nutrition"
- *                           description:
- *                             type: string
- *                             example: "Consume protein and carbs within 30 minutes after your run"
- *                           category:
- *                             type: string
- *                             example: "recovery"
- *                           icon:
- *                             type: string
- *                             example: "💧"
+ *                       - title: "Post-Run Nutrition"
+ *                         description: "Consume protein and carbs within 30 minutes after your run"
+ *                         category: "recovery"
+ *                         icon: "💧"
  *       404:
  *         description: No nutrition tips found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "NO_NUTRITION_FOUND"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               notFound:
+ *                 value:
+ *                   error: true
+ *                   status: 404
+ *                   message: "NO_NUTRITION_FOUND"
+ *                   data: []
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "GETTING_NUTRITION_FAILED"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               serverError:
+ *                 value:
+ *                   error: true
+ *                   status: 500
+ *                   message: "GETTING_NUTRITION_FAILED"
+ *                   data: []
  */
 router.get("/nutrition", ctr.getNutritionTips);
 
@@ -640,67 +567,49 @@ router.get("/nutrition", ctr.getNutritionTips);
  *     description: Returns a personalized motivational message based on user activities and progress
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/FrequencyQueryParam'
  *     responses:
  *       200:
  *         description: Motivation message retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
- *                     message:
- *                       type: string
- *                       example: "Great job on your 15km this week! 💪 You're making real progress toward your marathon goal."
+ *               $ref: '#/components/schemas/MotivationResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "SUCCESS"
+ *                   data:
+ *                     message: "Great job on your 15km this week! 💪 You're making real progress toward your marathon goal."
  *       404:
  *         description: No motivation message found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "NO_MOTIVATION_FOUND"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               notFound:
+ *                 value:
+ *                   error: true
+ *                   status: 404
+ *                   message: "NO_MOTIVATION_FOUND"
+ *                   data: []
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "ERROR_GETTING_MOTIVATION"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               serverError:
+ *                 value:
+ *                   error: true
+ *                   status: 500
+ *                   message: "ERROR_GETTING_MOTIVATION"
+ *                   data: []
  */
 router.get("/motivation", ctr.getMotivation);
 
@@ -720,80 +629,25 @@ router.get("/motivation", ctr.getMotivation);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "MESSAGES_RETRIEVED"
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
- *                       type:
- *                         type: string
- *                         example: "text"
- *                       message:
- *                         type: string
- *                         example: "Hello, how can I help you today?"
- *                       sender:
- *                         type: string
- *                         example: "bot"
+ *               $ref: '#/components/schemas/HistoryResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "MESSAGES_RETRIEVED"
+ *                   data:
+ *                     - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+ *                       type: "text"
+ *                       message: "Hello, how can I help you today?"
+ *                       sender: "bot"
  *                       metadata:
- *                         type: object
- *                         example:
- *                           sentiment: "positive"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2023-12-01T10:30:00.000Z"
+ *                         sentiment: "positive"
+ *                       createdAt: "2023-12-01T10:30:00.000Z"
  *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 401
- *                 message:
- *                   type: string
- *                   example: "UNAUTHORIZED_ACCESS"
- *                 data:
- *                   type: array
- *                   example: []
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "ERROR_RETRIEVING_MESSAGES"
- *                 data:
- *                   type: array
- *                   example: []
+ *         $ref: '#/components/responses/ServerError'
  */
 router.get("/history", ctr.getChatMessage);
 
@@ -807,106 +661,73 @@ router.get("/history", ctr.getChatMessage);
  *     description: Returns all types of personalized suggestions (motivation, workouts, plans, nutrition) in one request
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/FrequencyQueryParam'
  *     responses:
  *       200:
  *         description: All suggestions retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: "SUCCESS"
- *                 data:
- *                   type: object
- *                   properties:
+ *               $ref: '#/components/schemas/AllSuggestionsResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   error: false
+ *                   status: 200
+ *                   message: "SUCCESS"
+ *                   data:
  *                     motivation:
- *                       type: object
- *                       properties:
- *                         message:
- *                           type: string
- *                           example: "Keep up the great work! 🚀"
+ *                       message: "Keep up the great work! 🚀"
  *                     workouts:
- *                       type: object
- *                       properties:
- *                         suggestions:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               title:
- *                                 type: string
- *                                 example: "Hill Repeats"
- *                               description:
- *                                 type: string
- *                                 example: "6x400m hill repeats with jog back recovery"
+ *                       suggestions:
+ *                         - title: "Hill Repeats"
+ *                           description: "6x400m hill repeats with jog back recovery"
+ *                           type: "cardio"
+ *                           duration: "30 minutes"
+ *                           intensity: "high"
+ *                           icon: "⛰️"
  *                     plans:
- *                       type: object
- *                       properties:
- *                         plans:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               title:
- *                                 type: string
- *                                 example: "Marathon Builder"
+ *                       plans:
+ *                         - title: "Marathon Builder"
+ *                           duration: "16 weeks"
+ *                           level: "advanced"
+ *                           description: "Complete marathon training plan"
+ *                           goal: "Marathon"
+ *                           frequency: "5 times/week"
+ *                           icon: "🏁"
  *                     nutrition:
- *                       type: object
- *                       properties:
- *                         tips:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               title:
- *                                 type: string
- *                                 example: "Hydration Strategy"
+ *                       tips:
+ *                         - title: "Hydration Strategy"
+ *                           description: "Drink 500ml water 2 hours before running"
+ *                           category: "hydration"
+ *                           icon: "💦"
  *       404:
  *         description: No suggestions found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "NO_SUGGESTIONS_FOUND"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               notFound:
+ *                 value:
+ *                   error: true
+ *                   status: 404
+ *                   message: "NO_SUGGESTIONS_FOUND"
+ *                   data: []
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: true
- *                 status:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: "GETTTING_ALL_SUGGESTION_FAILED"
- *                 data:
- *                   type: array
- *                   example: []
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               serverError:
+ *                 value:
+ *                   error: true
+ *                   status: 500
+ *                   message: "GETTTING_ALL_SUGGESTION_FAILED"
+ *                   data: []
  */
 router.get("/all", ctr.getAllSuggestions);
 

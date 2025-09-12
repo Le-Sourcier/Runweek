@@ -1,9 +1,10 @@
+// config/passport.js
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { Users, Profiles, GoogleAuth, Sessions } = require("../models");
+const { Users, Profiles, GoogleAuth } = require("../models");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const dayjs = require("dayjs");
+const { Op } = require("sequelize");
 
 // Configuration de Passport
 module.exports = (app) => {
@@ -24,54 +25,120 @@ module.exports = (app) => {
       },
       async (req, accessToken, refreshToken, profile, done) => {
         try {
-          const email = profile.emails[0].value;
+          console.log("Google profile received:", profile);
 
-          // Vérifier si l'utilisateur existe déjà
-          let user = await Users.findOne({
-            where: { email },
+          // 1. D'abord, chercher si un GoogleAuth existe avec ce google_id
+          const existingGoogleAuth = await GoogleAuth.findOne({
+            where: { google_id: profile.id },
+            include: [
+              {
+                model: Users,
+                as: "user",
+                include: [{ model: Profiles, as: "profile" }],
+              },
+            ],
+          });
+
+          if (existingGoogleAuth && existingGoogleAuth.user) {
+            console.log(
+              "Google account already linked to user:",
+              existingGoogleAuth.user.id
+            );
+
+            // Mettre à jour les tokens
+            await GoogleAuth.update(
+              {
+                access_token: accessToken,
+                refresh_token: refreshToken || existingGoogleAuth.refresh_token, // Garder l'ancien si nouveau null
+                token_expiry: new Date(Date.now() + 3500 * 1000),
+                last_sync: new Date(),
+              },
+              { where: { google_id: profile.id } }
+            );
+
+            return done(null, existingGoogleAuth.user);
+          }
+
+          // 2. Si aucun GoogleAuth trouvé, chercher par email
+          const existingUser = await Users.findOne({
+            where: {
+              email: profile.emails[0].value,
+              status: { [Op.ne]: "ARCHIVED" }, // Exclure les comptes archivés
+            },
             include: [
               { model: Profiles, as: "profile" },
               { model: GoogleAuth, as: "googleAuth" },
             ],
           });
 
-          if (user) {
-            // Mettre à jour les tokens Google pour l'utilisateur existant
-            await GoogleAuth.upsert({
-              user_id: user.id,
-              google_id: profile.id,
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              token_expiry: new Date(Date.now() + 3500 * 1000),
-              scopes: profile._json.scope,
-              is_linked: true,
-              last_sync: new Date(),
+          if (existingUser) {
+            console.log(
+              "User exists by email, linking Google account:",
+              existingUser.id
+            );
+
+            // Si l'utilisateur existe mais n'a pas de GoogleAuth, le lier
+            if (!existingUser.googleAuth) {
+              await GoogleAuth.create({
+                user_id: existingUser.id,
+                google_id: profile.id,
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                token_expiry: new Date(Date.now() + 3500 * 1000),
+                scopes: req.query.scope || "",
+                is_linked: true,
+                last_sync: new Date(),
+              });
+            } else {
+              // Mettre à jour l'existant
+              await GoogleAuth.update(
+                {
+                  google_id: profile.id,
+                  access_token: accessToken,
+                  refresh_token:
+                    refreshToken || existingUser.googleAuth.refresh_token,
+                  token_expiry: new Date(Date.now() + 3500 * 1000),
+                  scopes: req.query.scope || existingUser.googleAuth.scopes,
+                  is_linked: true,
+                  last_sync: new Date(),
+                },
+                { where: { user_id: existingUser.id } }
+              );
+            }
+
+            // Recharger l'utilisateur avec les associations mises à jour
+            const updatedUser = await Users.findOne({
+              where: { id: existingUser.id },
+              include: [
+                { model: Profiles, as: "profile" },
+                { model: GoogleAuth, as: "googleAuth" },
+              ],
             });
 
-            // Générer les tokens JWT
-            const tokens = user.generateTokens();
-            user.jwtTokens = tokens; // Attacher les tokens à l'objet user pour les récupérer dans la callback
-
-            return done(null, user);
+            return done(null, updatedUser);
           }
 
-          // Créer un nouvel utilisateur
+          // 3. Créer un nouvel utilisateur si aucun existant
           const transaction = await Users.sequelize.transaction();
+
           try {
-            const randomPassword =
-              Math.random().toString(36).slice(-8) +
-              Math.random().toString(36).slice(-8);
+            // Générer un mot de passe aléatoire
+            const randomPassword = require("crypto")
+              .randomBytes(16)
+              .toString("hex");
             const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+            // Créer l'utilisateur
             const newUser = await Users.create(
               {
-                email: email,
+                email: profile.emails[0].value,
                 password: hashedPassword,
                 status: "VERIFIED",
               },
               { transaction }
             );
 
+            // Créer le profil
             await Profiles.create(
               {
                 user_id: newUser.id,
@@ -82,14 +149,15 @@ module.exports = (app) => {
               { transaction }
             );
 
+            // Créer l'enregistrement GoogleAuth
             await GoogleAuth.create(
               {
                 user_id: newUser.id,
                 google_id: profile.id,
                 access_token: accessToken,
                 refresh_token: refreshToken,
-                token_expiry: new Date(Date.now() + 3600 * 1000),
-                scopes: profile._json.scope,
+                token_expiry: new Date(Date.now() + 3500 * 1000),
+                scopes: req.query.scope || "",
                 is_linked: true,
                 last_sync: new Date(),
               },
@@ -98,37 +166,44 @@ module.exports = (app) => {
 
             await transaction.commit();
 
-            // Récupérer l'utilisateur complet
+            // Récupérer l'utilisateur complet avec les associations
             const completeUser = await Users.findOne({
               where: { id: newUser.id },
-              include: [{ model: Profiles, as: "profile" }],
+              include: [
+                { model: Profiles, as: "profile" },
+                { model: GoogleAuth, as: "googleAuth" },
+              ],
             });
 
-            // Générer les tokens JWT
-            const tokens = completeUser.generateTokens();
-            completeUser.jwtTokens = tokens;
-
+            console.log("New user created via Google:", completeUser.id);
             return done(null, completeUser);
           } catch (error) {
             await transaction.rollback();
+            console.error("Error creating user in transaction:", error);
             return done(error, null);
           }
         } catch (error) {
+          console.error("Error in Google strategy:", error);
           return done(error, null);
         }
       }
     )
   );
 
+  // Sérialisation de l'utilisateur
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
 
+  // Désérialisation de l'utilisateur
   passport.deserializeUser(async (id, done) => {
     try {
       const user = await Users.findOne({
         where: { id },
-        include: [{ model: Profiles, as: "profile" }],
+        include: [
+          { model: Profiles, as: "profile" },
+          { model: GoogleAuth, as: "googleAuth" },
+        ],
       });
       done(null, user);
     } catch (error) {
@@ -254,7 +329,7 @@ module.exports = (app) => {
 //       },
 //       async (req, accessToken, refreshToken, profile, done) => {
 //         try {
-//           // console.log("Google profile received:", profile);
+//           console.log("Google profile received:", profile);
 
 //           // Vérifier si l'utilisateur existe déjà
 //           const existingUser = await Users.findOne({
@@ -263,7 +338,7 @@ module.exports = (app) => {
 //           });
 
 //           if (existingUser) {
-//             // console.log("User exists, logging in:", existingUser.id);
+//             console.log("User exists, logging in:", existingUser.id);
 
 //             // Mettre à jour les tokens Google si l'utilisateur existe
 //             const googleData = {
@@ -351,7 +426,7 @@ module.exports = (app) => {
 //               include: [{ model: Profiles, as: "profile" }],
 //             });
 
-//             // console.log("New user created via Google:", completeUser.id);
+//             console.log("New user created via Google:", completeUser.id);
 //             return done(null, completeUser);
 //           } catch (error) {
 //             await transaction.rollback();

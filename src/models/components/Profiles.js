@@ -34,6 +34,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    lang: {
+      type: DataTypes.ENUM("fr", "en", "es", "de"),
+      defaultValue: "fr",
+    },
     bio: {
       type: DataTypes.TEXT,
       allowNull: true,

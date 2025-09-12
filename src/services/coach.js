@@ -1,11 +1,16 @@
 // utils/suggestionGenerator.js
-const { OpenAI } = require("openai");
 require("dotenv").config();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: process.env.OPENAI_ORG,
-});
+const openai = require("../config/openaiConfig");
+const {
+  Users,
+  UserStats,
+  Achievement,
+  Goal,
+  Profiles,
+  ActivityData,
+  SleepData,
+  HeartRateData,
+} = require("../models");
 
 let lastCall = 0;
 
@@ -125,6 +130,7 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
 
     const contextString = `
       Informations sur l'athlète :
+      - Langue de preference : ${profile.lang}
       - Nom : ${profile.fname || ""} ${profile.lname || ""}
       - Objectifs : ${profile.bio || "Non spécifié"}
       - Niveau : ${profile.level || "Non spécifié"}
@@ -134,6 +140,7 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
       - Distance hebdomadaire : ${stats.weekly_distance || 0} km
       - Jours de suite : ${stats.streak_days || 0}
       - Allure moyenne : ${stats.average_pace || "0:00"}
+      NB: Utilise le language par defaut (celui choisis par l'athlète sauf dans le cas ou il ecrit dans un autre language specifique ou il decide que la conversation ai lieu dans un language de son choix).
       
       Sommeil récent (moyenne) : ${Math.floor(avgSleep / 60)}h${
       avgSleep % 60
@@ -157,20 +164,23 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
     switch (suggestionType) {
       case "motivation":
         systemPrompt = `
-          Vous êtes Coach RunWeek, un assistant de coaching sportif motivant.
-          
-          Tâche : Créez un message de motivation personnalisé pour cet athlète en vous basant sur ses activités récentes, objectifs et performances.
-          
-          Caractéristiques :
-          - Ton : Energique, positif et personnalisé
-          - Longueur : 2-3 phrases maximum
-          - Faites référence à ses activités récentes, objectifs ou réalisations
-          - Inclure 1-2 emojis pertinents
-          - Proposez une petite action concrète pour la journée
-          
-          Contexte :
-          ${contextString}
-        `;
+    Vous êtes Coach RunWeek, un assistant de coaching sportif motivant.
+    
+    Tâche : Créez un message de motivation personnalisé pour cet athlète.
+    
+    Format de réponse JSON :
+    {
+      "message": "Votre message de motivation ici avec des emojis"
+    }
+    
+    Règles :
+    - Ton : Energique, positif et personnalisé
+    - 2-3 phrases maximum
+    - Référence aux activités récentes, objectifs ou réalisations
+    - 1-2 emojis pertinents
+    - Proposition d'une action concrète pour la journée
+  `;
+        userPrompt = `Génère un message de motivation en format JSON basé sur ce contexte: ${contextString}`;
         maxTokens = 150;
         break;
 
@@ -180,6 +190,8 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
           
           Tâche : Proposez 2-3 suggestions d'entraînement personnalisées pour cet athlète.
           
+          IMPORTANT : Vous DEVEZ répondre en format JSON valide uniquement.
+
           Format de réponse JSON :
           {
             "suggestions": [
@@ -281,7 +293,10 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
     ];
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model:
+        process.env.isChatGPT === "true"
+          ? "gpt-3.5-turbo-0125"
+          : "deepseek-chat",
       messages: messages,
       temperature: 0.7,
       max_tokens: maxTokens,
@@ -308,17 +323,17 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
 }
 
 // Fonction pour obtenir les données utilisateur complètes
-async function getUserData(userId, models) {
+async function getUserData(userId) {
   try {
-    const user = await models.Users.findByPk(userId, {
+    const user = await Users.findByPk(userId, {
       include: [
         {
-          model: models.Profiles,
+          model: Profiles,
           as: "profile",
-          attributes: ["fname", "lname", "bio", "level"],
+          attributes: ["fname", "lname", "bio"],
         },
         {
-          model: models.UserStats,
+          model: UserStats,
           as: "stats",
           attributes: [
             "points",
@@ -330,7 +345,7 @@ async function getUserData(userId, models) {
           ],
         },
         {
-          model: models.Goal,
+          model: Goal,
           as: "goals",
           where: { isActive: true },
           required: false,
@@ -347,7 +362,7 @@ async function getUserData(userId, models) {
           ],
         },
         {
-          model: models.Achievement,
+          model: Achievement,
           as: "achievements",
           order: [["earnedDate", "DESC"]],
           limit: 10,
@@ -362,7 +377,7 @@ async function getUserData(userId, models) {
           ],
         },
         {
-          model: models.ActivityData,
+          model: ActivityData,
           as: "activity_data",
           order: [["date", "DESC"]],
           limit: 10,
@@ -377,7 +392,7 @@ async function getUserData(userId, models) {
           ],
         },
         {
-          model: models.SleepData,
+          model: SleepData,
           as: "sleepData",
           order: [["date", "DESC"]],
           limit: 7,
@@ -391,7 +406,7 @@ async function getUserData(userId, models) {
           ],
         },
         {
-          model: models.HeartRateData,
+          model: HeartRateData,
           as: "heartRateData",
           order: [["timestamp", "DESC"]],
           limit: 20,
