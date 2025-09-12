@@ -16,20 +16,24 @@ export interface TrainingPlan {
   description: string;
 }
 
+export interface MotivationalText {
+  title: string;
+  description: string;
+}
 export interface SuggestedWorkouts {
-  id: string,
-  type: string,
-  duration: string,
-  description: string,
-  icon: string,
-  intensity: string
+  id: string;
+  type: string;
+  duration: string;
+  description: string;
+  icon: string;
+  intensity: string;
 }
 
 export interface SuggestedNutrition {
-  id: string,
-  title: string,
-  description: string,
-  icon: string,
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
 }
 
 export interface ChatState {
@@ -38,6 +42,7 @@ export interface ChatState {
   error: string | null;
   initialMessage: Message;
   trainingPlans: TrainingPlan[];
+  motivationalText?: MotivationalText;
   suggestedWorkouts: SuggestedWorkouts[];
   suggestedNutrition: SuggestedNutrition[];
   sendMessage: (content: string) => Promise<Message>;
@@ -45,5 +50,5 @@ export interface ChatState {
   clearMessages: () => void;
   getTrainingPlans: () => Promise<void>;
   getSuggestedWorkouts: () => Promise<void>;
-  getSuggestedNutrition: () =>  Promise<void>;
+  getSuggestedNutrition: () => Promise<void>;
 }

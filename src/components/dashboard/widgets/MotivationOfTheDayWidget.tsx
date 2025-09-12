@@ -10,7 +10,7 @@ const MotivationOfTheDayWidget: FC = () => {
 
   useEffect(() => {
     getMotivation();
-  }, []);
+  }, [getMotivation]);
 
   if (!motivation) {
     return null;

@@ -18,7 +18,7 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { sendFriendRequest, error } = useFriendsStore();
+  const { sendFriendRequest } = useFriendsStore();
   const [email, setEmail] = useState("");
   const [sendingRequest, setIsSendingRequest] = useState(false);
   const [message, setMessage] = useState("");

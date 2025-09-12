@@ -8,7 +8,7 @@ import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
 import { extractErrorMessage } from "../utils/error-handler";
 
 const LoginPage: React.FC = () => {
-  const { isLoading: loading, login } = useUserContext();
+  const { isLoading: loading, login, registerWithGoogle } = useUserContext();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -103,6 +103,7 @@ const LoginPage: React.FC = () => {
           <Button
             variant="social"
             type="button"
+            onClick={registerWithGoogle}
             icon={
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

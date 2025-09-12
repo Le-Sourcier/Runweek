@@ -10,7 +10,6 @@ import {
   Globe,
   Smartphone,
   CreditCard,
-  HelpCircle,
   AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,23 +25,23 @@ import { SupportTab } from "./tabs/SupprtTab";
 
 export default function Settings() {
   const { user, updateUserPreferences } = useUserContext();
- 
+
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // Get initial tab and section from URL params
-  const initialTab = searchParams.get('tab') || 'account';
+  const initialTab = searchParams.get("tab") || "account";
 
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const [dataSharing, setDataSharing] = useState({
-    enabled: user?.preferences?.dataSharing?.enabled || false,
-    shareNutrition: user?.preferences?.dataSharing?.shareNutrition || false,
-    shareActivities: user?.preferences?.dataSharing?.shareActivities || false,
-    shareGoals: user?.preferences?.dataSharing?.shareGoals || false,
-    shareAchievements: user?.preferences?.dataSharing?.shareAchievements || false,
-    allowFriendRequests: user?.preferences?.dataSharing?.allowFriendRequests || false,
-    showInSearch: user?.preferences?.dataSharing?.showInSearch || false,
+    enabled: user?.preferences?.enabled || false,
+    shareNutrition: user?.preferences?.shareNutrition || false,
+    shareActivities: user?.preferences?.shareActivities || false,
+    shareGoals: user?.preferences?.shareGoals || false,
+    shareAchievements: user?.preferences?.shareAchievements || false,
+    allowFriendRequests: user?.preferences?.allowFriendRequests || false,
+    showInSearch: user?.preferences?.showInSearch || false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -54,15 +53,17 @@ export default function Settings() {
     setSearchParams({ tab });
   };
 
-
   // @ts-ignore
-  const handleDataSharingToggle = (key: keyof typeof dataSharing, value: boolean) => {
+  const handleDataSharingToggle = (
+    key: keyof typeof dataSharing,
+    value: boolean
+  ) => {
     const newDataSharing = { ...dataSharing, [key]: value };
 
     setDataSharing(newDataSharing);
 
     // If disabling main sharing, disable all sub-options
-    if (key === 'enabled' && !value) {
+    if (key === "enabled" && !value) {
       newDataSharing.shareNutrition = false;
       newDataSharing.shareActivities = false;
       newDataSharing.shareGoals = false;
@@ -71,29 +72,28 @@ export default function Settings() {
       newDataSharing.showInSearch = false;
     }
 
-    // @ts-ignore
     updateUserPreferences({
       ...user?.preferences,
-      dataSharing: newDataSharing,
+      ...newDataSharing,
     });
 
-    toast.success('Paramètres de partage mis à jour');
+    toast.success("Paramètres de partage mis à jour");
   };
 
   const handleAccountDeletion = async () => {
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // if (deleteUser) {
       //   deleteUser();
       // }
 
-      toast.success('Compte supprimé avec succès');
-      navigate('/login');
+      toast.success("Compte supprimé avec succès");
+      navigate("/login");
     } catch (error) {
-      toast.error('Erreur lors de la suppression du compte');
+      toast.error("Erreur lors de la suppression du compte");
     } finally {
       setIsLoading(false);
       setShowDeleteConfirm(false);
@@ -167,10 +167,11 @@ export default function Settings() {
             <button
               key={section.id}
               onClick={() => handleTabChange(section.id)}
-              className={`px-4 py-2 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === section.id
-                ? "text-primary border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground hover:border-muted"
-                }`}
+              className={`px-4 py-2 font-medium transition-colors border-b-2 whitespace-nowrap ${
+                activeTab === section.id
+                  ? "text-primary border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground hover:border-muted"
+              }`}
             >
               <span className="flex items-center gap-2">
                 {section.icon}
@@ -192,7 +193,7 @@ export default function Settings() {
           {activeTab === "privacy" && <PrivacyTab />}
 
           {/* Appearance Settings */}
-          {activeTab === "appearance" && ( <AppearanceTab />)}
+          {activeTab === "appearance" && <AppearanceTab />}
 
           {/* Language & Region Settings */}
           {activeTab === "language" && <LanguageTab />}
@@ -229,10 +230,12 @@ export default function Settings() {
                     <AlertTriangle size={32} className="text-destructive" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">Supprimer le compte</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Supprimer le compte
+                    </h3>
                     <p className="text-muted-foreground mt-2">
-                      Êtes-vous sûr de vouloir supprimer définitivement votre compte ?
-                      Cette action ne peut pas être annulée.
+                      Êtes-vous sûr de vouloir supprimer définitivement votre
+                      compte ? Cette action ne peut pas être annulée.
                     </p>
                   </div>
                   <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
@@ -261,7 +264,9 @@ export default function Settings() {
                       // isLoading={isLoading}
                       className="flex-1"
                     >
-                      {isLoading ? 'Suppression...' : 'Supprimer définitivement'}
+                      {isLoading
+                        ? "Suppression..."
+                        : "Supprimer définitivement"}
                     </Button>
                   </div>
                 </div>

@@ -10,9 +10,9 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronDown,
-  TrendingDown, // For negative changes
+  TrendingDown,
 } from "lucide-react";
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -31,93 +31,9 @@ import {
   Legend,
 } from "recharts";
 import { useStatisticStore } from "../stores/StatisticStore";
-
-// const monthlyData = [
-//   { name: "Week 1", distance: 22.5 },
-//   { name: "Week 2", distance: 18.7 },
-//   { name: "Week 3", distance: 25.9 },
-//   { name: "Week 4", distance: 23.4 },
-// ];
-
-// const paceData = [
-//   { name: "Week 1", value: 0 },
-//   { name: "Week 2", value: 0 },
-//   { name: "Week 3", value: 0 },
-//   { name: "Week 4", value: 0 },
-// ]
-// const runTypeData = [
-//   { name: "Long Run", value: 42 },
-//   { name: "Recovery", value: 25 },
-//   { name: "Tempo", value: 18 },
-//   { name: "Intervals", value: 15 },
-// ];
+import { Activity } from "../types/Stats";
 
 const COLORS = ["#3B82F6", "#10B981", "#F97316", "#8B5CF6"];
-
-// Define Activity Type
-interface Activity {
-  id: number;
-  type: string;
-  distance: number;
-  time: string; // HH:MM:SS or MM:SS
-  date: string; // YYYY-MM-DD
-  location: string;
-  heartRate?: number; // Optional
-  elevation?: number; // Optional
-}
-
-const initialActivities: Activity[] = [
-  {
-    id: 1,
-    type: "Long Run",
-    distance: 12.5,
-    time: "1:10:22",
-    date: "2025-05-22",
-    location: "City Park",
-    heartRate: 162,
-    elevation: 125,
-  },
-  {
-    id: 2,
-    type: "Recovery",
-    distance: 5.2,
-    time: "28:42",
-    date: "2025-05-20",
-    location: "Neighborhood Loop",
-    heartRate: 145,
-    elevation: 45,
-  },
-  {
-    id: 3,
-    type: "Tempo",
-    distance: 8.4,
-    time: "42:15",
-    date: "2025-05-18",
-    location: "Riverside Trail",
-    heartRate: 172,
-    elevation: 86,
-  },
-  {
-    id: 4,
-    type: "Intervals",
-    distance: 6.8,
-    time: "35:30",
-    date: "2025-05-16",
-    location: "Track",
-    heartRate: 176,
-    elevation: 12,
-  },
-  {
-    id: 5,
-    type: "Long Run",
-    distance: 15.3,
-    time: "1:24:18",
-    date: "2025-05-14",
-    location: "Mountain Route",
-    heartRate: 158,
-    elevation: 320,
-  },
-];
 
 export default function Statistics() {
   const { user } = useUserContext();
@@ -126,44 +42,36 @@ export default function Statistics() {
     monthlyData,
     paceData,
     runTypeData,
-    getWeeklyData,
-    getMonthlyData,
-    getPaceData,
-    getRunTypeData,
+    recentActivities,
+    performanceMetrics,
+    loading,
+    error,
+    getPerformanceMetrics,
+    getStatistics,
   } = useStatisticStore();
 
-  const [timeFrame, _setTimeFrame] = useState("weekly");
-  const [sortedActivities, setSortedActivities] = useState<Activity[]>(initialActivities);
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Activity; direction: "ascending" | "descending"; } | null>(null);
+  const [timeFrame, setTimeFrame] = useState("weekly");
+  const [sortedActivities, setSortedActivities] = useState<Activity[]>([]);
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Activity;
+    direction: "ascending" | "descending";
+  } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      await getMonthlyData();
-      await getRunTypeData();
-      await getWeeklyData();
-      await getPaceData().then(() => console.log("paceData:", paceData));
+      // Utiliser getStatistics pour charger toutes les données en une fois
+      await getStatistics();
+      await getPerformanceMetrics();
     };
 
     loadData();
-  }, [])
-
-  if (!user) return null;
-
-  const requestSort = (key: keyof Activity) => {
-    let direction: "ascending" | "descending" = "ascending";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
+  }, [getStatistics, getPerformanceMetrics]);
 
   useEffect(() => {
-    const activitiesToSort = [...initialActivities]; // Use a copy of the original unsorted data
-    if (sortConfig !== null) {
+    // Utiliser les activités réelles du store
+    const activitiesToSort = [...recentActivities];
+
+    if (sortConfig !== null && activitiesToSort.length > 0) {
       activitiesToSort.sort((a, b) => {
         // Helper to convert time string "HH:MM:SS" or "MM:SS" to seconds
         const timeToSeconds = (timeStr: string) => {
@@ -189,17 +97,59 @@ export default function Statistics() {
           valA = valA.toLowerCase();
           valB = valB.toLowerCase();
         }
-        // Note: heartRate and elevation are numbers, distance is a number. Type is string.
 
-        // @ts-ignore
         if (valA < valB) return sortConfig.direction === "ascending" ? -1 : 1;
-        // @ts-ignore
         if (valA > valB) return sortConfig.direction === "ascending" ? 1 : -1;
         return 0;
       });
     }
     setSortedActivities(activitiesToSort);
-  }, [sortConfig]); // Removed initialActivities from deps as it's a constant for now
+  }, [sortConfig, recentActivities]);
+
+  useEffect(() => {
+    // Initialiser sortedActivities avec les activités du store
+    if (recentActivities.length > 0) {
+      setSortedActivities(recentActivities);
+    }
+  }, [recentActivities]);
+
+  if (!user) return null;
+
+  const requestSort = (key: keyof Activity) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">
+            Chargement des statistiques...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 md:p-6 flex items-center justify-center h-64">
+        <div className="text-center text-destructive">
+          <p>Erreur lors du chargement des données</p>
+          <p className="text-sm mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -215,14 +165,12 @@ export default function Statistics() {
 
         <div className="flex gap-2">
           <div className="relative">
-            {" "}
-            {/* This would be for a dropdown component later */}
             <button className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20 flex items-center gap-2">
               {timeFrame === "weekly"
                 ? "This Week"
                 : timeFrame === "monthly"
-                  ? "This Month"
-                  : "All Time"}
+                ? "This Month"
+                : "All Time"}
               <ChevronDown size={16} />
             </button>
           </div>
@@ -245,13 +193,24 @@ export default function Statistics() {
               <p className="text-sm text-muted-foreground">Total Distance</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats?.weeklyDistance ?? 0} km
+                  {performanceMetrics?.totalDistance?.value ??
+                    user.stats?.weeklyDistance ??
+                    0}{" "}
+                  km
                 </p>
-                <span className="text-xs text-success flex items-center">
-                  {" "}
-                  {/* Use text-success */}
-                  <ArrowUp size={12} />
-                  12%
+                <span
+                  className={`text-xs flex items-center ${
+                    (performanceMetrics?.totalDistance?.trend ?? 0) >= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
+                  {(performanceMetrics?.totalDistance?.trend ?? 0) >= 0 ? (
+                    <ArrowUp size={12} />
+                  ) : (
+                    <ArrowDown size={12} />
+                  )}
+                  {Math.abs(performanceMetrics?.totalDistance?.trend ?? 0)}%
                 </span>
               </div>
             </div>
@@ -261,22 +220,29 @@ export default function Statistics() {
         <Card className="p-4 bg-card text-card-foreground border-border">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-green-500/10 text-green-500 rounded-lg flex items-center justify-center">
-              {" "}
-              {/* Example different color */}
               <Clock size={20} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Avg. Pace</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats?.averagePace ?? 0}
+                  {performanceMetrics?.averagePace?.value ??
+                    user.stats?.averagePace ??
+                    "0:00"}
                 </p>
-                <span className="text-xs text-success flex items-center">
-                  {" "}
-                  {/* Use text-success */}
-                  <TrendingDown size={12} />{" "}
-                  {/* Changed to TrendingDown for variety */}
-                  5%
+                <span
+                  className={`text-xs flex items-center ${
+                    (performanceMetrics?.averagePace?.trend ?? 0) <= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
+                  {(performanceMetrics?.averagePace?.trend ?? 0) <= 0 ? (
+                    <TrendingDown size={12} />
+                  ) : (
+                    <TrendingUp size={12} />
+                  )}
+                  {Math.abs(performanceMetrics?.averagePace?.trend ?? 0)}%
                 </span>
               </div>
             </div>
@@ -292,11 +258,23 @@ export default function Statistics() {
               <p className="text-sm text-muted-foreground">Total Activities</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold text-foreground">
-                  {user.stats?.totalRuns ?? 0}
+                  {performanceMetrics?.totalActivities?.value ??
+                    user.stats?.totalRuns ??
+                    0}
                 </p>
-                <span className="text-xs text-success flex items-center">
-                  <ArrowUp size={12} />
-                  8%
+                <span
+                  className={`text-xs flex items-center ${
+                    (performanceMetrics?.totalActivities?.trend ?? 0) >= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
+                  {(performanceMetrics?.totalActivities?.trend ?? 0) >= 0 ? (
+                    <ArrowUp size={12} />
+                  ) : (
+                    <ArrowDown size={12} />
+                  )}
+                  {Math.abs(performanceMetrics?.totalActivities?.trend ?? 0)}%
                 </span>
               </div>
             </div>
@@ -311,12 +289,22 @@ export default function Statistics() {
             <div>
               <p className="text-sm text-muted-foreground">Avg. Heart Rate</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-xl font-bold text-foreground">156 bpm</p>
-                <span className="text-xs text-destructive flex items-center">
-                  {" "}
-                  {/* Use text-destructive */}
-                  <ArrowUp size={12} />
-                  3%
+                <p className="text-xl font-bold text-foreground">
+                  {performanceMetrics?.averageHeartRate?.value ?? 156} bpm
+                </p>
+                <span
+                  className={`text-xs flex items-center ${
+                    (performanceMetrics?.averageHeartRate?.trend ?? 0) <= 0
+                      ? "text-success"
+                      : "text-destructive"
+                  }`}
+                >
+                  {(performanceMetrics?.averageHeartRate?.trend ?? 0) <= 0 ? (
+                    <ArrowDown size={12} />
+                  ) : (
+                    <ArrowUp size={12} />
+                  )}
+                  {Math.abs(performanceMetrics?.averageHeartRate?.trend ?? 0)}%
                 </span>
               </div>
             </div>
@@ -449,7 +437,7 @@ export default function Statistics() {
                   cy="50%"
                   innerRadius={70}
                   outerRadius={100}
-                  fill="hsl(var(--primary-500))" // Base fill for pie
+                  fill="hsl(var(--primary-500))"
                   paddingAngle={4}
                   dataKey="value"
                   labelLine={false}
@@ -461,7 +449,7 @@ export default function Statistics() {
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
-                    /> /* Keep predefined distinct colors for pie chart */
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -613,10 +601,8 @@ export default function Statistics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {sortedActivities.map(
-                (
-                  activity // Use sortedActivities here
-                ) => (
+              {sortedActivities.length > 0 ? (
+                sortedActivities.map((activity) => (
                   <tr
                     key={activity.id}
                     className="hover:bg-muted transition-colors"
@@ -644,7 +630,16 @@ export default function Statistics() {
                       {activity.location}
                     </td>
                   </tr>
-                )
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-8 text-center text-muted-foreground"
+                  >
+                    Aucune activité récente
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -653,3 +648,633 @@ export default function Statistics() {
     </div>
   );
 }
+
+// /* eslint-disable react-hooks/exhaustive-deps */
+// import { useUserContext } from "../hooks/useUser";
+// import Card from "../components/ui/Card";
+// import {
+//   Calendar,
+//   Filter,
+//   TrendingUp,
+//   Clock,
+//   MapPin,
+//   Heart,
+//   ArrowUp,
+//   ArrowDown,
+//   ChevronDown,
+//   TrendingDown, // For negative changes
+// } from "lucide-react";
+// import { useState, useEffect } from "react"; // Added useEffect
+// import {
+//   ResponsiveContainer,
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   LineChart,
+//   Line,
+//   AreaChart,
+//   Area,
+//   PieChart,
+//   Pie,
+//   Cell,
+//   Legend,
+// } from "recharts";
+// import { useStatisticStore } from "../stores/StatisticStore";
+// import { Activity } from "../types/Stats";
+
+// const COLORS = ["#3B82F6", "#10B981", "#F97316", "#8B5CF6"];
+
+// // Define Activity Type
+
+// const initialActivities: Activity[] = [
+//   {
+//     id: 1,
+//     type: "Long Run",
+//     distance: 12.5,
+//     time: "1:10:22",
+//     date: "2025-05-22",
+//     location: "City Park",
+//     heartRate: 162,
+//     elevation: 125,
+//   },
+//   {
+//     id: 2,
+//     type: "Recovery",
+//     distance: 5.2,
+//     time: "28:42",
+//     date: "2025-05-20",
+//     location: "Neighborhood Loop",
+//     heartRate: 145,
+//     elevation: 45,
+//   },
+//   {
+//     id: 3,
+//     type: "Tempo",
+//     distance: 8.4,
+//     time: "42:15",
+//     date: "2025-05-18",
+//     location: "Riverside Trail",
+//     heartRate: 172,
+//     elevation: 86,
+//   },
+//   {
+//     id: 4,
+//     type: "Intervals",
+//     distance: 6.8,
+//     time: "35:30",
+//     date: "2025-05-16",
+//     location: "Track",
+//     heartRate: 176,
+//     elevation: 12,
+//   },
+//   {
+//     id: 5,
+//     type: "Long Run",
+//     distance: 15.3,
+//     time: "1:24:18",
+//     date: "2025-05-14",
+//     location: "Mountain Route",
+//     heartRate: 158,
+//     elevation: 320,
+//   },
+// ];
+
+// export default function Statistics() {
+//   const { user } = useUserContext();
+//   const {
+//     weeklyData,
+//     monthlyData,
+//     paceData,
+//     runTypeData,
+//     getWeeklyData,
+//     getMonthlyData,
+//     getPaceData,
+//     getRunTypeData,
+//   } = useStatisticStore();
+
+//   const [timeFrame, setTimeFrame] = useState("weekly");
+//   const [sortedActivities, setSortedActivities] =
+//     useState<Activity[]>(initialActivities);
+//   const [sortConfig, setSortConfig] = useState<{
+//     key: keyof Activity;
+//     direction: "ascending" | "descending";
+//   } | null>(null);
+
+//   useEffect(() => {
+//     const loadData = async () => {
+//       await getMonthlyData();
+//       await getRunTypeData();
+//       await getWeeklyData();
+//       await getPaceData().then(() => console.log("paceData:", paceData));
+//     };
+
+//     loadData();
+//   }, [getMonthlyData, getPaceData, getRunTypeData, getWeeklyData]);
+
+//   useEffect(() => {
+//     const activitiesToSort = [...initialActivities]; // Use a copy of the original unsorted data
+//     if (sortConfig !== null) {
+//       activitiesToSort.sort((a, b) => {
+//         // Helper to convert time string "HH:MM:SS" or "MM:SS" to seconds
+//         const timeToSeconds = (timeStr: string) => {
+//           const parts = timeStr.split(":").map(Number);
+//           if (parts.length === 3)
+//             return parts[0] * 3600 + parts[1] * 60 + parts[2]; // HH:MM:SS
+//           if (parts.length === 2) return parts[0] * 60 + parts[1]; // MM:SS
+//           return 0;
+//         };
+
+//         let valA = a[sortConfig.key];
+//         let valB = b[sortConfig.key];
+
+//         // Special handling for specific keys
+//         if (sortConfig.key === "time") {
+//           valA = timeToSeconds(valA as string);
+//           valB = timeToSeconds(valB as string);
+//         } else if (sortConfig.key === "date") {
+//           valA = new Date(valA as string).getTime();
+//           valB = new Date(valB as string).getTime();
+//         } else if (typeof valA === "string" && typeof valB === "string") {
+//           // Case-insensitive sort for strings
+//           valA = valA.toLowerCase();
+//           valB = valB.toLowerCase();
+//         }
+//         // Note: heartRate and elevation are numbers, distance is a number. Type is string.
+
+//         // @ts-ignore
+//         if (valA < valB) return sortConfig.direction === "ascending" ? -1 : 1;
+//         // @ts-ignore
+//         if (valA > valB) return sortConfig.direction === "ascending" ? 1 : -1;
+//         return 0;
+//       });
+//     }
+//     setSortedActivities(activitiesToSort);
+//   }, [sortConfig]); // Removed initialActivities from deps as it's a constant for now
+
+//   if (!user) return null;
+
+//   const requestSort = (key: keyof Activity) => {
+//     let direction: "ascending" | "descending" = "ascending";
+//     if (
+//       sortConfig &&
+//       sortConfig.key === key &&
+//       sortConfig.direction === "ascending"
+//     ) {
+//       direction = "descending";
+//     }
+//     setSortConfig({ key, direction });
+//   };
+//   return (
+//     <div className="p-4 md:p-6 space-y-6">
+//       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+//         <div>
+//           <h1 className="text-2xl font-bold text-foreground">
+//             Statistics & Analysis
+//           </h1>
+//           <p className="text-muted-foreground">
+//             Track your performance and progress over time
+//           </p>
+//         </div>
+
+//         <div className="flex gap-2">
+//           <div className="relative">
+//             {/* This would be for a dropdown component later */}
+//             <button className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20 flex items-center gap-2">
+//               {timeFrame === "weekly"
+//                 ? "This Week"
+//                 : timeFrame === "monthly"
+//                 ? "This Month"
+//                 : "All Time"}
+//               <ChevronDown size={16} />
+//             </button>
+//           </div>
+
+//           <button className="btn btn-outline dark:border-muted dark:text-muted-foreground dark:hover:bg-muted/20 flex items-center gap-2">
+//             <Filter size={16} />
+//             Filter
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Performance metrics */}
+//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+//         <Card className="p-4 bg-card text-card-foreground border-border">
+//           <div className="flex items-center gap-3">
+//             <div className="h-10 w-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+//               <TrendingUp size={20} />
+//             </div>
+//             <div>
+//               <p className="text-sm text-muted-foreground">Total Distance</p>
+//               <div className="flex items-baseline gap-2">
+//                 <p className="text-xl font-bold text-foreground">
+//                   {user.stats?.weeklyDistance ?? 0} km
+//                 </p>
+//                 <span className="text-xs text-success flex items-center">
+//                   {" "}
+//                   {/* Use text-success */}
+//                   <ArrowUp size={12} />
+//                   12%
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </Card>
+
+//         <Card className="p-4 bg-card text-card-foreground border-border">
+//           <div className="flex items-center gap-3">
+//             <div className="h-10 w-10 bg-green-500/10 text-green-500 rounded-lg flex items-center justify-center">
+//               {" "}
+//               {/* Example different color */}
+//               <Clock size={20} />
+//             </div>
+//             <div>
+//               <p className="text-sm text-muted-foreground">Avg. Pace</p>
+//               <div className="flex items-baseline gap-2">
+//                 <p className="text-xl font-bold text-foreground">
+//                   {user.stats?.averagePace ?? 0}
+//                 </p>
+//                 <span className="text-xs text-success flex items-center">
+//                   {" "}
+//                   {/* Use text-success */}
+//                   <TrendingDown size={12} />{" "}
+//                   {/* Changed to TrendingDown for variety */}
+//                   5%
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </Card>
+
+//         <Card className="p-4 bg-card text-card-foreground border-border">
+//           <div className="flex items-center gap-3">
+//             <div className="h-10 w-10 bg-accent/10 text-accent rounded-lg flex items-center justify-center">
+//               <Calendar size={20} />
+//             </div>
+//             <div>
+//               <p className="text-sm text-muted-foreground">Total Activities</p>
+//               <div className="flex items-baseline gap-2">
+//                 <p className="text-xl font-bold text-foreground">
+//                   {user.stats?.totalRuns ?? 0}
+//                 </p>
+//                 <span className="text-xs text-success flex items-center">
+//                   <ArrowUp size={12} />
+//                   8%
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </Card>
+
+//         <Card className="p-4 bg-card text-card-foreground border-border">
+//           <div className="flex items-center gap-3">
+//             <div className="h-10 w-10 bg-destructive/10 text-destructive rounded-lg flex items-center justify-center">
+//               <Heart size={20} />
+//             </div>
+//             <div>
+//               <p className="text-sm text-muted-foreground">Avg. Heart Rate</p>
+//               <div className="flex items-baseline gap-2">
+//                 <p className="text-xl font-bold text-foreground">156 bpm</p>
+//                 <span className="text-xs text-destructive flex items-center">
+//                   {" "}
+//                   {/* Use text-destructive */}
+//                   <ArrowUp size={12} />
+//                   3%
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </Card>
+//       </div>
+
+//       {/* Charts */}
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//         <Card
+//           title="Weekly Distance"
+//           className="bg-card text-card-foreground border-border"
+//         >
+//           <div className="h-80">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <BarChart data={weeklyData}>
+//                 <CartesianGrid
+//                   strokeDasharray="3 3"
+//                   vertical={false}
+//                   stroke="hsl(var(--border))"
+//                 />
+//                 <XAxis
+//                   dataKey="day"
+//                   tick={{ fill: "hsl(var(--muted-foreground))" }}
+//                 />
+//                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))" }} />
+//                 <Tooltip
+//                   contentStyle={{
+//                     backgroundColor: "hsl(var(--card))",
+//                     color: "hsl(var(--card-foreground))",
+//                     border: "1px solid hsl(var(--border))",
+//                   }}
+//                 />
+//                 <Bar
+//                   dataKey="distance"
+//                   fill="hsl(var(--primary))"
+//                   radius={[4, 4, 0, 0]}
+//                 />
+//               </BarChart>
+//             </ResponsiveContainer>
+//           </div>
+//         </Card>
+
+//         <Card
+//           title="Monthly Progress"
+//           className="bg-card text-card-foreground border-border"
+//         >
+//           <div className="h-80">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <AreaChart data={monthlyData}>
+//                 <CartesianGrid
+//                   strokeDasharray="3 3"
+//                   vertical={false}
+//                   stroke="hsl(var(--border))"
+//                 />
+//                 <XAxis
+//                   dataKey="name"
+//                   tick={{ fill: "hsl(var(--muted-foreground))" }}
+//                 />
+//                 <YAxis tick={{ fill: "hsl(var(--muted-foreground))" }} />
+//                 <Tooltip
+//                   contentStyle={{
+//                     backgroundColor: "hsl(var(--card))",
+//                     color: "hsl(var(--card-foreground))",
+//                     border: "1px solid hsl(var(--border))",
+//                   }}
+//                 />
+//                 <Area
+//                   type="monotone"
+//                   dataKey="distance"
+//                   fill="hsl(var(--secondary))"
+//                   stroke="hsl(var(--secondary))"
+//                   fillOpacity={0.2}
+//                 />
+//               </AreaChart>
+//             </ResponsiveContainer>
+//           </div>
+//         </Card>
+
+//         <Card
+//           title="Pace Improvement"
+//           className="bg-card text-card-foreground border-border"
+//         >
+//           <div className="h-80">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <LineChart data={paceData}>
+//                 <CartesianGrid
+//                   strokeDasharray="3 3"
+//                   vertical={false}
+//                   stroke="hsl(var(--border))"
+//                 />
+//                 <XAxis
+//                   dataKey="name"
+//                   tick={{ fill: "hsl(var(--muted-foreground))" }}
+//                 />
+//                 <YAxis
+//                   domain={["dataMin - 0.5", "dataMax + 0.5"]}
+//                   tick={{ fill: "hsl(var(--muted-foreground))" }}
+//                 />
+//                 <Tooltip
+//                   contentStyle={{
+//                     backgroundColor: "hsl(var(--card))",
+//                     color: "hsl(var(--card-foreground))",
+//                     border: "1px solid hsl(var(--border))",
+//                   }}
+//                 />
+//                 <Line
+//                   type="monotone"
+//                   dataKey="value"
+//                   stroke="hsl(var(--accent))"
+//                   strokeWidth={2}
+//                   dot={{ r: 4, fill: "hsl(var(--accent))" }}
+//                   activeDot={{ r: 6, fill: "hsl(var(--accent))" }}
+//                 />
+//               </LineChart>
+//             </ResponsiveContainer>
+//           </div>
+//         </Card>
+
+//         <Card
+//           title="Run Types"
+//           className="bg-card text-card-foreground border-border"
+//         >
+//           <div className="h-80">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <PieChart>
+//                 <Pie
+//                   data={runTypeData}
+//                   cx="50%"
+//                   cy="50%"
+//                   innerRadius={70}
+//                   outerRadius={100}
+//                   fill="hsl(var(--primary-500))" // Base fill for pie
+//                   paddingAngle={4}
+//                   dataKey="value"
+//                   labelLine={false}
+//                   label={({ name, percent }) =>
+//                     `${name} ${(percent * 100).toFixed(0)}%`
+//                   }
+//                 >
+//                   {runTypeData.map((_entry, index) => (
+//                     <Cell
+//                       key={`cell-${index}`}
+//                       fill={COLORS[index % COLORS.length]}
+//                     /> /* Keep predefined distinct colors for pie chart */
+//                   ))}
+//                 </Pie>
+//                 <Tooltip
+//                   contentStyle={{
+//                     backgroundColor: "hsl(var(--card))",
+//                     color: "hsl(var(--card-foreground))",
+//                     border: "1px solid hsl(var(--border))",
+//                   }}
+//                 />
+//                 <Legend
+//                   wrapperStyle={{ color: "hsl(var(--muted-foreground))" }}
+//                 />
+//               </PieChart>
+//             </ResponsiveContainer>
+//           </div>
+//         </Card>
+//       </div>
+
+//       {/* Activities */}
+//       <Card
+//         title="Recent Activities"
+//         className="bg-card text-card-foreground border-border"
+//       >
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-sm">
+//             <thead className="text-left text-muted-foreground">
+//               <tr className="border-b border-border">
+//                 <th className="pb-3 pr-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("type")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Activity{" "}
+//                     {sortConfig?.key === "type" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 px-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("distance")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Distance{" "}
+//                     {sortConfig?.key === "distance" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 px-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("time")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Time{" "}
+//                     {sortConfig?.key === "time" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 px-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("date")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Date{" "}
+//                     {sortConfig?.key === "date" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 px-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("heartRate")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Heart Rate{" "}
+//                     {sortConfig?.key === "heartRate" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 px-2 font-medium">
+//                   <button
+//                     onClick={() => requestSort("elevation")}
+//                     className="flex items-center gap-1 hover:text-foreground transition-colors"
+//                   >
+//                     Elevation{" "}
+//                     {sortConfig?.key === "elevation" ? (
+//                       sortConfig.direction === "ascending" ? (
+//                         <ArrowUp size={14} />
+//                       ) : (
+//                         <ArrowDown size={14} />
+//                       )
+//                     ) : (
+//                       <ArrowDown
+//                         size={14}
+//                         className="opacity-0 group-hover:opacity-50"
+//                       />
+//                     )}
+//                   </button>
+//                 </th>
+//                 <th className="pb-3 pl-2 font-medium">Location</th>
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-border">
+//               {sortedActivities.map(
+//                 (
+//                   activity // Use sortedActivities here
+//                 ) => (
+//                   <tr
+//                     key={activity.id}
+//                     className="hover:bg-muted transition-colors"
+//                   >
+//                     <td className="py-3 pr-2 font-medium text-foreground">
+//                       {activity.type}
+//                     </td>
+//                     <td className="py-3 px-2 text-foreground">
+//                       {activity.distance} km
+//                     </td>
+//                     <td className="py-3 px-2 text-foreground">
+//                       {activity.time}
+//                     </td>
+//                     <td className="py-3 px-2 text-foreground">
+//                       {new Date(activity.date).toLocaleDateString()}
+//                     </td>
+//                     <td className="py-3 px-2 text-foreground">
+//                       {activity.heartRate ? `${activity.heartRate} bpm` : "N/A"}
+//                     </td>
+//                     <td className="py-3 px-2 text-foreground">
+//                       {activity.elevation ? `${activity.elevation} m` : "N/A"}
+//                     </td>
+//                     <td className="py-3 pl-2 text-muted-foreground flex items-center gap-1">
+//                       <MapPin size={14} />
+//                       {activity.location}
+//                     </td>
+//                   </tr>
+//                 )
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </Card>
+//     </div>
+//   );
+// }

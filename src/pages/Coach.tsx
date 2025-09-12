@@ -11,177 +11,262 @@ import {
   Lightbulb,
   Activity,
   CheckCircle,
-  Plus,
   CalendarDaysIcon,
+  Footprints,
+  HeartPulse,
+  Calendar,
+  Trophy,
 } from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
 import { Message } from "../types/AiCoach";
 import { toast } from "react-toastify";
 import { chatStore } from "../stores/userChatStore";
 
-// Mock data for coach tips
-// const coachTips = [
-//   {
-//     id: "t1",
-//     title: "Improve Your Cadence",
-//     description:
-//       "Aim for 170-180 steps per minute to optimize your running efficiency and reduce injury risk.",
-//     icon: "Zap", // Updated icon
-//   },
-//   {
-//     id: "t2",
-//     title: "Post-Run Recovery",
-//     description:
-//       "Try foam rolling within 30 minutes of long runs to help release tension in muscles and fascia.",
-//     icon: "ShieldCheck", // Updated icon
-//   },
-//   {
-//     id: "t3",
-//     title: "Hill Training",
-//     description:
-//       "Include hill repeats in your weekly routine to build strength and improve your form on flat terrain.",
-//     icon: "TrendingUp",
-//   },
-// ];
+// Types pour les entraînements
+interface Workout {
+  id: string;
+  type: string;
+  description: string;
+  icon: string | React.ReactNode;
+  duration?: string;
+  distance?: string;
+  difficulty?: string;
+}
 
-// Mock data for training plans
-// const trainingPlans = [
-//   {
-//     id: "p1",
-//     title: "5K Improvement Plan",
-//     duration: "8 weeks",
-//     level: "Intermediate",
-//     description:
-//       "Structured plan to help you improve your 5K time with a mix of speed work and endurance training.",
-//   },
-//   {
-//     id: "p2",
-//     title: "Half Marathon Build-Up",
-//     duration: "12 weeks",
-//     level: "Intermediate to Advanced",
-//     description:
-//       "Progressive plan to prepare you for a half marathon with long runs, tempo sessions, and recovery days.",
-//   },
-//   {
-//     id: "p3",
-//     title: "Recovery & Injury Prevention",
-//     duration: "4 weeks",
-//     level: "All Levels",
-//     description:
-//       "Focus on proper recovery techniques, strength training, and mobility work to prevent injuries.",
-//   },
-// ];
+// Composant pour l'affichage d'un entraînement
+const WorkoutCard = ({
+  workout,
+  isCompleted,
+  onAddToCalendar,
+  onCompleteWorkout,
+}: {
+  workout: Workout;
+  isCompleted: boolean;
+  onAddToCalendar: (workout: Workout) => void;
+  onCompleteWorkout: (workoutId: string, workoutType: string) => void;
+}) => {
+  const getWorkoutIcon = (icon: string | React.ReactNode) => {
+    if (typeof icon !== "string") return icon;
 
+    const iconMap: { [key: string]: React.ReactNode } = {
+      running: <Footprints size={20} className="text-blue-500" />,
+      recovery: <HeartPulse size={20} className="text-green-500" />,
+      cardio: <Activity size={20} className="text-red-500" />,
+      default: <Activity size={20} className="text-gray-500" />,
+    };
 
-// const suggestedWorkouts = [{
-//   id: "easy-run",
-//   type: "Easy Run",
-//   distance: "5-6 km",
-//   description: "conversational pace",
-//   icon: <Footprints size={18} className="text-blue-500 dark:text-blue-400" />,
-//   difficulty: "easy"
-// },
-// {
-//   id: "long-run",
-//   type: "Long Run",
-//   distance: "10-12 km",
-//   description: "easy pace",
-//   icon: <Footprints size={18} className="text-green-500 dark:text-green-400" />,
-//   difficulty: "moderate"
-// },
-// {
-//   id: "recovery",
-//   type: "Recovery",
-//   distance: "3-4 km",
-//   description: "very easy + strength",
-//   icon: <HeartPulse size={18} className="text-red-500 dark:text-red-400" />,
-//   difficulty: "easy"
-// }
-// ];
+    return iconMap[icon] || iconMap.default;
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+        isCompleted
+          ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-primary/50 dark:hover:border-primary-400"
+      }`}
+    >
+      {/* Icon */}
+      <div className="flex-shrink-0 text-xl">
+        {getWorkoutIcon(workout.icon)}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <h4
+            className={`font-semibold truncate ${
+              isCompleted
+                ? "text-green-700 dark:text-green-300 line-through"
+                : "text-gray-800 dark:text-gray-200"
+            }`}
+          >
+            {workout.type}
+          </h4>
+          {isCompleted && (
+            <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
+          )}
+        </div>
+
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+          {workout.description}
+        </p>
+
+        {/* Metadata */}
+        {(workout.duration || workout.distance) && (
+          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500 mt-2">
+            {workout.duration && (
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {workout.duration}
+              </span>
+            )}
+            {workout.distance && (
+              <span className="flex items-center gap-1">
+                <Footprints size={12} />
+                {workout.distance}
+              </span>
+            )}
+            {workout.difficulty && (
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  workout.difficulty === "easy"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                    : workout.difficulty === "moderate"
+                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                }`}
+              >
+                {workout.difficulty}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-1 flex-shrink-0">
+        {!isCompleted ? (
+          <>
+            <button
+              onClick={() => onAddToCalendar(workout)}
+              className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors rounded-lg"
+              title="Ajouter au calendrier"
+            >
+              <Calendar size={16} />
+            </button>
+            <button
+              onClick={() => onCompleteWorkout(workout.id, workout.type)}
+              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors rounded-lg"
+              title="Marquer comme terminé"
+            >
+              <CheckCircle size={16} />
+            </button>
+          </>
+        ) : (
+          <Trophy size={16} className="text-green-500" />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Composant pour l'état vide
+const EmptyState = ({
+  icon: Icon = CalendarDaysIcon,
+  message,
+  subtitle,
+}: {
+  icon?: React.ComponentType<any>;
+  message: string;
+  subtitle?: string;
+}) => (
+  <div className="text-center py-8">
+    <Icon size={32} className="mx-auto text-muted-foreground mb-3 opacity-60" />
+    <p className="text-muted-foreground font-medium mb-1">{message}</p>
+    {subtitle && <p className="text-sm text-muted-foreground/70">{subtitle}</p>}
+  </div>
+);
 
 export default function Coach() {
-
   const {
     messages,
     getMessages,
     trainingPlans,
     suggestedNutrition,
     sendMessage: sendChatMessageToStore,
+    motivationalText,
     getTrainingPlans,
     suggestedWorkouts,
     getSuggestedWorkouts,
-    getSuggestedNutrition
+    getSuggestedNutrition,
   } = chatStore();
 
-  const isEmpty = suggestedWorkouts.length === 0;
-
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
-  const [isAiTyping, setIsAiTyping] = useState(false); // Added AI typing state
-  const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
-  const [failedMessages, setFailedMessages] = useState<Map<string, string>>(new Map());
-  const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(new Set());
-  const [weeklyFocus, setWeeklyFocus] = useState({
-    title: "Building Base Endurance",
-    description: "This week, focus on easy runs to build your aerobic base. Keep your heart rate below 75% of your max.",
-    progress: 0,
-    total: suggestedWorkouts.length
-  });
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [pendingMessages, setPendingMessages] = useState<Set<string>>(
+    new Set()
+  );
+  const [failedMessages, setFailedMessages] = useState<Map<string, string>>(
+    new Map()
+  );
+  const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(
+    new Set()
+  );
+
+  const weeklyFocus = {
+    title: motivationalText?.title || "Planification de la semaine",
+    description:
+      motivationalText?.description ||
+      "Commencez par compléter vos entraînements suggérés",
+    progress: completedWorkouts.size,
+    total: suggestedWorkouts.length,
+  };
 
   useEffect(() => {
-    loadMessages();
-    getTrainingPlans();
-    getSuggestedWorkouts();
-    getSuggestedNutrition();
+    loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    try {
+      await Promise.all([
+        loadMessages(),
+        getTrainingPlans(),
+        getSuggestedWorkouts(),
+        getSuggestedNutrition(),
+      ]);
+    } catch (error) {
+      toast.error("Erreur lors du chargement des données");
+    }
+  };
 
   const loadMessages = async () => {
     await getMessages();
     setChatMessages(chatStore.getState().messages);
-  }
+  };
 
   const processMessageSend = async (messageText: string, messageId: string) => {
     try {
-      // Call the actual API through the store
       const aiResponseData = await sendChatMessageToStore(messageText);
 
-      // Success - remove from pending and add AI response
-      setPendingMessages(prev => {
+      setPendingMessages((prev) => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
         return newSet;
       });
 
-      // Use the response from the API
-      const responseText = aiResponseData.message || "Réponse reçue du serveur.";
-
+      const responseText =
+        aiResponseData.message || "Réponse reçue du serveur.";
       const aiMessage: Message = {
-        id: "ai-" + Date.now(),
+        id: `ai-${Date.now()}`,
         type: "text",
         message: responseText,
         sender: "bot",
         createdAt: new Date().toISOString(),
       };
+
       setChatMessages((prev) => [...prev, aiMessage]);
       setIsAiTyping(false);
     } catch (error) {
-      // Handle failure
-      setPendingMessages(prev => {
+      setPendingMessages((prev) => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
         return newSet;
       });
 
-      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-      setFailedMessages(prev => new Map([...prev, [messageId, errorMessage]]));
+      const errorMessage =
+        error instanceof Error ? error.message : "Erreur inconnue";
+      setFailedMessages(
+        (prev) => new Map([...prev, [messageId, errorMessage]])
+      );
       setIsAiTyping(false);
     }
   };
 
   const handleSendMessage = async (messageText: string) => {
-    // Updated signature
     if (!messageText.trim()) return;
 
-    const messageId = "user-" + Date.now();
+    const messageId = `user-${Date.now()}`;
     const userMessage: Message = {
       id: messageId,
       type: "text",
@@ -189,38 +274,43 @@ export default function Coach() {
       sender: "user",
       createdAt: new Date().toISOString(),
     };
+
     setChatMessages((prev) => [...prev, userMessage]);
-    setPendingMessages(prev => new Set([...prev, messageId]));
+    setPendingMessages((prev) => new Set([...prev, messageId]));
     setIsAiTyping(true);
 
-    // Set timeout to show failure after 5 minutes if still pending
+    // Timeout pour les messages en attente
     setTimeout(() => {
-      setPendingMessages(prev => {
+      setPendingMessages((prev) => {
         if (prev.has(messageId)) {
           const newSet = new Set(prev);
           newSet.delete(messageId);
-          setFailedMessages(prevFailed => new Map([...prevFailed, [messageId, "Timeout - Message non envoyé après 5 minutes"]]));
+          setFailedMessages(
+            (prevFailed) =>
+              new Map([
+                ...prevFailed,
+                [messageId, "Timeout - Message non envoyé après 5 minutes"],
+              ])
+          );
           return newSet;
         }
         return prev;
       });
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
 
     await processMessageSend(messageText, messageId);
   };
 
   const handleRetryMessage = (messageId: string) => {
-    // Find the original message
-    const originalMessage = chatMessages.find(msg => msg.id === messageId);
+    const originalMessage = chatMessages.find((msg) => msg.id === messageId);
     if (!originalMessage) return;
 
-    // Remove from failed messages and add back to pending
-    setFailedMessages(prev => {
+    setFailedMessages((prev) => {
       const newMap = new Map(prev);
       newMap.delete(messageId);
       return newMap;
     });
-    setPendingMessages(prev => new Set([...prev, messageId]));
+    setPendingMessages((prev) => new Set([...prev, messageId]));
     setIsAiTyping(true);
 
     processMessageSend(originalMessage.message, messageId);
@@ -228,23 +318,23 @@ export default function Coach() {
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     const userMessage: Message = {
-      id: "user-suggestion-" + Date.now(),
+      id: `user-suggestion-${Date.now()}`,
       type: "text",
       message: suggestion.text,
       sender: "user",
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
     };
     setChatMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
-    // Simulate AI response based on suggestion
+    // Simuler une réponse de l'IA
     setTimeout(() => {
       const aiResponse: Message = {
-        id: "ai-suggestion-response-" + Date.now(),
+        id: `ai-suggestion-response-${Date.now()}`,
         type: "text",
-        message: `Regarding "${suggestion.text}", let's explore that. (This is a demo AI response for suggestions)`,
+        message: `Concernant "${suggestion.text}", explorons cela ensemble.`,
         sender: "bot",
-        createdAt: new Date().toLocaleString(),
+        createdAt: new Date().toISOString(),
       };
       setChatMessages((prev) => [...prev, aiResponse]);
       setIsAiTyping(false);
@@ -253,15 +343,16 @@ export default function Coach() {
 
   const handleTalkToHumanClick = () => {
     const systemMessage: Message = {
-      id: "system-" + Date.now(),
+      id: `system-${Date.now()}`,
       type: "text",
-      message: "Talk to Human requested. An expert will be notified (demo).",
+      message:
+        "Demande de contact avec un expert enregistrée. Un coach vous contactera rapidement.",
       sender: "system",
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
     };
     setChatMessages((prev) => [...prev, systemMessage]);
-    console.log("Talk to human requested from main Coach page.");
-  }
+    toast.info("Un expert sera notifié de votre demande");
+  };
 
   const handleCompleteWorkout = (workoutId: string, workoutType: string) => {
     if (completedWorkouts.has(workoutId)) {
@@ -269,41 +360,45 @@ export default function Coach() {
       return;
     }
 
-    setCompletedWorkouts(prev => new Set([...prev, workoutId]));
-    setWeeklyFocus(prev => ({
-      ...prev,
-      progress: Math.min(prev.progress + 1, prev.total)
-    }));
-    toast.success(`${workoutType} terminé ! Excellent travail ! 🏃‍♂️`);
+    setCompletedWorkouts((prev) => new Set([...prev, workoutId]));
+    toast.success(`${workoutType} terminé ! Excellent travail ! 🎉`);
   };
 
-  const handleAddToCalendar = (workout: any) => {
-    // Simulate adding to calendar
-    toast.success(`${workout.type} ajouté au calendrier pour demain`);
+  const handleAddToCalendar = (workout: Workout) => {
+    toast.success(`${workout.type} ajouté au calendrier`);
+    // Ici vous pourriez intégrer avec l'API calendrier
+  };
+
+  const getCompletionPercentage = () => {
+    if (weeklyFocus.total === 0) return 0;
+    return Math.round((weeklyFocus.progress / weeklyFocus.total) * 100);
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">AI Coach</h1>
-        <p className="text-gray-600">
-          Get personalized training advice and running tips
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Coach IA
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Recevez des conseils d'entraînement personnalisés et des astuces de
+          course
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Coach chat */}
+        {/* Interface de chat */}
         <Card className="lg:col-span-8 p-0 flex flex-col h-[600px] overflow-hidden">
-          {" "}
-          {/* Added overflow-hidden */}
-          {/* ChatInterface will fill this card */}
           <ChatInterface
             initialMessages={chatMessages}
             onSendMessage={handleSendMessage}
             suggestionChips={[
-              { id: "s1", text: "What was my average pace last week?" },
-              { id: "s2", text: "Suggest a workout for today." },
-              { id: "s3", text: "How to prevent shin splints?" },
+              {
+                id: "s1",
+                text: "Quelle était ma vitesse moyenne la semaine dernière ?",
+              },
+              { id: "s2", text: "Suggérez un entraînement pour aujourd'hui" },
+              { id: "s3", text: "Comment prévenir les périostites ?" },
             ]}
             onSuggestionClick={handleSuggestionClick}
             onTalkToHumanClick={handleTalkToHumanClick}
@@ -311,221 +406,192 @@ export default function Coach() {
             pendingMessages={pendingMessages}
             failedMessages={failedMessages}
             onRetryMessage={handleRetryMessage}
-          // className="h-full" is default and should work with parent's h-[600px] and flex-col
           />
         </Card>
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Coach insights */}
-          <Card title="Weekly Focus">
-            {/* Updated styling for Weekly Focus main section */}
-
+          {/* Focus de la semaine */}
+          <Card title="Focus de la Semaine">
             <div
-              className={`border-l-4 pl-3 py-3 pr-2 rounded-r-md flex items-start gap-3
-                ${isEmpty
+              className={`border-l-4 pl-4 py-3 pr-2 rounded-r-md flex items-start gap-3
+              ${
+                suggestedWorkouts.length === 0
                   ? "border-gray-400 bg-gray-50 dark:bg-gray-800/40"
                   : "border-green-500 bg-green-50/50 dark:bg-green-900/20"
-                }`}
+              }`}
             >
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 border
-                  ${isEmpty
+                ${
+                  suggestedWorkouts.length === 0
                     ? "bg-white text-gray-500 border-gray-300"
                     : "bg-white text-green-500 border-green-200"
-                  }`}
+                }`}
               >
                 <Target size={20} />
               </div>
-              <div>
+
+              <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-gray-700 dark:text-gray-200">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">
                     {weeklyFocus.title}
                   </h4>
-                  {!isEmpty && <span
-                    className={`text-xs px-2 py-0.5 rounded-full
-                      ${isEmpty
-                        ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                        : "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
+                  {suggestedWorkouts.length > 0 && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full
+                      ${
+                        suggestedWorkouts.length === 0
+                          ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                          : "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
                       }`}
-                  >
-                    {weeklyFocus.progress}/{weeklyFocus.total}
-                  </span>}
+                    >
+                      {weeklyFocus.progress}/{weeklyFocus.total}
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   {weeklyFocus.description}
                 </p>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className={`${isEmpty ? "bg-gray-400" : "bg-green-500"} h-2 rounded-full transition-all duration-500`}
-                    style={{
-                      width: isEmpty ? "0%" : `${(weeklyFocus.progress / weeklyFocus.total) * 100}%`,
-                    }}
-                  />
-                </div>
+
+                {suggestedWorkouts.length > 0 && (
+                  <>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${getCompletionPercentage()}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      {getCompletionPercentage()}% complété
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                  Entraînements Suggérés
+                </h4>
+                {suggestedWorkouts.length > 0 && (
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    {weeklyFocus.progress} sur {weeklyFocus.total} terminés
+                  </span>
+                )}
+              </div>
 
-            <div className="mt-4">
-              <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-300">
-                Entraînements Suggérés
-              </h4>
-              {
-                suggestedWorkouts.length > 0 ? (
-                  <div className="space-y-3">
-                    {suggestedWorkouts.map((workout) => {
-                      const isCompleted = completedWorkouts.has(workout.id);
-
-                      return (
-                        <div
-                          key={workout.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isCompleted
-                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:border-primary/50'
-                            }`}
-                        >
-                          {workout.icon}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className={`font-medium ${isCompleted ? 'text-green-700 dark:text-green-300 line-through' : 'text-gray-700 dark:text-gray-200'}`}>
-                                {workout.type}
-                              </p>
-                              {isCompleted && <CheckCircle size={16} className="text-green-500" />}
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {workout.duration} at {workout.description}
-                            </p>
-                          </div>
-                          <div className="flex gap-1">
-                            {!isCompleted && (
-                              <>
-                                <button
-                                  onClick={() => handleAddToCalendar(workout)}
-                                  className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded"
-                                  title="Ajouter au calendrier"
-                                >
-                                  <Plus size={14} />
-                                </button>
-                                <button
-                                  onClick={() => handleCompleteWorkout(workout.id, workout.type)}
-                                  className="p-1.5 text-gray-400 hover:text-green-500 transition-colors rounded"
-                                  title="Marquer comme terminé"
-                                >
-                                  <CheckCircle size={14} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>) : (
-                  <div className="text-center py-4">
-                    <CalendarDaysIcon size={24} className="mx-auto text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground mb-3">Aucun entraînement suggéré pour le moment.</p>
-                  </div>
-                )
-              }
-            </div>
-          </Card>
-
-          {/* Training plans */}
-          <Card title="Training Plans">
-            {
-              trainingPlans.length > 0 ? (
+              {suggestedWorkouts.length > 0 ? (
                 <div className="space-y-3">
-                  {trainingPlans.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="p-3 border dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:shadow-sm transition-all"
-                    >
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-100">
-                          {plan.title}
-                        </h4>
-                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300 px-2 py-0.5 text-xs rounded-full font-medium">
-                          {plan.duration}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                        {plan.description}
-                      </p>
-                      <button className="group mt-2 text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1">
-                        <Link
-                          to={`/training-plan/${plan.id}`}
-                          className="group-hover:underline"
-                        >
-                          View plan
-                        </Link>
-                        <ArrowRight
-                          size={14}
-                          className="transition-transform group-hover:translate-x-1"
-                        />
-                      </button>
-                    </div>
+                  {suggestedWorkouts.map((workout) => (
+                    <WorkoutCard
+                      key={workout.id}
+                      workout={workout}
+                      isCompleted={completedWorkouts.has(workout.id)}
+                      onAddToCalendar={handleAddToCalendar}
+                      onCompleteWorkout={handleCompleteWorkout}
+                    />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <CalendarDaysIcon size={24} className="mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground mb-3">
-                    Aucune suggestion pour le moment.
-                  </p>
-                </div>)
-            }
+                <EmptyState
+                  icon={CalendarDaysIcon}
+                  message="Aucun entraînement suggéré"
+                  subtitle="Le coach vous proposera bientôt des entraînements personnalisés"
+                />
+              )}
+            </div>
+          </Card>
+
+          {/* Plans d'entraînement */}
+          <Card title="Plans d'Entraînement">
+            {trainingPlans.length > 0 ? (
+              <div className="space-y-3">
+                {trainingPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:shadow-sm transition-all bg-white dark:bg-gray-800"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100">
+                        {plan.title}
+                      </h4>
+                      <span className="bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300 px-2 py-1 text-xs rounded-full font-medium">
+                        {plan.duration}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      {plan.description}
+                    </p>
+
+                    <button className="group text-primary-600 dark:text-primary-400 text-sm font-medium flex items-center gap-1 hover:underline">
+                      <Link to={`/training-plan/${plan.id}`}>Voir le plan</Link>
+                      <ArrowRight
+                        size={14}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Target}
+                message="Aucun plan disponible"
+                subtitle="Des plans d'entraînement seront bientôt suggérés"
+              />
+            )}
           </Card>
         </div>
       </div>
 
-      {/* Running tips */}
-      <Card title="Coach Tips">
+      {/* Conseils du coach */}
+      <Card title="Conseils du Coach">
         {suggestedNutrition.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {suggestedNutrition.map((tip) => (
-              <div
-                key={tip.id}
-                className="p-4 border dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition-all flex flex-col" // Added flex flex-col for consistent height if needed
-              >
-                <div className="h-10 w-10 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center text-primary dark:text-primary-400 mb-3 shrink-0">
-                  {tip.icon === "Zap" && <Zap size={20} />}
-                  {tip.icon === "ShieldCheck" && <ShieldCheck size={20} />}
-                  {tip.icon === "TrendingUp" && <TrendingUp size={20} />}
-                  {tip.icon === "Clock" && <Clock size={20} />}{" "}
-                  {/* Default/fallback */}
-                  {tip.icon === "Activity" && <Activity size={20} />}{" "}
-                  {/* Default/fallback */}
-                  {tip.icon === "Lightbulb" && <Lightbulb size={20} />}{" "}
-                  {/* Default/fallback */}
-                  {
-                    ![
-                      "Zap",
-                      "ShieldCheck",
-                      "TrendingUp",
-                      "Clock",
-                      "Activity",
-                      "Lightbulb",
-                    ].includes(tip.icon) && (
-                      <Lightbulb size={20} />
-                    ) /* Fallback for any other unspecified icon */
-                  }
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {suggestedNutrition.map((tip) => {
+              const iconMap: { [key: string]: React.ReactNode } = {
+                Zap: <Zap size={20} className="text-yellow-500" />,
+                ShieldCheck: (
+                  <ShieldCheck size={20} className="text-green-500" />
+                ),
+                TrendingUp: <TrendingUp size={20} className="text-blue-500" />,
+                Clock: <Clock size={20} className="text-gray-500" />,
+                Activity: <Activity size={20} className="text-red-500" />,
+                Lightbulb: <Lightbulb size={20} className="text-purple-500" />,
+              };
+
+              return (
+                <div
+                  key={tip.id}
+                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:border-primary-400/50 transition-all bg-white dark:bg-gray-800"
+                >
+                  <div className="h-12 w-12 bg-primary-100 dark:bg-primary-700/20 rounded-full flex items-center justify-center mb-3">
+                    {iconMap[tip.icon] || (
+                      <Lightbulb size={20} className="text-primary-500" />
+                    )}
+                  </div>
+
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    {tip.title}
+                  </h4>
+
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {tip.description}
+                  </p>
                 </div>
-                <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-100">
-                  {tip.title}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 flex-grow">
-                  {tip.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="text-center py-4">
-            <Lightbulb size={24} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-3">
-              Aucune suggestion pour le moment.
-            </p>
-          </div>
+          <EmptyState
+            icon={Lightbulb}
+            message="Aucun conseil pour le moment"
+            subtitle="Le coach vous préparera bientôt des conseils personnalisés"
+          />
         )}
       </Card>
     </div>

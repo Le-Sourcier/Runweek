@@ -23,7 +23,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
 
   useEffect(() => {
     if (isAuthenticated) navigateWithParams(ROUTES.WELCOME);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigateWithParams]);
 
   const authLayoutContent = (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 lg:p-8 flex items-center justify-center">

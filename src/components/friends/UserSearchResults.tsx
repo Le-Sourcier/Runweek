@@ -288,7 +288,7 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({
               friend={user}
               isOpen={isProfileModalOpen}
               onClose={() => setIsProfileModalOpen(false)}
-              onSendMessage={function (friendId: string): void {
+              onSendMessage={function (): void {
                 throw new Error("Function not implemented.");
               }}
               // onRemoveFriend={function (friendId: string): void {

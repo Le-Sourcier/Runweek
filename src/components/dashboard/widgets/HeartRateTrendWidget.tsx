@@ -27,7 +27,7 @@ const HeartRateTrendWidget: FC = () => {
 
   useEffect(() => {
     getHeartRateData();
-  }, []);
+  }, [getHeartRateData]);
 
 
   return (

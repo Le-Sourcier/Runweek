@@ -75,7 +75,7 @@ const WeeklyNutritionTrend: React.FC<WeeklyNutritionTrendProps> = ({
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (

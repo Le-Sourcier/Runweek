@@ -1,5 +1,6 @@
 import { Facebook, Twitter, Zap, BarChart2, Link } from "lucide-react";
 import { GoalCategory } from ".";
+import { Language } from "./message";
 
 export type UserStats = {
   totalDistance: number;
@@ -43,6 +44,7 @@ export type User = {
   goals: UserGoal[];
   achievements: UserAchievement[];
   preferences?: UserPreferences; // Added preferences field
+  lang: Language;
   connectedDevices?: ConnectedDevice[]; // New field
   socialAccounts?: SocialAccountConnection[]; // New field
 };
@@ -77,13 +79,13 @@ export interface UserPreferences {
   activityVisibility?: "only_me" | "friends" | "public";
   profileVisibility?: "only_me" | "friends" | "public";
   // dataSharing?: {
-    enabled: boolean;
-    shareNutrition: boolean;
-    shareActivities: boolean;
-    shareGoals: boolean;
-    shareAchievements: boolean;
-    allowFriendRequests: boolean;
-    showInSearch: boolean;
+  enabled: boolean;
+  shareNutrition: boolean;
+  shareActivities: boolean;
+  shareGoals: boolean;
+  shareAchievements: boolean;
+  allowFriendRequests: boolean;
+  showInSearch: boolean;
   // };
   locationSharing?: boolean;
   // Language and Region settings
@@ -162,11 +164,16 @@ export type UserContextType = {
   isAuthenticated: boolean; // Added for easier auth checks
   message: string | null; // For login/auth errors
   login: (credentials: UserCredentials) => Promise<void>; // Made async to mimic API call
+  verifyGoogleAuth: (
+    code: string
+  ) => Promise<{ error: boolean; message: string | null }>;
   register: (auth: UserRegistration) => Promise<void>; // Made async to mimic API call
+  registerWithGoogle: () => Promise<void>;
   linkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; //
   unlinkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; // Added for unlinked account
   verifyMail: (token: string) => Promise<{ message: string; error: boolean }>;
   resendVerificationMail: (email: string) => Promise<void>;
+  passwordRecoveryRequest: (email: string) => Promise<void>;
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => Promise<void>;
   updateUserPreferences: (preferences: UserPreferences) => void;

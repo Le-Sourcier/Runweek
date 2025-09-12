@@ -14,7 +14,7 @@ export const UpcomingWorkouts: FC = () => {
     .filter((event) => new Date(`${event.date}T${event.time || "00:00"}`) >= new Date())
     .slice(0, 2);
 
-  useEffect(() => { getEvents(); }, []);
+  useEffect(() => { getEvents(); }, [getEvents]);
 
   return (
     <div className="chart-container mb-8">

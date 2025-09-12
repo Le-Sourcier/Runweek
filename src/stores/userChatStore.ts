@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import { ChatState, Message, SuggestedNutrition, SuggestedWorkouts, TrainingPlan } from "../types/AiCoach";
+import {
+  ChatState,
+  Message,
+  MotivationalText,
+  SuggestedNutrition,
+  SuggestedWorkouts,
+  TrainingPlan,
+} from "../types/AiCoach";
 import { v4 as uuidv4 } from "uuid"; // npm install uuid
 import { apiUtils } from "../hooks/useApi";
 import { ApiUrl } from "../utils/api-url";
@@ -12,9 +19,11 @@ export const chatStore = create<ChatState>((set, get) => ({
   trainingPlans: [],
   suggestedWorkouts: [],
   suggestedNutrition: [],
+  motivationalText: undefined,
   initialMessage: {
     id: "init-" + Date.now(),
-    message: "Hi there! I'm your running coach AI. How can I help you today with your training?",
+    message:
+      "Hi there! I'm your running coach AI. How can I help you today with your training?",
     sender: "bot",
     createdAt: new Date().toISOString(),
     type: "text",
@@ -24,7 +33,9 @@ export const chatStore = create<ChatState>((set, get) => ({
   getMessages: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get<Message[]>(ApiUrl.GET_AI_COACH_MESSAGES);
+      const { data } = await apiUtils.get<Message[]>(
+        ApiUrl.GET_AI_COACH_MESSAGES
+      );
       set({ messages: data.length > 0 ? data : [get().initialMessage] });
     } catch (err) {
       const error =
@@ -55,7 +66,10 @@ export const chatStore = create<ChatState>((set, get) => ({
 
     try {
       // Ensuite envoyer au backend et obtenir la réponse
-      const { data } = await apiUtils.post<Message>(ApiUrl.SEND_AI_COACH_MESSAGES, { message: content });
+      const { data } = await apiUtils.post<Message>(
+        ApiUrl.SEND_AI_COACH_MESSAGES,
+        { message: content }
+      );
 
       const botMessage: Message = {
         ...data,
@@ -75,12 +89,39 @@ export const chatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  getMotivationalText: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await apiUtils.get<{ message: unknown }>(
+        ApiUrl.MOTIVATION
+      );
 
+      const text = data.message as MotivationalText;
+
+      set({ motivationalText: text });
+    } catch (err) {
+      if (extractErrorMessage(err).message === "NO_PLANTS_FOUND") {
+        set({ motivationalText: undefined, error: null });
+        return;
+      }
+      const error =
+        err instanceof Error ? err : new Error("Getting training plans failed");
+      set({ error: error.message, isLoading: false });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
   getTrainingPlans: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get<TrainingPlan[]>(ApiUrl.GET_AI_COACH_TRAINING_PLANS);
-      set({ trainingPlans: data });
+      const { data } = await apiUtils.get<{ plans: unknown }>(
+        ApiUrl.GET_AI_COACH_TRAINING_PLANS
+      );
+
+      const plans = data.plans as TrainingPlan[];
+
+      set({ trainingPlans: plans });
     } catch (err) {
       if (extractErrorMessage(err).message === "NO_PLANTS_FOUND") {
         set({ trainingPlans: [], error: null });
@@ -98,15 +139,21 @@ export const chatStore = create<ChatState>((set, get) => ({
   getSuggestedWorkouts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get<SuggestedWorkouts[]>(ApiUrl.GET_AI_COACH_SUGGESTED_WORKOUTS);
-      set({ suggestedWorkouts: data });
+      const { data } = await apiUtils.get<{ suggestions: unknown }>(
+        ApiUrl.GET_AI_COACH_SUGGESTED_WORKOUTS
+      );
+
+      const workout = data.suggestions as SuggestedWorkouts[];
+      set({ suggestedWorkouts: workout });
     } catch (err) {
       if (extractErrorMessage(err).message === "NO_WORKOUTS_FOUND") {
         set({ suggestedWorkouts: [], error: null });
         return;
       }
       const error =
-        err instanceof Error ? err : new Error("Getting suggested workouts failed");
+        err instanceof Error
+          ? err
+          : new Error("Getting suggested workouts failed");
       set({ error: error.message, isLoading: false });
       throw error;
     } finally {
@@ -117,15 +164,21 @@ export const chatStore = create<ChatState>((set, get) => ({
   getSuggestedNutrition: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get<SuggestedNutrition[]>(ApiUrl.GET_AI_COACH_SUGGESTED_NUTRITION);
-      set({ suggestedNutrition: data });
+      const { data } = await apiUtils.get<{ tips: unknown }>(
+        ApiUrl.GET_AI_COACH_SUGGESTED_NUTRITION
+      );
+
+      const nutritions = data.tips as SuggestedNutrition[];
+      set({ suggestedNutrition: nutritions });
     } catch (err) {
       if (extractErrorMessage(err).message === "NO_NUTRITION_FOUND") {
         set({ suggestedNutrition: [], error: null });
         return;
       }
       const error =
-        err instanceof Error ? err : new Error("Getting suggested nutrition failed");
+        err instanceof Error
+          ? err
+          : new Error("Getting suggested nutrition failed");
       set({ error: error.message, isLoading: false });
       throw error;
     } finally {

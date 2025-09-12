@@ -1,16 +1,31 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/layout/AuthLayout";
 import { Input2 as Input } from "../components/ui/Input";
 import { Button2 as Button } from "../components/ui/Button";
 import { ArrowLeft, Mail } from "lucide-react";
 import { ROUTES } from "../hooks/useAppNavigation";
+import { useUserContext } from "../hooks/useUser";
 
 const PasswordRecoveryRequestPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const navigate = useNavigate();
+
+  const {
+    isLoading: loading,
+    isAuthenticated,
+    passwordRecoveryRequest,
+  } = useUserContext();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Navigate back to the previous page or dashboard
+      navigate((-1 as unknown) || ROUTES.DASHBOARD, { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -37,19 +52,7 @@ const PasswordRecoveryRequestPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setSent(true);
-      console.log("Password reset requested for:", email);
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
-      console.error("Password reset error:", error);
-    } finally {
-      setLoading(false);
-    }
+    await passwordRecoveryRequest(email);
   };
 
   if (sent) {

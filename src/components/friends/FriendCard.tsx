@@ -15,7 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { formatTimeAgo } from "../../utils/date-formatter";
+
 import ConversationModal from "./ConversationModal";
 import BlockFriendModal from "./BlockFriendModal";
 import { getInitials } from "../../utils/get-initial";
@@ -37,7 +37,6 @@ const FriendCard: React.FC<FriendCardProps> = ({
   onViewProfile,
   onRemoveFriend,
   onBlockUser,
-  onReportUser,
   onSendMessage,
 }) => {
 
@@ -47,29 +46,7 @@ const FriendCard: React.FC<FriendCardProps> = ({
   const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
   const [isBlockedFriendModalOpen, setIsBlockedFriendModalOpen] = useState(false);
 
-  const handleReportUser = () => {
-    const reasons = [
-      "Contenu inapproprié",
-      "Harcèlement",
-      "Spam",
-      "Faux profil",
-      "Comportement abusif",
-      "Autre",
-    ];
-
-    const reasonIndex = prompt(
-      `Sélectionnez une raison:\n${reasons
-        .map((r, i) => `${i + 1}. ${r}`)
-        .join("\n")}\n\nEntrez le numéro (1-${reasons.length
-      }) ou décrivez une autre raison:`
-    );
-
-    if (reasonIndex) {
-      const selectedReason = reasons[parseInt(reasonIndex) - 1] || reasonIndex;
-      onReportUser(friend.id, selectedReason);
-    }
-    setShowDropdown(false);
-  };
+  
 
   return (
     <motion.div

@@ -7,6 +7,7 @@ export const ApiUrl = {
   UPDATE_PROFILE: "/user/update",
   RESEND_VERIFICATION_MAIL: "/user/resend-mail",
   UPDATE_PASSWORD: "/user/update-password",
+  RECOVERY_PASSWORD_REQUEST: "/user/forget-password",
 
   GET_AI_COACH_MESSAGES: "/aicoach/history",
   SEND_AI_COACH_MESSAGES: "/aicoach",
@@ -15,6 +16,10 @@ export const ApiUrl = {
   GET_AI_COACH_SUGGESTED_WORKOUTS: "/aicoach/workouts",
   GET_AI_COACH_SUGGESTED_NUTRITION: "/aicoach/nutrition",
 
+  // Google
+  GOOGLE_AUTH: "/auth/google",
+  GOOGLE_AUTH_CALLBACK: "/auth/google/callback",
+  GOOGLE_AUTH_CONFIRMATION: "/auth/google/exchange-code",
   LINK_GOOGLE_ACCOUNT: "/auth/link-google",
   UNLINK_GOOGLE_ACCOUNT: "/auth/google/unlink",
 
@@ -31,7 +36,6 @@ export const ApiUrl = {
   FRIENDS_ACTIVITY: "/friends/activity",
   FRIENDS_REPORT: "/friends/report",
   FRIENDS_STATS: "/friends/stats",
-
 
   // achievements
   ACHIEVEMENTS: "/achievements",
@@ -62,7 +66,6 @@ export const ApiUrl = {
   NUTRITION_GET_WEEKLY_NUTRITION: "/nutrition/weekly",
   NUTRITION_GET_NUTRITION_STATS: "/nutrition/stats",
 
-
   GET_DATA_SHARING_PREFERENCE: "/data-sharing/preferences",
   UPDATE_DATA_SHARING_PREFERENCE: "/data-sharing/preferences",
   GET_DATA_SHARING_PREFERENCE_BY_ADMIN: "/data-sharing/preferences/:id",
@@ -77,20 +80,36 @@ export const ApiUrl = {
   EVENTS: "/calendar/events",
   DELETE_EVENT: "/calendar/events/:id",
 
-  GET_PACE_STATS: "/statistics/pace",
-  GET_SLEEP_STATS: "/statistics/sleep",
-  GET_DAILY_STATS: "/statistics/daily",
+  // GET_PACE_STATS: "/statistics/pace",
+  // GET_SLEEP_STATS: "/statistics/sleep",
+  // GET_DAILY_STATS: "/statistics/daily",
+  // GET_WEEKLY_STATS: "/statistics/weekly",
+  // GET_MONTH_STATS: "/statistics/monthly",
+  // GET_ACTIVITY_TYPE_STATS: "/statistics/activity-types",
+  // GET_PERSONAL_RECORDS_STATS: "/statistics/personal-records",
+  // GET_HEART_RATE_STATS: "/statistics/heart-rate",
+
+  // URLs existantes
   GET_WEEKLY_STATS: "/statistics/weekly",
-  GET_MONTH_STATS: "/statistics/monthly",
-  GET_ACTIVITY_TYPE_STATS: "/statistics/activity-types",
-  GET_PERSONAL_RECORDS_STATS: "/statistics/personal-records",
+  GET_MONTHLY_STATS: "/statistics/monthly",
+  GET_PACE_STATS: "/statistics/pace",
+  GET_RUN_TYPE_STATS: "/statistics/run-types",
   GET_HEART_RATE_STATS: "/statistics/heart-rate",
 
+  // Nouvelles URLs
+  GET_RECENT_ACTIVITIES: "/statistics/activities",
+  GET_PERFORMANCE_METRICS: "/statistics/metrics",
+  GET_STATISTICS: "/statistics",
+  GET_PERSONAL_RECORDS: "/statistics/personal-records",
+  GET_SLEEP_DATA: "/statistics/sleep",
 
   /**
    * Fonction pour les url à paramètres sous la forme url/:id
    */
-  parameterized: (item: string, parameters: Record<string, string | number> | string | number) => {
+  parameterized: (
+    item: string,
+    parameters: Record<string, string | number> | string | number
+  ) => {
     // Si on passe directement un string ou un number → c'est l'id par défaut
     if (typeof parameters === "string" || typeof parameters === "number") {
       return item.replace(":id", parameters.toString());
@@ -105,9 +124,12 @@ export const ApiUrl = {
   },
 
   /**
- * Fonction pour les query strings sous la forme url?key=value
- */
-  queryable: (item: string, queries: Record<string, string | number> | string | number) => {
+   * Fonction pour les query strings sous la forme url?key=value
+   */
+  queryable: (
+    item: string,
+    queries: Record<string, string | number> | string | number
+  ) => {
     // Si on passe directement un string ou un number → c'est le paramètre 'id' par défaut
     if (typeof queries === "string" || typeof queries === "number") {
       return `${item}?q=${encodeURIComponent(queries.toString())}`;
@@ -115,8 +137,11 @@ export const ApiUrl = {
 
     // Sinon on construit les query strings à partir de l'objet
     const queryString = Object.entries(queries)
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value.toString())}`)
-      .join('&');
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(value.toString())}`
+      )
+      .join("&");
 
     return queryString ? `${item}?${queryString}` : item;
   },

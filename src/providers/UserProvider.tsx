@@ -81,10 +81,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const socialAccounts = data.socialAccounts || [];
 
       setUser({ ...data, socialAccounts });
-    } catch (error: any) {
-      console.log("Error:", error);
+    } catch (err) {
+      const error = extractErrorMessage(err);
 
-      if (error.response && error.response.status === 401) {
+      if (error && error.code === 401) {
         await refreshUserTokens();
         await fetchUser();
       }
@@ -144,7 +144,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       handleAuthSuccess(data);
 
       showMessage(message as MessageCode, { username: user?.fname ?? "" });
-
     } catch (err) {
       const error = extractErrorMessage(err);
 
@@ -227,7 +226,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       setMessage(error.message);
 
-      showMessage(error.message);
+      // showMessage(error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -385,6 +384,76 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // const registerWithGoogle = async () => {
+  //   setIsLoading(true);
+
+  //   try {
+  //     // Au lieu d'une requête API, on redirige directement vers l'URL d'authentification Google
+  //     const authUrl = `http://localhost:3001/api${ApiUrl.GOOGLE_AUTH}`;
+  //     window.location.href = authUrl;
+  //   } catch (error) {
+  //     const _message = extractErrorMessage(error);
+  //     showMessage(_message.message as MessageCode);
+  //     throw new Error(_message.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const registerWithGoogle = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const width = 500;
+  //     const height = 600;
+  //     const left = (window.innerWidth - width) / 2;
+  //     const top = (window.innerHeight - height) / 2;
+
+  //     const popup = window.open(
+  //       `${import.meta.env.VITE_API_URL}${ApiUrl.GOOGLE_AUTH}`,
+  //       "GoogleAuth",
+  //       `width=${width},height=${height},top=${top},left=${left}`
+  //     );
+
+  //     // Écouter les messages du popup (si vous utilisez postMessage)
+  //     const handleMessage = (event: MessageEvent) => {
+  //       if (
+  //         event.origin === window.location.origin &&
+  //         event.data.type === "google-auth-success"
+  //       ) {
+  //         const { token, refresh } = event.data;
+  //         sec.setItem("aspk", token);
+  //         sec.setItem("rft", refresh);
+  //         fetchUser();
+  //         popup?.close();
+  //         window.removeEventListener("message", handleMessage);
+  //       }
+  //     };
+
+  //     window.addEventListener("message", handleMessage);
+  //   } catch (error) {
+  //     const _message = extractErrorMessage(error);
+  //     showMessage(_message.message as MessageCode);
+  //     throw new Error(_message.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const registerWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      // Redirection vers le endpoint Google OAuth
+      window.location.href = `${import.meta.env.VITE_API_URL}${
+        ApiUrl.GOOGLE_AUTH
+      }`;
+    } catch (error) {
+      const _message = extractErrorMessage(error);
+      showMessage(_message.message as MessageCode);
+      throw new Error(_message.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const linkedAccount = async (accountId: string) => {
     switch (accountId) {
       case "google":
@@ -516,7 +585,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateUserPreferences = async (preferences: UserPreferences) => {
     try {
-      await apiUtils.put<UserPreferences>(ApiUrl.UPDATE_DATA_SHARING_PREFERENCE, preferences);
+      await apiUtils.put<UserPreferences>(
+        ApiUrl.UPDATE_DATA_SHARING_PREFERENCE,
+        preferences
+      );
       await fetchUser();
       setUser((prevUser) => {
         if (!prevUser) return null;
@@ -524,7 +596,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           ...prevUser,
           preferences: { ...(prevUser.preferences || {}), ...preferences },
         };
-        sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes       
+        sec.setItem("user", JSON.stringify(updatedUser)); // Persist changes
         showMessage("DATA_SHARING_PREFERENCES_UPDATED");
         return updatedUser;
       });
@@ -566,6 +638,46 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const passwordRecoveryRequest = async (email: string) => {
+    setIsLoading(true);
+    try {
+      await apiUtils.post(ApiUrl.RECOVERY_PASSWORD_REQUEST, { email });
+    } catch (err) {
+      const error = extractErrorMessage(err);
+
+      setMessage(error.message);
+
+      // showMessage(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyGoogleAuth = async (code: string) => {
+    setIsLoading(true);
+    try {
+      const { error, data, message } = await apiUtils.post<LoginResponse>(
+        ApiUrl.GOOGLE_AUTH_CONFIRMATION,
+        { code }
+      );
+
+      if (error) {
+        return { error: true, message: message };
+      }
+
+      handleAuthSuccess(data);
+      return { error: false, message: message };
+    } catch (err) {
+      const msg = extractErrorMessage(err);
+
+      console.log("msg: ", msg);
+      return { error: true, message: msg.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -574,11 +686,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         message,
         login,
+        verifyGoogleAuth,
         register,
+        registerWithGoogle,
         linkedAccount,
         unlinkedAccount,
         verifyMail,
         resendVerificationMail,
+        passwordRecoveryRequest,
         logout,
         updateUserProfile,
         updatePassword,

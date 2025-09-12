@@ -29,6 +29,32 @@ interface PRFormModalProps {
   editingPR?: PersonalRecord | null;
 }
 
+interface PRFormData {
+  distance: string;
+  time: string;
+  date: string;
+  notes: string;
+  location: string;
+  weather: {
+    temperature: string;
+    conditions: string;
+    humidity: string;
+    windSpeed: string;
+  };
+  heartRate: {
+    average: string;
+    max: string;
+    min: string;
+  };
+  elevation: {
+    gain: string;
+    loss: string;
+    maxAltitude: string;
+  };
+  tags: string[];
+  tagInput: string;
+}
+
 const PRFormModal: React.FC<PRFormModalProps> = ({
   isOpen,
   onClose,
@@ -37,7 +63,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
   isPRSaving
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<PersonalRecord | any>(editingPR ?? {
+  const [formData, setFormData] = useState<PRFormData>({
     // Required fields
     distance: "",
     time: "",
@@ -133,7 +159,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
 
     if (name.startsWith("weather.")) {
       const field = name.split(".")[1];
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       setFormData((prev) => ({
         ...prev,
         weather: {
@@ -143,7 +169,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       }));
     } else if (name.startsWith("heartRate.")) {
       const field = name.split(".")[1];
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       setFormData((prev) => ({
         ...prev,
         heartRate: {
@@ -153,7 +179,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       }));
     } else if (name.startsWith("elevation.")) {
       const field = name.split(".")[1];
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       setFormData((prev) => ({
         ...prev,
         elevation: {
@@ -162,7 +188,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
         },
       }));
     } else {
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -175,7 +201,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
       formData.tagInput.trim() &&
       !formData.tags.includes(formData.tagInput.trim())
     ) {
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, prev.tagInput.trim()],
@@ -188,7 +214,7 @@ const PRFormModal: React.FC<PRFormModalProps> = ({
     // @ts-ignore
     setFormData((prev) => ({
       ...prev,
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };

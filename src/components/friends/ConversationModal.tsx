@@ -136,7 +136,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
       // Le socket se chargera de l'ajouter
 
       // Envoyer le message via Socket.io pour une diffusion immédiate
-      // @ts-ignore
+      // @ts-expect-error: sendRealTimeMessage is not defined in the store
       sendRealTimeMessage({
         friend_id: friend.id,
         sender: {

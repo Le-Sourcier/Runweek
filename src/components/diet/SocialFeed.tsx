@@ -7,9 +7,14 @@ import { motion } from 'framer-motion';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
+import { User } from '../../types/user';
+
+interface UserSearchResult extends Pick<User, 'id' | 'fname' | 'lname' | 'image'> {
+  email?: string;
+}
+
 const SocialFeed: React.FC = () => {
   const { 
-    friends, 
     sharedMeals, 
     friendRequests,
     likeMeal, 
@@ -22,8 +27,7 @@ const SocialFeed: React.FC = () => {
 
   const [newFriendEmail, setNewFriendEmail] = useState('');
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
 
   const handleSendFriendRequest = async () => {
     if (!newFriendEmail) return;

@@ -42,6 +42,7 @@ import FriendsLayout from "./components/layout/FriendsLayout";
 import SocketManager from "./utils/SocketManager";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import NotFoundPage from "./pages/NotFoundPage";
+import GoogleAuthConfirmation from "./pages/GoogleAuthConfirmation";
 
 const MainAppLayoutContent: React.FC = () => {
   return (
@@ -74,6 +75,12 @@ const AuthRoutesHandler = () => {
     <Routes>
       {/* Public Auth Routes */}
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route
+        path="/auth/google/callback"
+        element={<GoogleAuthConfirmation />}
+      />
+
+      {/* auth/google/callback */}
 
       <Route path={ROUTES.REGISTER} element={<RegistrationPage />} />
 

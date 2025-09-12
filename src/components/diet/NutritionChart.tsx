@@ -7,7 +7,7 @@ interface NutritionChartProps {
   goals: NutritionGoals;
 }
 
-const NutritionChart: React.FC<NutritionChartProps> = ({ currentDay, goals }) => {
+const NutritionChart: React.FC<NutritionChartProps> = ({ currentDay }) => {
   if (!currentDay) return null;
 
   const data = [
@@ -31,7 +31,14 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ currentDay, goals }) =>
     },
   ];
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface TooltipPayload {
+    name: string;
+    value: number;
+    percentage: number;
+    color: string;
+  }
+
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: TooltipPayload }[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -67,7 +74,7 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ currentDay, goals }) =>
           <Legend 
             verticalAlign="bottom" 
             height={36}
-            formatter={(value, entry: any) => (
+            formatter={(value, entry: { color: string }) => (
               <span style={{ color: entry.color }}>{value}</span>
             )}
           />

@@ -217,7 +217,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as "overview" | "stats" | "activity")}
               className={`px-4 py-2 font-medium transition-colors flex items-center gap-2 ${
                 activeTab === tab.id
                   ? "text-primary border-b-2 border-primary"
@@ -450,7 +450,7 @@ const FriendProfileModal: React.FC<FriendProfileModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              {mockRecentActivities.map((activity, index) => (
+              {mockRecentActivities.map((activity) => (
                 <div
                   key={activity.id}
                   className="bg-background p-4 rounded-lg border border-border"

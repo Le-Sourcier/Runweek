@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useUserContext } from "../../hooks/useUser";
 import Card from "../ui/Card";
-import { Bell } from "lucide-react"; // Assuming Bell icon is suitable
+
 import { motion } from "framer-motion";
 
 interface NotificationSettingsProps {
