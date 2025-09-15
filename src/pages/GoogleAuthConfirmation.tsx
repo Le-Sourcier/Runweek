@@ -1,51 +1,88 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout from "../components/layout/AuthLayout";
 import { Button2 as Button } from "../components/ui/Button";
 import { CheckCircle, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { useUserContext } from "../hooks/useUser";
-import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
+import { ROUTES } from "../hooks/useAppNavigation";
 
-const GoogleAuthConfirmation: React.FC = () => {
-  const { getCurrentLocation } = useAppNavigation();
+// Composant de chargement pour Suspense
+const LoadingSpinner = () => (
+  <AuthLayout
+    title="Connecting with Google"
+    subtitle="Please wait while we authenticate your account"
+    showVisual={true}
+  >
+    <div className="text-center space-y-6">
+      <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+        <RefreshCw className="h-10 w-10 text-white animate-spin" />
+      </div>
+      <div className="space-y-3">
+        <p className="text-gray-600 text-lg">
+          We're connecting your Google account...
+        </p>
+        <div className="bg-blue-50/60 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-4 text-sm text-blue-700">
+          <p>This should only take a few seconds.</p>
+        </div>
+      </div>
+    </div>
+  </AuthLayout>
+);
+
+// Composant principal qui peut suspendre
+const GoogleAuthContent: React.FC = () => {
   const navigate = useNavigate();
-  const { verifyGoogleAuth, isLoading } = useUserContext();
+  const { verifyGoogleAuth } = useUserContext();
 
-  const [isSuccess, setIsSeccess] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { code } = getCurrentLocation().queryParams;
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get("code");
+
+  const handleGoogleCallback = useCallback(async () => {
+    if (!code) {
+      throw new Error("No authorization code received");
+    }
+
+    setErrorMessage("");
+    setIsSuccess(false);
+
+    try {
+      const { error, message } = await verifyGoogleAuth(code);
+
+      if (!error) {
+        setIsSuccess(true);
+        // Attendre 2 secondes avant la redirection
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 2000);
+        return true;
+      } else {
+        throw new Error(message || "Authentication failed");
+      }
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+      setErrorMessage(errorMsg);
+      throw error;
+    }
+  }, [code, navigate, verifyGoogleAuth]);
+
+  // Utiliser une promesse pour Suspense
+  const [authPromise, setAuthPromise] = useState<Promise<boolean> | null>(null);
 
   useEffect(() => {
-    const handleGoogleCallback = async () => {
-      if (!code) {
-        setIsSeccess(false);
-        setErrorMessage("No authorization code received");
-        return;
-      }
+    if (code && !authPromise) {
+      const promise = handleGoogleCallback();
+      setAuthPromise(promise);
+    }
+  }, [code, handleGoogleCallback, authPromise]);
 
-      try {
-        const { error, message } = await verifyGoogleAuth(code as string);
-
-        if (!error) {
-          setIsSeccess(true);
-          // Attendre 2 secondes avant la redirection pour montrer l'indicateur de validation
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 2000);
-        } else {
-          setIsSeccess(false);
-          setErrorMessage(message || "Authentication failed");
-        }
-      } catch (error) {
-        setIsSeccess(false);
-        setErrorMessage("An unexpected error occurred");
-        console.error("Google auth confirmation error:", error);
-      }
-    };
-
-    handleGoogleCallback();
-  }, [code, navigate, verifyGoogleAuth]);
+  // Si nous avons une promesse en cours, suspendre le composant
+  if (authPromise) {
+    throw authPromise;
+  }
 
   // Success state
   if (isSuccess) {
@@ -82,36 +119,10 @@ const GoogleAuthConfirmation: React.FC = () => {
     );
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <AuthLayout
-        title="Connecting with Google"
-        subtitle="Please wait while we authenticate your account"
-        showVisual={true}
-      >
-        <div className="text-center space-y-6">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-            <RefreshCw className="h-10 w-10 text-white animate-spin" />
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-gray-600 text-lg">
-              We're connecting your Google account...
-            </p>
-            <div className="bg-blue-50/60 backdrop-blur-sm border border-blue-200/50 rounded-2xl p-4 text-sm text-blue-700">
-              <p>This should only take a few seconds.</p>
-            </div>
-          </div>
-        </div>
-      </AuthLayout>
-    );
-  }
-
-  // Error, expired, or invalid token states
+  // Error state
   return (
     <AuthLayout
-      title={"Authentication failed"}
+      title="Authentication failed"
       subtitle={errorMessage}
       showVisual={true}
     >
@@ -123,7 +134,16 @@ const GoogleAuthConfirmation: React.FC = () => {
         </div>
 
         <div className="space-y-3 pt-4">
-          <Button onClick={() => window.location.reload()} className="w-full">
+          <Button
+            onClick={() => {
+              setAuthPromise(null);
+              setTimeout(() => {
+                const promise = handleGoogleCallback();
+                setAuthPromise(promise);
+              }, 0);
+            }}
+            className="w-full"
+          >
             Try again
           </Button>
 
@@ -133,23 +153,18 @@ const GoogleAuthConfirmation: React.FC = () => {
               Back to sign in
             </Button>
           </Link>
-
-          {isSuccess && (
-            <div className="text-center mt-4">
-              <p className="text-sm text-gray-500">
-                Need help?{" "}
-                {/* <Link
-                  to={ROUTES.CONTACT_SUPPORT}
-                  className="text-blue-600 hover:underline"
-                >
-                  Contact support
-                </Link> */}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </AuthLayout>
+  );
+};
+
+// Composant principal avec Suspense
+const GoogleAuthConfirmation: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <GoogleAuthContent />
+    </Suspense>
   );
 };
 

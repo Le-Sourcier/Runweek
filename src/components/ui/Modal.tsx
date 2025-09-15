@@ -1,4 +1,4 @@
-import React, { Children, FC, ReactNode, useEffect, useRef, useState } from "react";
+import React, { FC, ReactNode, useEffect, useRef, useState } from "react";
 import { AlertCircle, X } from "lucide-react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
@@ -168,8 +168,8 @@ export const Modal: React.FC<ModalProps> = ({
 //           }}
 //           exit={{ opacity: 0, scale: 0.95, y: 20 }}
 //           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-//           className={`bg-card text-card-foreground rounded-xl shadow-2xl p-6 space-y-4 
-//             ${sizeClasses[size]} 
+//           className={`bg-card text-card-foreground rounded-xl shadow-2xl p-6 space-y-4
+//             ${sizeClasses[size]}
 //             border border-border/50 select-none
 //             lg:fixed lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2`}
 //           onClick={(e) => e.stopPropagation()}
@@ -201,33 +201,36 @@ export const Modal: React.FC<ModalProps> = ({
 //   );
 // };
 
-
 export const DeleteConfirmModal: FC<DeleteConfirmModalProps> = ({
   isOpen,
   onClose,
   children,
 }) => {
-  return <Modal
-    isOpen={isOpen}
-    onClose={onClose}
-    title="Confirmation de suppression"
-    size="md"
-  >
-    <div className="space-y-4">
-
-      <div className="grid grid-cols-1 items-center justify-center mb-4">
-        <div className="flex items-center">
-          <AlertCircle size={48} className="mr-2 text-white bg-gradient-to-br from-blue-500 to-purple-600 rounded-full p-2" />
-          <h3 className="text-sm text-red-500 text-center">
-            Attention, cette action est irréversible.
-          </h3>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Confirmation de suppression"
+      size="md"
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 items-center justify-center mb-4">
+          <div className="flex items-center">
+            <AlertCircle
+              size={48}
+              className="mr-2 text-white bg-gradient-to-br from-blue-500 to-purple-600 rounded-full p-2"
+            />
+            <h3 className="text-sm text-red-500 text-center">
+              Attention, cette action est irréversible.
+            </h3>
+          </div>
         </div>
-      </div>
 
-      {children}
-    </div>
-  </Modal>
-}
+        {children}
+      </div>
+    </Modal>
+  );
+};
 
 export const DraggableModal: React.FC<DraggableModalProps> = ({
   isOpen,

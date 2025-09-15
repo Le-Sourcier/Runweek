@@ -149,8 +149,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       setMessage(error.message);
 
-      showMessage(error.message as MessageCode);
-      console.error("Erreur lors de la connexion (message) :", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -220,14 +218,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const resendVerificationMail = async (email: string) => {
     setIsLoading(true);
     try {
-      await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, { email });
+      const { message } = await apiUtils.post(ApiUrl.RESEND_VERIFICATION_MAIL, {
+        email,
+      });
+
+      return { error: false, message: message };
     } catch (err) {
       const error = extractErrorMessage(err);
 
       setMessage(error.message);
 
       // showMessage(error.message);
-      throw error;
+      return { error: true, message: error.message };
     } finally {
       setIsLoading(false);
     }
@@ -671,7 +673,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       const msg = extractErrorMessage(err);
 
-      console.log("msg: ", msg);
       return { error: true, message: msg.message };
     } finally {
       setIsLoading(false);

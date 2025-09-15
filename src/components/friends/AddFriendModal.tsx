@@ -14,10 +14,7 @@ interface AddFriendModalProps {
   isLoading: boolean;
 }
 
-const AddFriendModal: FC<AddFriendModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+const AddFriendModal: FC<AddFriendModalProps> = ({ isOpen, onClose }) => {
   const { sendFriendRequest } = useFriendsStore();
   const [email, setEmail] = useState("");
   const [sendingRequest, setIsSendingRequest] = useState(false);
@@ -30,7 +27,7 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
     return emailRegex.test(email);
   };
 
-  const {showMessage} = useMessages();
+  const { showMessage } = useMessages();
 
   const handleEmailNext = () => {
     if (!email.trim()) {
@@ -49,7 +46,7 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
 
   const handleSendRequest = async () => {
     try {
-      setIsSendingRequest(true)
+      setIsSendingRequest(true);
       await sendFriendRequest(email, message || undefined);
 
       // Store the request locally for immediate UI feedback
@@ -73,8 +70,7 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
       setMessage("");
       setStep("email");
       onClose();
-      showMessage("FRIEND_REQUEST_SENT")
-
+      showMessage("FRIEND_REQUEST_SENT");
     } catch (err) {
       showMessage(extractErrorMessage(err).message);
     } finally {
@@ -108,14 +104,16 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
         {/* Indicateur d'étapes */}
         <div className="flex items-center gap-4">
           <div
-            className={`flex items-center gap-2 ${step === "email" ? "text-primary" : "text-muted-foreground"
-              }`}
+            className={`flex items-center gap-2 ${
+              step === "email" ? "text-primary" : "text-muted-foreground"
+            }`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "email"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step === "email"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
-                }`}
+              }`}
             >
               1
             </div>
@@ -123,14 +121,16 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
           </div>
           <div className="flex-1 h-px bg-border"></div>
           <div
-            className={`flex items-center gap-2 ${step === "message" ? "text-primary" : "text-muted-foreground"
-              }`}
+            className={`flex items-center gap-2 ${
+              step === "message" ? "text-primary" : "text-muted-foreground"
+            }`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "message"
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step === "message"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
-                }`}
+              }`}
             >
               2
             </div>
@@ -210,7 +210,7 @@ const AddFriendModal: FC<AddFriendModalProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Écrivez un message pour vous présenter..."
-                className="input w-full h-24 resize-none"
+                className="input w-full h-24 resize-none dark:bg-gray-800 dark:border-gray-700"
                 maxLength={300}
               />
               <div className="flex justify-between items-center mt-1">

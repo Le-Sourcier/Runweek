@@ -3,6 +3,8 @@ import { Language, MessageCode } from "../types/message";
 
 export const MESSAGE_MAPPINGS = {
   en: {
+    EMAIL_SENDING_FAILED: "Email sending failed.",
+    EMAIL_SENDING_SUCCESS: "Email was sent successfully.",
     PERFORMANCE_METRICS_RETRIEVED:
       "Performance metrics successfully retrieved.",
     ERROR_GETTING_PERFORMANCE_METRICS: "Error retrieving performance metrics.",
@@ -238,6 +240,8 @@ export const MESSAGE_MAPPINGS = {
   fr: {
     PERFORMANCE_METRICS_RETRIEVED:
       "Les métriques de performance ont été récupérées avec succès.",
+    EMAIL_SENDING_SUCCESS: "L'email a été envoyé avec succès.",
+    EMAIL_SENDING_FAILED: "L'envoi de l'email a échoué.",
     ERROR_GETTING_PERFORMANCE_METRICS:
       "Erreur lors de la récupération des métriques de performance.",
     FOOD_NAME_REQUIRED:

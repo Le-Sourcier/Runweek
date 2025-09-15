@@ -18,7 +18,7 @@ import {
   Trophy,
 } from "lucide-react";
 import ChatInterface, { Suggestion } from "../components/chat/ChatInterface";
-import { Message } from "../types/AiCoach";
+import { Advices, Message } from "../types/AiCoach";
 import { toast } from "react-toastify";
 import { chatStore } from "../stores/userChatStore";
 
@@ -175,12 +175,13 @@ export default function Coach() {
     trainingPlans,
     suggestedNutrition,
     sendMessage: sendChatMessageToStore,
-    motivationalText,
+    advices,
     getTrainingPlans,
     suggestedWorkouts,
     getSuggestedWorkouts,
     getSuggestedNutrition,
   } = chatStore();
+  const [currentAdvice, setCurrentAdvice] = useState<Advices | null>(null);
 
   const [chatMessages, setChatMessages] = useState<Message[]>(messages);
   const [isAiTyping, setIsAiTyping] = useState(false);
@@ -194,10 +195,24 @@ export default function Coach() {
     new Set()
   );
 
+  // Sélectionner un conseil aléatoire quand les conseils changent
+  useEffect(() => {
+    if (advices.length > 0) {
+      selectRandomAdvice();
+    }
+  }, [advices]);
+
+  const selectRandomAdvice = () => {
+    if (advices.length > 0) {
+      const randomIndex = Math.floor(Math.random() * advices.length);
+      setCurrentAdvice(advices[randomIndex]);
+    }
+  };
+
   const weeklyFocus = {
-    title: motivationalText?.title || "Planification de la semaine",
+    title: currentAdvice?.title || "Planification de la semaine",
     description:
-      motivationalText?.description ||
+      currentAdvice?.description ||
       "Commencez par compléter vos entraînements suggérés",
     progress: completedWorkouts.size,
     total: suggestedWorkouts.length,
@@ -316,7 +331,7 @@ export default function Coach() {
     processMessageSend(originalMessage.message, messageId);
   };
 
-  const handleSuggestionClick = (suggestion: Suggestion) => {
+  const handleSuggestionClick = async (suggestion: Suggestion) => {
     const userMessage: Message = {
       id: `user-suggestion-${Date.now()}`,
       type: "text",
@@ -327,18 +342,9 @@ export default function Coach() {
     setChatMessages((prev) => [...prev, userMessage]);
     setIsAiTyping(true);
 
-    // Simuler une réponse de l'IA
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: `ai-suggestion-response-${Date.now()}`,
-        type: "text",
-        message: `Concernant "${suggestion.text}", explorons cela ensemble.`,
-        sender: "bot",
-        createdAt: new Date().toISOString(),
-      };
-      setChatMessages((prev) => [...prev, aiResponse]);
-      setIsAiTyping(false);
-    }, 1000);
+    await processMessageSend(suggestion.text, suggestion.id).then(() =>
+      setIsAiTyping(false)
+    );
   };
 
   const handleTalkToHumanClick = () => {

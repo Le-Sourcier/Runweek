@@ -1,7 +1,5 @@
 import { useUserContext } from "../../hooks/useUser";
-import {
-  LayoutGrid,
-} from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { useState } from "react";
 import { defaultDashboardWidgetsConfig } from "../../providers/UserProvider";
 import WidgetManagementModal from "../../components/dashboard/WidgetManagementModal";
@@ -96,23 +94,23 @@ export default function Dashboard() {
       {!user?.connectedDevices?.some(
         (device) => device.status === "connected"
       ) && (
-          <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-semibold text-xl mb-2">
-                  Connectez votre appareil Garmin
-                </h3>
-                <p className="text-white dark:opacity-90">
-                  Suivez vos activités automatiquement et obtenez des analyses
-                  détaillées
-                </p>
-              </div>
-              <button className="px-6 py-2.5 bg-white dark:bg-gray-100 text-primary dark:text-primary-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-200 transition-colors font-medium">
-                Connecter
-              </button>
+        <div className="bg-primary dark:bg-primary-600 rounded-xl p-6 text-primary-foreground mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-semibold text-xl mb-2">
+                Connectez votre appareil Garmin
+              </h3>
+              <p className="text-white dark:opacity-90">
+                Suivez vos activités automatiquement et obtenez des analyses
+                détaillées
+              </p>
             </div>
+            <button className="px-6 py-2.5 bg-white dark:bg-gray-100 text-primary dark:text-primary-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-200 transition-colors font-medium">
+              Connecter
+            </button>
           </div>
-        )}
+        </div>
+      )}
       {/* Last Updated Time */}
       <div className="text-xs text-muted-foreground/80 dark:text-muted-foreground/60 mt-8 text-center">
         <span>Dernière mise à jour: 21:30</span>

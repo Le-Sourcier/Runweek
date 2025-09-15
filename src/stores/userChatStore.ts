@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import {
+  Advices,
   ChatState,
   Message,
-  MotivationalText,
+  Motivational,
   SuggestedNutrition,
   SuggestedWorkouts,
   TrainingPlan,
@@ -19,7 +20,8 @@ export const chatStore = create<ChatState>((set, get) => ({
   trainingPlans: [],
   suggestedWorkouts: [],
   suggestedNutrition: [],
-  motivationalText: undefined,
+  motivation: undefined,
+  advices: [],
   initialMessage: {
     id: "init-" + Date.now(),
     message:
@@ -89,23 +91,49 @@ export const chatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  getMotivationalText: async () => {
+  getMotivation: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await apiUtils.get<{ message: unknown }>(
-        ApiUrl.MOTIVATION
-      );
+      const { data } = await apiUtils.get(ApiUrl.MOTIVATION);
 
-      const text = data.message as MotivationalText;
+      const text = data as Motivational;
 
-      set({ motivationalText: text });
+      // console.log("HHBBB: ", text.message);
+      set({
+        motivation: text,
+      });
     } catch (err) {
-      if (extractErrorMessage(err).message === "NO_PLANTS_FOUND") {
-        set({ motivationalText: undefined, error: null });
+      if (extractErrorMessage(err).message === "NO_MOTIVATION_FOUND") {
+        set({ motivation: undefined, error: null });
         return;
       }
       const error =
-        err instanceof Error ? err : new Error("Getting training plans failed");
+        err instanceof Error ? err : new Error("Getting motivation failed");
+      set({ error: error.message, isLoading: false });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  getAdvices: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await apiUtils.get<{ advices: [] }>(
+        ApiUrl.GET_AI_ADVICES
+      );
+
+      const advices = data.advices as Advices[];
+      // console.log("HHBBB: ", advices[0].description);
+      set({
+        advices: advices,
+      });
+    } catch (err) {
+      if (extractErrorMessage(err).message === "NO_MOTIVATION_FOUND") {
+        set({ motivation: undefined, error: null });
+        return;
+      }
+      const error =
+        err instanceof Error ? err : new Error("Getting motivation failed");
       set({ error: error.message, isLoading: false });
       throw error;
     } finally {

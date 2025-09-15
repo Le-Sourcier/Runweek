@@ -15,6 +15,7 @@ export const ApiUrl = {
   GET_AI_COACH_TRAINING_PLANS: "/aicoach/plans",
   GET_AI_COACH_SUGGESTED_WORKOUTS: "/aicoach/workouts",
   GET_AI_COACH_SUGGESTED_NUTRITION: "/aicoach/nutrition",
+  GET_AI_ADVICES: "/aicoach/advices",
 
   // Google
   GOOGLE_AUTH: "/auth/google",

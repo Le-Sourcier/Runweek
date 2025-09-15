@@ -6,6 +6,9 @@ import { Button2 as Button } from "../components/ui/Button";
 import { useUserContext } from "../hooks/useUser";
 import { ROUTES, useAppNavigation } from "../hooks/useAppNavigation";
 import { extractErrorMessage } from "../utils/error-handler";
+import UnverifiedAccountModal from "../components/ui/UnverifiedAccountModal";
+import { MessageCode } from "../types/message";
+import { useMessages } from "../hooks/useMessage";
 
 const LoginPage: React.FC = () => {
   const { isLoading: loading, login, registerWithGoogle } = useUserContext();
@@ -14,7 +17,10 @@ const LoginPage: React.FC = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { navigateWithParams, navigateWithQuery } = useAppNavigation();
+  const { navigateWithParams } = useAppNavigation();
+  const [isUnverifiedModalOpen, setIsUnverifiedModalOpen] = useState(false);
+
+  const { showMessage } = useMessages();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,12 +58,12 @@ const LoginPage: React.FC = () => {
       await login(formData);
       navigateWithParams(ROUTES.WELCOME);
     } catch (error) {
-      if (extractErrorMessage(error).message === "ACCOUNT_UNVERIFIED") {
-        navigateWithQuery(ROUTES.VERIFY_EMAIL, { email: formData.email });
+      const err = extractErrorMessage(error);
+      if (err.message === "ACCOUNT_UNVERIFIED") {
+        setIsUnverifiedModalOpen(true);
+      } else {
+        showMessage(err.message as MessageCode);
       }
-
-      console.error(error);
-      // Error is already handled in the UserProvider
     }
   };
 
@@ -161,6 +167,12 @@ const LoginPage: React.FC = () => {
           </Link>
         </div>
       </form>
+
+      <UnverifiedAccountModal
+        isOpen={isUnverifiedModalOpen}
+        onClose={() => setIsUnverifiedModalOpen(false)}
+        email={formData.email}
+      />
     </AuthLayout>
   );
 };

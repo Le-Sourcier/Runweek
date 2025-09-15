@@ -172,7 +172,10 @@ export type UserContextType = {
   linkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; //
   unlinkedAccount: (accountId: string) => Promise<SocialAccountConnection[]>; // Added for unlinked account
   verifyMail: (token: string) => Promise<{ message: string; error: boolean }>;
-  resendVerificationMail: (email: string) => Promise<void>;
+  resendVerificationMail: (email: string) => Promise<{
+    error: boolean;
+    message: string | null;
+  }>;
   passwordRecoveryRequest: (email: string) => Promise<void>;
   logout: () => void;
   updateUserProfile: (updatedProfileData: Partial<User>) => Promise<void>;
