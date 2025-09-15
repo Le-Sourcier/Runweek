@@ -139,7 +139,7 @@ class SuggestionService {
       });
 
       // Générer les suggestions manquantes
-      const types = ["motivation", "workout", "plan", "nutrition"];
+      const types = ["motivation", "advices", "workout", "plan", "nutrition"];
       const generationPromises = [];
 
       for (const type of types) {

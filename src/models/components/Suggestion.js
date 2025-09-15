@@ -17,7 +17,13 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       type: {
-        type: DataTypes.ENUM("motivation", "workout", "plan", "nutrition"),
+        type: DataTypes.ENUM(
+          "motivation",
+          "advices",
+          "workout",
+          "plan",
+          "nutrition"
+        ),
         allowNull: false,
       },
       frequency: {

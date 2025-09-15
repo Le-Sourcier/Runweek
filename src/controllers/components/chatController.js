@@ -138,6 +138,28 @@ module.exports = {
     }
   },
 
+  // Obtenir des suggestions de conseils
+  getAdvice: async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const { frequency = "daily" } = req.query;
+
+      const advices = await suggestionService.getSuggestion(
+        userId,
+        "advices",
+        frequency
+      );
+
+      if (!advices || advices.lenght === 0) {
+        return serverMessage(res, "NO_ADVICES_FOUND");
+      }
+      return serverMessage(res, "SUCCESS", advices);
+    } catch (error) {
+      console.error("Erreur contrôleur advices:", error);
+      return serverMessage(res, "ERROR_GETTING_ADVICES");
+    }
+  },
   // Obtenir des suggestions d'entraînement
   getWorkoutSuggestions: async (req, res) => {
     try {
@@ -299,7 +321,6 @@ module.exports = {
   },
 };
 
-// Fonction pour récupérer les données utilisateur complètes
 // Fonction pour récupérer les données utilisateur complètes
 async function getUserData(userId) {
   try {

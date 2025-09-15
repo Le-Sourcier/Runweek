@@ -48,7 +48,7 @@ module.exports = {
       const user = await Users.create({ email, password }, { transaction });
 
       // Création profil
-      await Profiles.create(
+      const profile = await Profiles.create(
         {
           user_id: user.id,
           fname,
@@ -57,16 +57,23 @@ module.exports = {
         { transaction }
       );
 
+      const expiresAt = dayjs().add(15, "minutes").toDate();
+
       // Génère et sauvegarde le token de vérification
       const verificationToken = user.generateVerificationToken();
       user.token = verificationToken;
       await user.save({ transaction });
 
-      await transaction.commit();
-
       // Email de vérification
       const link = `${process.env.ORIGINE_URL}/verify-mail?pk=${user.token}`;
-      const html = mailVerificationTemplate(link);
+
+      await transaction.commit();
+
+      const html = mailVerificationTemplate({
+        VERIFICATION_LINK: link,
+        user: profile,
+        ExpiredIn: expiresAt,
+      });
 
       await sendMail({
         to: email,
@@ -77,7 +84,7 @@ module.exports = {
       return serverMessage(res, "ACCOUNT_CREATED");
     } catch (error) {
       await transaction.rollback();
-      console.error("REGISTER_ERROR", error);
+      console.error("REGISTER_ERROR", error.massage);
       return serverMessage(res, "REGISTER_ERROR");
     }
   },
@@ -370,17 +377,6 @@ module.exports = {
 
       const prefData = user.dataSharingPreferences;
 
-      // const langs = await Lang.findAll();
-
-      // const avLangs = langs.map((lang) => {
-      //   return {
-      //     code: lang.code,
-      //     name: lang.name,
-      //     flag: lang.flag,
-      //     enabled: lang.enabled,
-      //   };
-      // });
-
       // Preferences:
       const pref = {
         enabled: prefData.enabled,
@@ -628,6 +624,8 @@ module.exports = {
 
       // 🔐 Génére un token de vérification temporaire (15 min)
       const token = user.generateVerificationToken();
+
+      const expiresAt = dayjs().add(15, "minutes").toDate();
       user.token = token;
       await user.save();
 
@@ -638,8 +636,28 @@ module.exports = {
 
       const fullName = profile?.fname || user.email.split("@")[0];
 
+      Object.assign(user, {
+        reset_token: token,
+        reset_token_expires_at: expiresAt,
+      });
+      await user.save();
+
       const verificationUrl = `${process.env.ORIGINE_URL}/verify-mail?pk=${token}`;
-      const html = mailVerificationTemplate(verificationUrl);
+      const _user = await Users.findOne({
+        where: { email },
+        include: [
+          {
+            model: Profiles,
+            as: "profile",
+            attributes: ["fname", "lname", "lang"],
+          },
+        ],
+      });
+      const html = mailVerificationTemplate({
+        VERIFICATION_LINK: verificationUrl,
+        user: _user,
+        ExpiredIn: expiresAt,
+      });
 
       // Envoie de l'email
       const result = await sendMail({
@@ -698,7 +716,16 @@ module.exports = {
   forgetPassword: async (req, res) => {
     try {
       const { email } = req.body;
-      const user = await Users.findOne({ where: { email } });
+      const user = await Users.findOne({
+        where: { email },
+        include: [
+          {
+            model: Profiles,
+            as: "profile",
+            attributes: ["fname", "lname", "lang"],
+          },
+        ],
+      });
       if (!user) return serverMessage(res, "PROFILE_NOT_FOUND");
 
       const token = user.generateVerificationToken();
@@ -710,9 +737,11 @@ module.exports = {
       });
       await user.save();
 
+      const _user = user.profile;
       const rLink = `${process.env.ORIGINE_URL}/reset-password?pk=${token}`;
       const html = PasswordResetTemplate({
         RESET_LINK: rLink,
+        user: _user,
       });
       const result = await sendMail({
         to: email,
@@ -725,7 +754,7 @@ module.exports = {
         ? serverMessage(res, "EMAIL_SINDING_SUCCESS")
         : serverMessage(res, "EMAIL_SENDING_FAILED");
     } catch (error) {
-      return serverMessage(res);
+      return serverMessage(res, "EMAIL_SENDING_FAILED");
     }
   },
 

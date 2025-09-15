@@ -612,6 +612,7 @@ router.get("/nutrition", ctr.getNutritionTips);
  *                   data: []
  */
 router.get("/motivation", ctr.getMotivation);
+router.get("/advices", ctr.getAdvice);
 
 /**
  * @openapi

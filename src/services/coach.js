@@ -250,6 +250,48 @@ async function generateAthleteSuggestions(userContext, suggestionType) {
         `;
         maxTokens = 450;
         break;
+      case "advices":
+        systemPrompt = `
+    Vous êtes Coach RunWeek, un expert en conseils sportifs personnalisés.
+    
+    Tâche : Donnez 2-3 conseils personnalisés pour améliorer la performance de cet athlète.
+    
+    IMPORTANT : Vous DEVEZ répondre en format JSON valide uniquement.
+
+    Format de réponse JSON :
+    {
+      "advices": [
+        {
+          "title": "Titre du conseil",
+          "description": "Description détaillée du conseil",
+          "category":"technique"|"training"|"recovery"|"mental"|"equipment",
+          "priority": "low"|"medium"|"high",
+          "icon": "emoji pertinent",
+          "actionSteps": ["étape 1", "étape 2", "étape 3"]
+        }
+      ]
+    }
+    
+    Règles :
+    - Basé sur l'analyse des activités récentes, objectifs et données physiologiques
+    - Proposer des conseils pratiques et actionnables
+    - Adapter au niveau et à l'expérience de l'athlète
+    - Tenir compte des données de sommeil et fréquence cardiaque
+    - Maximum 3 conseils avec priorités variées
+    - Inclure des étapes d'action concrètes
+    
+    Catégories possibles :
+    - technique : amélioration de la forme, posture, technique
+    - entraînement : planification, variété, intensité
+    - récupération : sommeil, nutrition, hydratation
+    - mental : motivation, concentration, gestion du stress
+    - équipement : choix des chaussures, vêtements, accessoires
+    
+    Contexte :
+    ${contextString}
+  `;
+        maxTokens = 500;
+        break;
 
       case "nutrition":
         systemPrompt = `
@@ -439,288 +481,3 @@ module.exports = {
   generateAthleteSuggestions,
   getUserData,
 };
-
-// const { OpenAI } = require("openai");
-// require("dotenv").config();
-
-// const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
-//   organization: process.env.OPENAI_ORG,
-// });
-
-// let lastCall = 0;
-
-// // Icônes de sports (déjà définies dans votre code)
-// const sportIcons = {
-//   running: "🏃‍♂️",
-//   // ... autres icônes
-// };
-
-// // Fonction pour générer des suggestions personnalisées
-// async function generateAthleteSuggestions(userContext, suggestionType) {
-//   const now = Date.now();
-
-//   if (now - lastCall < 1000) {
-//     await new Promise((res) => setTimeout(res, 1000 - (now - lastCall)));
-//   }
-//   lastCall = Date.now();
-
-//   const activities = userContext.activities || [];
-//   const profile = userContext.profile || {};
-
-//   // Formater les activités récentes
-//   const activityLines = activities
-//     .map((act) => {
-//       const icon = sportIcons[act.type] || "🏅";
-//       let line = `${icon} ${new Date(act.date).toISOString().split("T")[0]} : ${
-//         act.title
-//       } (${act.type})`;
-//       if (act.duration) line += `, Durée: ${act.duration} min`;
-//       if (act.distance) line += `, Distance: ${act.distance} km`;
-//       return line;
-//     })
-//     .join("\n");
-
-//   const contextString = `
-//     Informations sur l'athlète :
-//     - Nom complet : ${profile.fname || ""} ${profile.lname || ""}
-//     - Objectifs : ${profile.bio || "Non spécifié"}
-//     - Niveau : ${profile.level || "Non spécifié"}
-
-//     Activités récentes (10 dernières) :
-//     ${activityLines || "Aucune activité enregistrée récemment."}
-//   `;
-
-//   // Définir le prompt en fonction du type de suggestion
-//   let systemPrompt = "";
-//   let maxTokens = 300;
-
-//   switch (suggestionType) {
-//     case "motivation":
-//       systemPrompt = `
-//         Vous êtes Coach RunWeek, un assistant de coaching sportif motivant.
-
-//         Tâche : Créez un message de motivation personnalisé pour cet athlète en vous basant sur ses activités récentes et ses objectifs.
-
-//         Caractéristiques :
-//         - Ton : Energique et positif
-//         - Longueur : 2-3 phrases maximum
-//         - Personnalisé : Faites référence à ses activités récentes
-//         - Inclure un emoji pertinent (max 2)
-
-//         Contexte :
-//         ${contextString}
-//       `;
-//       maxTokens = 150;
-//       break;
-
-//     case "workout":
-//       systemPrompt = `
-//         Vous êtes Coach RunWeek, un expert en entraînement sportif.
-
-//         Tâche : Proposez 2-3 suggestions d'entraînement personnalisées pour cet athlète.
-
-//         Format de réponse :
-//         Pour chaque suggestion :
-//         - Titre accrocheur
-//         - Description concise (1-2 phrases)
-//         - Type d'entraînement (cardio, force, récupération, etc.)
-//         - Durée estimée
-//         - Niveau de difficulté
-
-//         Règles :
-//         - Basé sur les activités récentes et objectifs de l'athlète
-//         - Proposer des variétés (pas toujours le même type)
-//         - Inclure une icône d'emoji pertinente pour chaque suggestion
-//         - Maximum 3 suggestions
-
-//         Contexte :
-//         ${contextString}
-//       `;
-//       maxTokens = 350;
-//       break;
-
-//     case "plan":
-//       systemPrompt = `
-//         Vous êtes Coach RunWeek, un créateur de plans d'entraînement.
-
-//         Tâche : Proposez 2-3 plans d'entraînement personnalisés pour cet athlète.
-
-//         Format de réponse pour chaque plan :
-//         - Titre du plan
-//         - Durée (ex: "4 semaines")
-//         - Niveau (débutant, intermédiaire, avancé)
-//         - Description concise (2-3 phrases)
-//         - Objectif principal du plan
-//         - Fréquence hebdomadaire recommandée
-
-//         Règles :
-//         - Adapter aux activités récentes et objectifs de l'athlète
-//         - Proposer différents types de plans (performance, récupération, préparation d'événement)
-//         - Inclure une icône d'emoji pertinente pour chaque plan
-//         - Maximum 3 plans
-
-//         Contexte :
-//         ${contextString}
-//       `;
-//       maxTokens = 400;
-//       break;
-
-//     default:
-//       throw new Error("Type de suggestion non reconnu");
-//   }
-
-//   try {
-//     const messages = [
-//       {
-//         role: "system",
-//         content: systemPrompt.trim(),
-//       },
-//     ];
-
-//     const chatCompletion = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo-0125",
-//       messages: messages,
-//       temperature: 0.7,
-//       max_tokens: maxTokens,
-//     });
-
-//     let response = chatCompletion.choices[0].message.content;
-//     response = response.replace(/\*\*/g, "").trim();
-
-//     return response;
-//   } catch (error) {
-//     if (error.status === 429) {
-//       console.error("Erreur IA : limite de quota atteinte");
-//       return "Notre service connaît une forte demande. Pourriez-vous réessayer dans quelques instants ?";
-//     }
-
-//     console.error("Erreur technique du coach :", error);
-//     return "Un problème technique empêche la génération de suggestions. L'équipe technique a été alertée.";
-//   }
-// }
-
-// // Fonction pour parser les suggestions d'entraînement
-// function parseWorkoutSuggestions(aiResponse) {
-//   const suggestions = [];
-//   const lines = aiResponse.split("\n");
-
-//   let currentSuggestion = {};
-//   for (const line of lines) {
-//     if (line.trim() === "") continue;
-
-//     if (line.match(/^[^a-z]*$/i) || line.includes(":")) {
-//       // C'est probablement un titre ou une nouvelle suggestion
-//       if (Object.keys(currentSuggestion).length > 0) {
-//         suggestions.push(currentSuggestion);
-//         currentSuggestion = {};
-//       }
-
-//       if (line.includes(":")) {
-//         const [key, value] = line.split(":").map((part) => part.trim());
-//         currentSuggestion[key.toLowerCase()] = value;
-//       } else {
-//         currentSuggestion["title"] = line.trim();
-//       }
-//     } else {
-//       // C'est une description ou détail supplémentaire
-//       if (currentSuggestion["description"]) {
-//         currentSuggestion["description"] += " " + line.trim();
-//       } else {
-//         currentSuggestion["description"] = line.trim();
-//       }
-//     }
-//   }
-
-//   if (Object.keys(currentSuggestion).length > 0) {
-//     suggestions.push(currentSuggestion);
-//   }
-
-//   // Ajouter des IDs et formater
-//   return suggestions.map((suggestion, index) => ({
-//     id: `s${index + 1}`,
-//     title: suggestion.title || `Suggestion ${index + 1}`,
-//     description: suggestion.description || "",
-//     type: suggestion.type || "Entraînement",
-//     duration: suggestion.duration || "Non spécifié",
-//     level: suggestion.level || "Tous niveaux",
-//     icon: getIconForSuggestion(suggestion.title || ""),
-//   }));
-// }
-
-// // Fonction pour parser les plans d'entraînement
-// function parseTrainingPlans(aiResponse) {
-//   const plans = [];
-//   const lines = aiResponse.split("\n");
-
-//   let currentPlan = {};
-//   for (const line of lines) {
-//     if (line.trim() === "") continue;
-
-//     if (line.match(/^[^a-z]*$/i) || line.includes(":")) {
-//       // Nouveau plan ou propriété
-//       if (
-//         Object.keys(currentPlan).length > 0 &&
-//         (line.match(/^[^a-z]*$/i) || line.includes("titre"))
-//       ) {
-//         plans.push(currentPlan);
-//         currentPlan = {};
-//       }
-
-//       if (line.includes(":")) {
-//         const [key, value] = line.split(":").map((part) => part.trim());
-//         currentPlan[key.toLowerCase()] = value;
-//       } else {
-//         currentPlan["title"] = line.trim();
-//       }
-//     } else {
-//       // Description ou détail supplémentaire
-//       if (currentPlan["description"]) {
-//         currentPlan["description"] += " " + line.trim();
-//       } else {
-//         currentPlan["description"] = line.trim();
-//       }
-//     }
-//   }
-
-//   if (Object.keys(currentPlan).length > 0) {
-//     plans.push(currentPlan);
-//   }
-
-//   // Ajouter des IDs et formater
-//   return plans.map((plan, index) => ({
-//     id: `p${index + 1}`,
-//     title: plan.title || `Plan ${index + 1}`,
-//     duration: plan.duration || "Non spécifié",
-//     level: plan.level || "Tous niveaux",
-//     description: plan.description || "",
-//     goal: plan.objectif || plan.goal || "Amélioration générale",
-//     frequency: plan.fréquence || plan.frequency || "3-4 fois/semaine",
-//   }));
-// }
-
-// // Helper function pour obtenir une icône basée sur le titre
-// function getIconForSuggestion(title) {
-//   const titleLower = title.toLowerCase();
-
-//   if (titleLower.includes("course") || titleLower.includes("running"))
-//     return "Zap";
-//   if (titleLower.includes("récupération") || titleLower.includes("recovery"))
-//     return "ShieldCheck";
-//   if (titleLower.includes("force") || titleLower.includes("strength"))
-//     return "TrendingUp";
-//   if (titleLower.includes("interval") || titleLower.includes("hiit"))
-//     return "Activity";
-//   if (titleLower.includes("endurance")) return "Award";
-//   if (titleLower.includes("yoga") || titleLower.includes("stretch"))
-//     return "Heart";
-
-//   return "Award"; // Icône par défaut
-// }
-
-// // Exporter les fonctions
-// module.exports = {
-//   generateAthleteSuggestions,
-//   parseWorkoutSuggestions,
-//   parseTrainingPlans,
-// };
